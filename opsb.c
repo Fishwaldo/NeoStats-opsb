@@ -860,8 +860,8 @@ int checkcache(scaninfo *scandata) {
 
 
 EventFnList __module_events[] = {
-	{ "ONLINE", 	Online},
-	{ "SIGNON", 	ScanNick},
+	{ EVENT_ONLINE, 	Online},
+	{ EVENT_SIGNON, 	ScanNick},
 	{ NULL, 	NULL}
 };
 
