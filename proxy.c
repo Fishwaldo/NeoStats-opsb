@@ -68,7 +68,7 @@ void do_ban(scaninfo *scandata) {
 	socklist *sockdata;
 	FILE *fp;
 
-	strcpy(segv_location, "OPSB:doban");
+	SET_SEGV_LOCATION();
 
 	if (scandata->doneban == 1)
 		return;
@@ -134,7 +134,7 @@ void cleanlist() {
 	char sockname[64];
 	int savescan, timedout = 0, finished;
 
-	strcpy(segv_location, "OPSB:cleanlist");
+	SET_SEGV_LOCATION();
 
 	scannode = list_first(opsbl);
 	while (scannode) {
@@ -221,7 +221,7 @@ void send_status(User *u) {
 	scaninfo *scandata;
 	socklist *sockinfo;
 
-	strcpy(segv_location, "OPSB:send_status");
+	SET_SEGV_LOCATION();
 	
 	prefmsg(u->nick, s_opsb, "Proxy Results:");
 	prefmsg(u->nick, s_opsb, "Hosts Scanned: %d Hosts found Open: %d Exceptions %d", opsb.scanned, opsb.open, list_count(exempt));
@@ -302,7 +302,7 @@ void start_proxy_scan(lnode_t *scannode) {
 	char *sockname;
 	int i, j;
 
-	strcpy(segv_location, "OPSB:start_proxy_scan");
+	SET_SEGV_LOCATION();
 
 
 	scandata = lnode_get(scannode);
@@ -451,7 +451,7 @@ int proxy_read(int socknum, char *sockname) {
 	lnode_t	*socknode;
 	socklist *sockdata = NULL;
 
-	strcpy(segv_location, "OPSB:proxy_read");
+	SET_SEGV_LOCATION();
 
 	scandata = find_scandata(sockname);
 	if (!scandata) {
@@ -533,7 +533,7 @@ int proxy_write(int socknum, char *sockname) {
 	lnode_t	*socknode;
 	socklist *sockdata = NULL;
 
-	strcpy(segv_location, "OPSB:proxy_write");
+	SET_SEGV_LOCATION();
 
 
 	scandata = find_scandata(sockname);

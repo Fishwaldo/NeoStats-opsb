@@ -98,7 +98,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 	int lookuptype, i;
 	char *buf;
 
-	strcpy(segv_location, "OPSB:Bot_Message");
+	SET_SEGV_LOCATION();
 	
 	u = finduser(origin); 
 	if (!u) { 
@@ -354,7 +354,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 int do_set(User *u, char **av, int ac) {
 	char *buf;
 
-	strcpy(segv_location, "OPSB:do_set");
+	SET_SEGV_LOCATION();
 	
 	if (UserLevel(u) < 100) {
 		prefmsg(u->nick, s_opsb, "Access Denied");
@@ -542,7 +542,7 @@ int Online(char **av, int ac) {
 	struct sockaddr_in sa;
 	socklen_t ulen = sizeof(struct sockaddr_in);
 
-	strcpy(segv_location, "OPSB:Online");
+	SET_SEGV_LOCATION();
 
 	if (init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", my_info[0].module_name) == -1 ) {
 		/* Nick was in use!!!! */
@@ -578,7 +578,7 @@ void checkqueue() {
 	lnode_t *scannode;
 	scaninfo *scandata;
 
-	strcpy(segv_location, "OPSB:checkqueue");
+	SET_SEGV_LOCATION();
 	
 	/* exit, if the list is full */
 	if (list_isfull(opsbl) || list_isempty(opsbq))
@@ -596,7 +596,7 @@ void addtocache(unsigned long ipaddr) {
 	lnode_t *cachenode;
 	C_entry *ce;
 
-	strcpy(segv_location, "OPSB:addtocache");
+	SET_SEGV_LOCATION();
 			
 	/* pop off the oldest entry */
 	if (list_isfull(cache)) {
@@ -628,7 +628,7 @@ int checkcache(scaninfo *scandata) {
 	C_entry *ce;
 	exemptinfo *exempts;
 
-	strcpy(segv_location, "OPSB:checkcache");	
+	SET_SEGV_LOCATION();
 
 	node = list_first(exempt);
 	while (node) {
@@ -681,7 +681,7 @@ void savecache() {
 	exemptinfo *exempts;
 	FILE *fp = fopen("data/opsb.db", "w");	
 
-	strcpy(segv_location, "OPSB:savecache");
+	SET_SEGV_LOCATION();
 	
 	if (!fp) {
 		nlog(LOG_WARNING, LOG_MOD, "OPSB: warning, Can not open cache file for writting");
@@ -727,7 +727,7 @@ void loadcache() {
 	FILE *fp = fopen("data/opsb.db", "r");
 	char *tmp;
 
-	strcpy(segv_location, "OPSB:loadcache");
+	SET_SEGV_LOCATION();
 
 	if (!fp) {
 		nlog(LOG_WARNING, LOG_MOD, "OPSB: Warning, Can not open Cache file for Reading");
@@ -813,7 +813,7 @@ static int ScanNick(char **av, int ac) {
 	lnode_t *node;
 	exemptinfo *exempts;
 
-	strcpy(segv_location, "OPSB:ScanNick");
+	SET_SEGV_LOCATION();
 
 	/* don't do anything if NeoStats hasn't told us we are online yet */
 	if (!online)
@@ -896,7 +896,7 @@ int startscan(scaninfo *scandata) {
 	int buflen;
 	int i;
 
-	strcpy(segv_location, "OPSB:Startscan");
+	SET_SEGV_LOCATION();
 	
 	/* only check the cache when we have IP addy */
 	if (scandata->dnsstate == DO_OPM_LOOKUP) {
@@ -987,7 +987,7 @@ void dnsblscan(char *data, adns_answer *a) {
 	char *show;
 	int len, ri;
 
-	strcpy(segv_location, "OPSB:dnsblscan");
+	SET_SEGV_LOCATION();
 
 	scannode = list_find(opsbl, data, findscan);
 	if (!scannode) {
@@ -1080,7 +1080,7 @@ void reportdns(char *data, adns_answer *a) {
 	char *show;
 	int i, len, ri;
 
-	strcpy(segv_location, "OPSB:reportdns");	
+	SET_SEGV_LOCATION();
 					
 	dnslookup = list_find(opsbl, data, findscan);
 	if (!dnslookup) {
@@ -1113,9 +1113,8 @@ void reportdns(char *data, adns_answer *a) {
 }
 
 
-
-void _init() {
-
+int __ModInit(int modnum, int apiver)
+{
 	s_opsb = "opsb";
 	
 
@@ -1156,10 +1155,12 @@ void _init() {
 	opsb.opmhits = 1;
 	snprintf(opsb.lookforstring, 512, "*** Looking up your hostname...");
 	snprintf(opsb.scanmsg, 512, "Your Host is being Scanned for Open Proxies");
+	return 1;
 }
 
 
-void _fini() {
+void __ModFini()
+{
 };
 
 
