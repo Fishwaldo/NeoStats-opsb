@@ -574,7 +574,7 @@ int Online(char **av, int ac) {
 void unconf() {
 	if (opsb.confed == 1) return;
 	chanalert(s_opsb, "Warning, OPSB is configured with default Settings. Please Update this ASAP");
-	globops(s_opsb, "Warning, OPSB is configred with default Settings, Please Update this ASAP");
+	globops(s_opsb, "Warning, OPSB is configured with default Settings, Please Update this ASAP");
 }
 
 void checkqueue() {
