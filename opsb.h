@@ -138,5 +138,10 @@ void start_proxy_scan(lnode_t *scannode);
 void send_status(User *u);
 void check_scan_free(scaninfo *scandata);
 int init_libopm();
+char *type_of_proxy(int type);
+int get_proxy_by_name(const char *name);
+void add_port(int type, int port);
+int load_ports();
+ 
 
 #endif /* OPSB_H */

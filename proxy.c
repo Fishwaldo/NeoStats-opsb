@@ -116,7 +116,6 @@ int load_ports() {
 }
 
 int init_libopm() {
-	int i, portcount;
 	lnode_t *pn;
 	port_list *pl;
 
@@ -162,7 +161,9 @@ int init_libopm() {
 
 void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused)
       {
+#if 0
 	FILE *fp;
+#endif
 	scaninfo *scandata;
 
 	SET_SEGV_LOCATION();
