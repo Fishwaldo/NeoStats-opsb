@@ -790,6 +790,7 @@ int ModInit (Module *mod_ptr)
 	strlcpy(opsb.targethost, me.uplink, MAXHOST);
 	opsb.targetport = me.port;
 	opsb.confed = 0;
+	GetConf((void *)&opsb.confed, CFGINT, "Confed");
 	ModuleConfig (opsb_settings);
 	/* we have to be careful here. Currently, we have 7 sockets that get opened per connection. Soooo.
 	*  we check that MAX_SCANS is not greater than the maxsockets available / 7
