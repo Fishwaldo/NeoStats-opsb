@@ -24,6 +24,7 @@ libopm/inet.c -text
 libopm/inet.h -text
 libopm/libopm.c -text
 libopm/libopm.h -text
+libopm/libopm.vcproj -text
 libopm/list.c -text
 libopm/list.h -text
 libopm/malloc.c -text
@@ -39,5 +40,7 @@ libopm/test.c -text
 /opsb.Settings -text
 /opsb.c -text
 /opsb.h -text
+/opsb.vcproj -text
 /opsb_help.c -text
 /proxy.c -text
+/win32modconfig.h -text
