@@ -11,7 +11,7 @@ INCLUDES=-I@DIRINST@/include/ -I. -Ilibopm
 SOURCES= opsb.c proxy.c opsb_help.c
 OBJECTS= opsb.o proxy.o opsb_help.o
 TARGET= opsb.so                 
-DOCS=README.opsb opsb.Settings
+DOCS=README.opsb README.opsb.html opsb.Settings
 DISTFILES = $(SOURCES) $(DOCS) modconfig.h.in configure install-sh ChangeLog Makefile.in opsb.h libopm/*.c libopm/*.h libopm/README libopm/LICENSE LICENSE libopm/*.in
 distdir = @PACKAGE@-@VERSION@
 
