@@ -20,7 +20,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: proxy.c,v 1.9 2002/11/05 13:31:59 fishwaldo Exp $
+** $Id: proxy.c,v 1.10 2002/11/07 10:50:12 fishwaldo Exp $
 */
 
 
@@ -497,7 +497,7 @@ int proxy_read(int socknum, char *sockname) {
 			log("OPSB proxy_read(): Got this: %s (%d)",buf, i);
 #endif
 			/* we check if this might be a normal http server */
-			strncat(sockdata->buf, buf, 1024);
+			strncat(sockdata->buf, buf, 1022);
 
 			if (strstr(sockdata->buf, "Method Not Allowed")) {
 #ifdef DEBUG
