@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.6 2002/10/24 09:27:58 fishwaldo Exp $
+** $Id: opsb.c,v 1.7 2002/10/27 14:38:45 fishwaldo Exp $
 */
 
 
@@ -62,7 +62,7 @@ int online;
 Module_Info my_info[] = { {
 	"OPSB",
 	"A Open Proxy Scanning Bot",
-	"1.0RC1"
+	"1.0RC2"
 } };
 
 
