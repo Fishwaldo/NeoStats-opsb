@@ -8,8 +8,8 @@ INSTALL_DATA = @INSTALL_DATA@
 DIRECTORY=@DIRINST@/dl/
 INCLUDES= -I. -I..
 
-SOURCES= compat.c config.c inet.c libopm.c list.c malloc.c proxy.c
-OBJECTS= compat.o config.o inet.o libopm.o list.o malloc.o proxy.o 
+SRCS= compat.c config.c inet.c libopm.c list.c malloc.c proxy.c
+OBJS= ${SRCS:.c=.o}
 
 TARGET= libopm.a
 DOCS=
@@ -20,8 +20,8 @@ all:	 libopm.a
 	 $(CC) -c $(CFLAGS) $(INCLUDES) $<
 
 
-libopm.a: $(OBJECTS) 
-	ar cru $(TARGET) ${OBJECTS}
+libopm.a: $(OBJS) 
+	ar cru $(TARGET) ${OBJS}
 	ranlib $(TARGET)
 
 clean:
@@ -31,7 +31,7 @@ install:
 
 dist:	
 
-$(OBJECTS): Makefile
+$(OBJS): Makefile
 compat.o: compat.c ../modconfig.h compat.h opm.h opm_common.h
 config.o: config.c ../modconfig.h malloc.h config.h libopm.h inet.h \
   opm_common.h opm.h opm_error.h opm_types.h list.h
