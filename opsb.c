@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.16 2003/05/14 14:21:44 fishwaldo Exp $
+** $Id$
 */
 
 

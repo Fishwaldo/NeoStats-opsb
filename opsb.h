@@ -4,7 +4,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: opsb.h,v 1.8 2003/01/30 11:29:25 fishwaldo Exp $
+** $Id$
 */
 
 

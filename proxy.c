@@ -20,7 +20,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: proxy.c,v 1.15 2003/04/17 15:55:47 fishwaldo Exp $
+** $Id$
 */
 
 
