@@ -1286,6 +1286,12 @@ void LoadConfig(void)
 
 int __ModInit(int modnum, int apiver)
 {
+#ifdef NS_ERR_VERSION /* Forward port version checks */
+	/* Check that our compiled version if compatible with the calling version of NeoStats */
+	if(	ircstrncasecmp (me.version, NEOSTATS_VERSION, VERSIONSIZE) !=0) {
+		return NS_ERR_VERSION;
+	}
+#endif 
 	strlcpy(s_opsb, "opsb", MAXNICK);
 
 	/* we have to be careful here. Currently, we have 7 sockets that get opened per connection. Soooo.
