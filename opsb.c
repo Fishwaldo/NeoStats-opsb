@@ -308,7 +308,8 @@ int do_set_cb (CmdParams* cmdparams, SET_REASON reason)
 	if (reason == SET_LOAD) {
 		return NS_SUCCESS;
 	}
-	DBAStoreConfigInt ("Confed", 1);
+	opsb.confed = 1;
+	DBAStoreConfigInt ("Confed", &opsb.confed);
 	del_timer("unconf");
 	return NS_SUCCESS;
 }
