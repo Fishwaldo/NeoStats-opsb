@@ -5,6 +5,7 @@
 /OPSB.xml -text
 /README.opsb -text
 /README.opsb.html -text
+/RELNOTES -text
 /aclocal.m4 -text
 /configure -text
 /configure.in -text

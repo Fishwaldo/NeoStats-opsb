@@ -118,5 +118,8 @@ AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
 AC_OUTPUT(Makefile libopm/Makefile)
 echo "Configuration complete."
+read -p "Press Enter key to read the release notes"
+clear
+more RELNOTES
 echo "Run 'make' (or 'gmake' on some systems) to compile NeoStats."
 echo "If you require support, see the README file."

@@ -1,0 +1,28 @@
+* OPSB * M & Fish * Version 3.0.a1
+==============================================================================
+Important information you should know: (READ THIS!)
+==============================================================================
+
+This is an alpha release. Not all features will work and there may be major 
+bugs in the software. This release is purely for us to get feedback on the new 
+version of NeoStats and should not be run on production networks. This release
+is ideal for users with test networks or those that want an opportunity to 
+help us develop the new version with feedback and suggestions. 
+
+No support is provided for this release so if you have problems and are unable 
+to resolve them using the provided documentation, you should use the supported 
+stable 2.5 series instead until NeoStats 3.0 is further along. 
+
+Bugs, requests and suggestions should be reported using the bug tracking 
+system. You must provide all information required as listed in the README 
+section on support or your entry will be removed.
+
+Known issues that we are aware of and should not be reported:
+
+* You may get a warning during compilation similar to:
+* proxy.c: In function `init_libopm':
+* proxy.c:199: warning: passing arg 3 of `add_sockpoll' from incompatible 
+* pointer type
+* proxy.c:199: warning: passing arg 4 of `add_sockpoll' from incompatible 
+* pointer type gcc -c -
+* This does not affect the running of OPSB
