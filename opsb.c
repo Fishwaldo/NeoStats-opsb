@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.13 2003/01/30 11:29:25 fishwaldo Exp $
+** $Id: opsb.c,v 1.14 2003/02/14 13:13:56 fishwaldo Exp $
 */
 
 
@@ -56,7 +56,7 @@ extern const char *opsb_help_check[];
 extern const char *opsb_help_status[];
 extern const char *opsb_help_set[];
 extern const char *opsb_help_exclude[];
-
+extern const char *opsb_help_remove[];
 int online;
 
 Module_Info my_info[] = { {
@@ -121,6 +121,8 @@ int __Bot_Message(char *origin, char **argv, int argc)
 				privmsg_list(u->nick, s_opsb, opsb_help_set);
 		} else if ((!strcasecmp(argv[2], "exclude") && UserLevel(u) > 100)) {
 				privmsg_list(u->nick, s_opsb, opsb_help_exclude);
+		} else if ((!strcasecmp(argv[2], "remove") && UserLevel(u) > 40)) {
+				privmsg_list(u->nick, s_opsb, opsb_help_remove);
 		} else {
 			prefmsg(u->nick, s_opsb, "Invalid Syntax. /msg %s help for more info", s_opsb);
 		}
@@ -186,6 +188,19 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		} 
 		lnode = lnode_create(scandata);
 		list_append(opsbl, lnode);
+	} else if (!strcasecmp(argv[1], "remove")) {
+		if (UserLevel(u) < 40) {
+			prefmsg(u->nick, s_opsb, "Access Denied");
+			chanalert(s_opsb, "%s tried to use remove, but does not have access", u->nick);
+			return 0;
+		}
+		if (argc < 3) {
+			prefmsg(u->nick, s_opsb, "Invalid Syntax. /msg %s help remove for more info", s_opsb);
+			return 0;
+		}
+		srakill_cmd(argv[2], "*");
+		chanalert(s_opsb, "%s attempted to remove a akill for *@%s", u->nick, argv[2]);
+		return 1;
 	} else if (!strcasecmp(argv[1], "check")) {
 		if (UserLevel(u) < 40) {
 			prefmsg(u->nick, s_opsb, "Access Denied");

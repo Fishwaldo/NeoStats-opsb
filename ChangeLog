@@ -4,6 +4,7 @@ Open Proxy Scanning Bot Module for NeoStats Changelog.
 - Fix a coredump when not enough paramaters supplied to the set command
 - OPSB checks the excluded server list when a nick joins on straight away, instead of waiting for the DNS lookups to finish :)
 - Changed some of the levels to 40 (localoper) so localops can use opsb to check sites/users
+- added REMOVE function to help remove akills set by OPSB
 - Bah, really fixed set to not work at all!
 - Added some stats on cachehits and opm hits
 

@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb_help.c,v 1.4 2002/10/24 09:27:58 fishwaldo Exp $
+** $Id: opsb_help.c,v 1.5 2003/02/14 13:13:56 fishwaldo Exp $
 */
 
 #include "stats.h"
@@ -37,7 +37,7 @@ NULL
 
 const char *opsb_help_oper[] = {
 "OPERTATOR COMMANDS:",
-"     CHECK    STATUS    SET    EXCLUDE",
+"     CHECK    STATUS    SET    EXCLUDE    REMOVE",
 "",
 NULL
 };
@@ -136,6 +136,14 @@ const char *opsb_help_exclude[] = {
 "                       The final portion of the string is a description of the exclusion for future reference",
 "                       Wildcards such as * and ? may be used in the hostname portion",
 "    \2DEL <NUM>\2    - This will delete entry numbered <NUM> in the list from the exclusions"
+"",
+NULL
+};
+const char *opsb_help_remove[] = {
+"Usage: \2REMOVE <ip/host>\2",
+"",
+"This command lets you remove akills that might have been set by opsb previously",
+"<ip/host> is the hostname as listed in your akill list (usually /stats a)",
 "",
 NULL
 };
