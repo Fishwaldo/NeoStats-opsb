@@ -23,7 +23,6 @@
 
 #include "neostats.h"
 
-const char opsb_help_info_oneline[] = "Information about opsb";
 const char opsb_help_status_oneline[] = "View opsb state information";
 const char opsb_help_lookup_oneline[] = "Lookup DNS record";
 const char opsb_help_remove_oneline[] = "Remove an akill set by opsb";
@@ -51,7 +50,7 @@ const char *opsb_help_lookup[] = {
 	NULL
 };
 
-const char *opsb_help_info[] = {
+const char *opsb_about[] = {
 	"\2Open Proxy Scanning Bot Information\2",
 	"",
 	"This bot is intended to scan clients connecting to this",

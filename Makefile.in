@@ -8,7 +8,7 @@ INSTALL_DATA = @INSTALL_DATA@
 DIRECTORY = @DIRINST@/dl/
 INCLUDES = -I@DIRINST@/include/ -I. -Ilibopm
 
-SRCS= opsb.c proxy.c opsb_help.c
+SRCS= opsb.c proxy.c opsb_help.c exempts.c
 OBJS= ${SRCS:.c=.o}
 TARGET= opsb.so                 
 DOCS=README.opsb README.opsb.html opsb.Settings
@@ -57,4 +57,5 @@ $(OBJS): Makefile
 opsb.o:		opsb.h opsb.c modconfig.h
 proxy.o: 	opsb.h proxy.c modconfig.h
 opsb_help.o: 	opsb.h
+exempts.o: 	opsb.h exempts.c exempts.h 
 

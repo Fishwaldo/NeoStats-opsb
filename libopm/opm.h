@@ -10,7 +10,9 @@
 #define OPM_H
 
 #include "opm_common.h"
+#ifndef WIN32
 #include <sys/poll.h>
+#endif
 
 /* Stuff to shut up warnings about rcsid being unused. */
 #define USE_VAR(var)    static char sizeof##var = sizeof(sizeof##var) + sizeof(var)

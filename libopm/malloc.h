@@ -1,7 +1,11 @@
 #ifndef MALLOC_H
 #define MALLOC_H
 
+#ifdef WIN32
+#include "win32modconfig.h"
+#else
 #include "modconfig.h"
+#endif
 
 #ifdef STDC_HEADERS
 # include <stdlib.h>

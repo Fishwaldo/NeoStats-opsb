@@ -21,7 +21,11 @@
  *	Boston, MA  02111-1307, USA
  */
 
+#ifdef WIN32
+#include "win32modconfig.h"
+#else
 #include "modconfig.h"
+#endif
 
 #include <stdio.h>
 

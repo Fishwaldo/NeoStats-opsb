@@ -25,7 +25,11 @@ along with this program; if not, write to
  * -TimeMr14C
  */
 
+#ifdef WIN32
+#include "win32modconfig.h"
+#else
 #include "modconfig.h"
+#endif
 
 #include <errno.h>
 #include <stdio.h>

@@ -21,7 +21,11 @@
  *
  */
 
+#ifdef WIN32
+#include "win32modconfig.h"
+#else
 #include "modconfig.h"
+#endif
 
 #include <stdio.h>
 #include "opm.h"

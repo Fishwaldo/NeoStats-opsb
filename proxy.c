@@ -26,17 +26,19 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+#ifndef WIN32
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <arpa/nameser.h>
+#endif
 #include "neostats.h"
 #include "opsb.h"
 #include "opm.h"
 #include "opm_types.h"
 #include "opm_error.h"
 
-int proxy_connect(unsigned long ipaddr, int port, char *who);
+int proxy_connect(unsigned long ip, int port, char *who);
 void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
 void negfailed(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
 void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
@@ -85,16 +87,16 @@ int load_ports() {
 	ok = 0;
 	for (i = 0; proxy_list[i].type != 0; i++) {
 		if (GetConf((void *)&portname, CFGSTR, proxy_list[i].name) <= 0) {
-			nlog(LOG_WARNING, LOG_MOD, "Warning, No Ports defined for Protocol %s", proxy_list[i].name);
+			nlog (LOG_WARNING, "Warning, No Ports defined for Protocol %s", proxy_list[i].name);
 		} else {
 			ac = split_buf(portname, &av, 0);
 			for (j = 0; j < ac; j++) {
 				if (atoi(av[j]) == 0) {
-					nlog(LOG_WARNING, LOG_MOD, "Invalid Port %s for Proxy Type %s", av[j], proxy_list[i].name);
+					nlog (LOG_WARNING, "Invalid Port %s for Proxy Type %s", av[j], proxy_list[i].name);
 					continue;
 				}
 				if (list_isfull(opsb.ports)) {
-					nlog(LOG_MOD, LOG_WARNING, "Ports List is Full.");
+					nlog (LOG_WARNING, "Ports List is Full.");
 					break;
 				}
 				prtlst = malloc(sizeof(port_list));
@@ -103,7 +105,7 @@ int load_ports() {
 				prtlst->noopen = 0;
 				pn = lnode_create(prtlst);
 				list_append(opsb.ports, pn);
-				nlog(LOG_DEBUG1, LOG_MOD, "Added Port %d for Protocol %s", prtlst->port, proxy_list[i].name);
+				dlog (DEBUG1, "Added Port %d for Protocol %s", prtlst->port, proxy_list[i].name);
 				ok = 1;
 			}
 			free(av);
@@ -152,7 +154,7 @@ int init_libopm() {
 	       
 
 	/* add the sock poll interface into neo */
-	add_sockpoll("libopm_before_poll", "libopm_after_poll", "opsb", "opsb", scanner);        
+	add_sockpoll("opsb", scanner, libopm_before_poll, libopm_after_poll);
         
         return 1;
 }         
@@ -173,11 +175,12 @@ void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused)
 
 	++opsb.open;
 
-	nlog(LOG_CRITICAL, LOG_MOD, "OPSB: Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
-	chanalert(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
-	globops(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
-	if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
-	if (opsb.doban) sakill_cmd(remote->ip, "*", s_opsb, opsb.bantime, "Open Proxy found on your host. %s(%d)", type_of_proxy(remote->protocol), remote->port);
+	nlog (LOG_CRITICAL, "OPSB: Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
+	irc_chanalert (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
+	irc_globops  (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
+	if (scandata->u) irc_prefmsg (opsb_bot, scandata->u, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
+	if (opsb.doban) 
+		irc_akill (opsb_bot, remote->ip, "*", opsb.bantime, "Open Proxy found on your host. %s(%d)", type_of_proxy(remote->protocol), remote->port);
 #if 0
 	/* write out to a logfile */
 	if ((fp = fopen("logs/openproxies.log", "a")) == NULL) return;
@@ -192,11 +195,11 @@ void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused)
 #if 0
 	if (scandata->dnsstate == OPMLIST) {
 		scandata->doneban = 1;
-		nlog(LOG_CRITICAL, LOG_MOD, "OPSB: Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
-		chanalert(s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
-		globops(s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
-		if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
-		sakill_cmd(inet_ntoa(scandata->ipaddr), "*", s_opsb, opsb.bantime, "Your host is listed as an Open Proxy. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ipaddr));
+		nlog (LOG_CRITICAL, "OPSB: Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
+		irc_chanalert (opsb_bot, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
+		irc_globops  (opsb_bot, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
+		if (scandata->u) irc_prefmsg (opsb_bot, scandata->u, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
+		irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.bantime, "Your host is listed as an Open Proxy. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ip));
 	}	
 #endif
 }
@@ -209,7 +212,7 @@ void negfailed(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) 
 	scandata = remote->data;
 	
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, s_opsb, "Negitiation failed for protocol %s(%d)", type_of_proxy(remote->protocol), remote->port);
+		irc_prefmsg (opsb_bot, scandata->u, "Negitiation failed for protocol %s(%d)", type_of_proxy(remote->protocol), remote->port);
 	}
 }	
 
@@ -220,7 +223,7 @@ void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
 
 	scandata = remote->data;
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, s_opsb, "Timeout on Protocol %s(%d)", type_of_proxy(remote->protocol), remote->port);
+		irc_prefmsg (opsb_bot, scandata->u, "Timeout on Protocol %s(%d)", type_of_proxy(remote->protocol), remote->port);
 	}
 }
 
@@ -231,7 +234,7 @@ void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
 
 	scandata = remote->data;
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, s_opsb, "scan finished on %s", scandata->who);
+		irc_prefmsg (opsb_bot, scandata->u, "scan finished on %s", scandata->who);
 	}
 	opm_remote_free(remote);
 	if (scandata->state != GOTOPENPROXY) scandata->state = FIN_SCAN;
@@ -245,9 +248,9 @@ void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused) 
 	scandata = remote->data;
 	if (scandata->u) {
 		if (opmerr == 5) {
-			prefmsg(scandata->u->nick, s_opsb, "Closed Proxy on Protocol %s (%d)", type_of_proxy(remote->protocol), remote->port);
+			irc_prefmsg (opsb_bot, scandata->u, "Closed Proxy on Protocol %s (%d)", type_of_proxy(remote->protocol), remote->port);
 		} else {
-			prefmsg(scandata->u->nick, s_opsb, "scan error on Protocol %s (%d) - %d", type_of_proxy(remote->protocol), remote->port, opmerr);
+			irc_prefmsg (opsb_bot, scandata->u, "scan error on Protocol %s (%d) - %d", type_of_proxy(remote->protocol), remote->port, opmerr);
 		}
 	}
 
@@ -255,60 +258,60 @@ void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused) 
 
 
 
-int do_status(User *u, char **av, int ac) 
+int opsb_cmd_status (CmdParams* cmdparams) 
 {
 	lnode_t *node;
 	scaninfo *scandata;
 
 	SET_SEGV_LOCATION();
 	
-	prefmsg(u->nick, s_opsb, "Proxy Results:");
-	prefmsg(u->nick, s_opsb, "Hosts Scanned: %d Hosts found Open: %d Exceptions %d", opsb.scanned, opsb.open, (int)list_count(exempt));
-	prefmsg(u->nick, s_opsb, "Cache Entries: %d", (int)list_count(cache));
-	prefmsg(u->nick, s_opsb, "Cache Hits: %d", opsb.cachehits);
-	prefmsg(u->nick, s_opsb, "Blacklist Hits: %d", opsb.opmhits);
+	irc_prefmsg (opsb_bot, cmdparams->source, "Proxy Results:");
+	irc_prefmsg (opsb_bot, cmdparams->source, "Hosts Scanned: %d Hosts found Open: %d Exceptions %d", opsb.scanned, opsb.open, (int)list_count(exempt));
+	irc_prefmsg (opsb_bot, cmdparams->source, "Cache Entries: %d", (int)list_count(cache));
+	irc_prefmsg (opsb_bot, cmdparams->source, "Cache Hits: %d", opsb.cachehits);
+	irc_prefmsg (opsb_bot, cmdparams->source, "Blacklist Hits: %d", opsb.opmhits);
 #if 0
 	for (i = 0; i < NUM_PROXIES; i++) {
-		prefmsg(u->nick, s_opsb, "Proxy %s (%d) Found %d Open %d", proxy_list[i].type, proxy_list[i].port, proxy_list[i].nofound, proxy_list[i].noopen);
+		irc_prefmsg (opsb_bot, cmdparams->source, "Proxy %s (%d) Found %d Open %d", proxy_list[i].type, proxy_list[i].port, proxy_list[i].nofound, proxy_list[i].noopen);
 	}
 #endif
-	prefmsg(u->nick, s_opsb, "Currently Scanning %d Proxies (%d in queue):", (int)list_count(opsbl), (int)list_count(opsbq));
+	irc_prefmsg (opsb_bot, cmdparams->source, "Currently Scanning %d Proxies (%d in queue):", (int)list_count(opsbl), (int)list_count(opsbq));
 	node = list_first(opsbl);
 	while (node) {
 		scandata = lnode_get(node);
 		if (scandata->u) 
-			prefmsg(u->nick, s_opsb, "Scanning %s by request of %s", scandata->lookup, scandata->u->nick);
+			irc_prefmsg (opsb_bot, cmdparams->source, "Scanning %s by request of %s", scandata->lookup, scandata->u->name);
 		else 
-			prefmsg(u->nick, s_opsb, "Scanning %s (%s) - %s", scandata->lookup, inet_ntoa(scandata->ipaddr), scandata->who);
+			irc_prefmsg (opsb_bot, cmdparams->source, "Scanning %s (%s) - %s", scandata->lookup, inet_ntoa(scandata->ip), scandata->who);
 		
 		switch(scandata->dnsstate) {
 			case REPORT_DNS:
-					prefmsg(u->nick, s_opsb, "Looking up IP Address");
+					irc_prefmsg (opsb_bot, cmdparams->source, "Looking up IP Address");
 					break;
 			case DO_DNS_HOST_LOOKUP:
-					prefmsg(u->nick, s_opsb, "Looking up IP address for Scan");
+					irc_prefmsg (opsb_bot, cmdparams->source, "Looking up IP address for Scan");
 					break;
 			case DO_OPM_LOOKUP:
-					prefmsg(u->nick, s_opsb, "Looking up DNS blacklist");
+					irc_prefmsg (opsb_bot, cmdparams->source, "Looking up DNS blacklist");
 					break;
 			case OPMLIST:
-					prefmsg(u->nick, s_opsb, "Host is listed in %s", opsb.opmdomain);
+					irc_prefmsg (opsb_bot, cmdparams->source, "Host is listed in %s", opsb.opmdomain);
 					break;
 			case NOOPMLIST:
-					prefmsg(u->nick, s_opsb, "Host is Not listed in %s", opsb.opmdomain);
+					irc_prefmsg (opsb_bot, cmdparams->source, "Host is Not listed in %s", opsb.opmdomain);
 					break;
 			default:
-					prefmsg(u->nick, s_opsb, "Unknown State (DNS)");
+					irc_prefmsg (opsb_bot, cmdparams->source, "Unknown State (DNS)");
 		}
 		switch(scandata->state) {
 			case DOING_SCAN:
-					prefmsg(u->nick, s_opsb, "Scanning for Open Proxies");
+					irc_prefmsg (opsb_bot, cmdparams->source, "Scanning for Open Proxies");
 					break;
 			case GOTOPENPROXY:
-					prefmsg(u->nick, s_opsb, "Contains an Open Proxy");
+					irc_prefmsg (opsb_bot, cmdparams->source, "Contains an Open Proxy");
 					break;
 			default:
-					prefmsg(u->nick, s_opsb, "Unknown State (Scan)");
+					irc_prefmsg (opsb_bot, cmdparams->source, "Unknown State (Scan)");
 		}
 	node = list_next(opsbl, node);
 	}
@@ -332,21 +335,21 @@ void start_proxy_scan(lnode_t *scannode) {
 		return;
 	}
 
-	if (scandata->u) chanalert(s_opsb, "Starting proxy scan on %s (%s) by Request of %s", scandata->who, scandata->lookup, scandata->u->nick);
+	if (scandata->u) irc_chanalert (opsb_bot, "Starting proxy scan on %s (%s) by Request of %s", scandata->who, scandata->lookup, scandata->u->name);
 	scandata->state = DOING_SCAN;
 	/* this is so we can timeout scans */
 	scandata->started = time(NULL);
 
 	if ((opsb.doscan == 1) || (scandata->u)) {
-		remote  = opm_remote_create(inet_ntoa(scandata->ipaddr));
+		remote  = opm_remote_create(inet_ntoa(scandata->ip));
 		remote->data = scandata;
 	   	switch(i = opm_scan(scanner, remote))
       		{
             		case OPM_SUCCESS:
-				nlog(LOG_DEBUG2, LOG_MOD, "Starting Scan on %s", inet_ntoa(scandata->ipaddr));
+				dlog (DEBUG2, "Starting Scan on %s", inet_ntoa(scandata->ip));
                         	break;
                         case OPM_ERR_BADADDR:
-				nlog(LOG_WARNING, LOG_MOD, "Scan of %s %s Failed. Bad Address?", scandata->who, inet_ntoa(scandata->ipaddr));
+				nlog (LOG_WARNING, "Scan of %s %s Failed. Bad Address?", scandata->who, inet_ntoa(scandata->ip));
                                 opm_remote_free(remote);
 				scandata->state = FIN_SCAN;
 				check_scan_free(scandata);
@@ -357,22 +360,22 @@ void start_proxy_scan(lnode_t *scannode) {
 void check_scan_free(scaninfo *scandata) {
 	lnode_t *scannode;
 	if ((scandata->dnsstate == DO_OPM_LOOKUP) || (scandata->dnsstate == DO_DNS_HOST_LOOKUP) || (scandata->state == DOING_SCAN)) {
-		nlog(LOG_DEBUG2, LOG_MOD, "Not Cleaning up Scaninfo for %s yet. Scan hasn't completed", scandata->who);
+		dlog (DEBUG2, "Not Cleaning up Scaninfo for %s yet. Scan hasn't completed", scandata->who);
 		return;
 	}
 	if ((scandata->dnsstate != OPMLIST) && (scandata->state != GOTOPENPROXY)) {
-		addtocache(scandata->ipaddr.s_addr);	
-		nlog(LOG_DEBUG1, LOG_MOD, "%s's Host is clean. Adding to Cache", scandata->who);
+		addtocache(scandata->ip.s_addr);	
+		dlog (DEBUG1, "%s's Host is clean. Adding to Cache", scandata->who);
 	}
 	scannode = list_find(opsbl, scandata->who, findscan);
 	if (scannode) {
-		nlog(LOG_DEBUG1, LOG_MOD, "%s scan finished. Cleaning up", scandata->who);
+		dlog (DEBUG1, "%s scan finished. Cleaning up", scandata->who);
 		list_delete(opsbl, scannode);
 		lnode_destroy(scannode);
 		scandata->u = NULL;
 		free(scandata);
 	} else {
-		nlog(LOG_WARNING, LOG_MOD, "Damn, Can't find ScanNode %s. Something is fubar", scandata->who);
+		nlog (LOG_WARNING, "Damn, Can't find ScanNode %s. Something is fubar", scandata->who);
 	}
 	checkqueue();												
 }

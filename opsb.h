@@ -11,7 +11,11 @@
 #ifndef OPSB_H
 #define OPSB_H
 
+#ifdef WIN32
+#include "win32modconfig.h"
+#else
 #include "modconfig.h"
+#endif
 #include "opm_types.h"
 
 typedef struct port_list {
@@ -21,9 +25,7 @@ typedef struct port_list {
 	int noopen;
 } port_list;
 
-
-extern char s_opsb[MAXNICK];
-
+extern Bot *opsb_bot;
 
 /* max scans in the max concurrent scans at any one time */
 #define MAX_SCANS 100
@@ -36,26 +38,21 @@ extern char s_opsb[MAXNICK];
 
 #define MAXREASON		128
 
-struct scanq {
+typedef struct scaninfo{
 	char who[MAXHOST];
 	int state;
 	int dnsstate;
 	char lookup[MAXHOST];
 	char server[MAXHOST];
-	struct in_addr ipaddr;
-	User *u;
+	struct in_addr ip;
+	Client *u;
 	int doreport;
 	time_t started;
 	int doneban;
 	char connectstring[BUFSIZE];
-};
-
-typedef struct scanq scaninfo;
+} scaninfo;
 
 struct opsb {
-	char user[MAXUSER]; 
-	char host[MAXHOST]; 
-	char realname[MAXREALNAME]; 
 	char opmdomain[MAXHOST];
 	int init;
 	char targethost[MAXHOST];
@@ -79,44 +76,30 @@ struct opsb {
 	list_t *ports;
 } opsb;
 
-
-typedef struct sockinfo socklist;
-
-
 /* this is the list of items to be queued */
 list_t *opsbq;
 /* this is the list of currently active scans */
 list_t *opsbl;
 
-
-struct cache_entry {
+typedef struct cache_entry {
 	unsigned long ip;
 	time_t when;
-};
-
-typedef struct cache_entry C_entry;
-
+} cache_entry;
 
 /* this is a list of cached scans */
 list_t *cache;
 
-struct exempts {
+typedef struct exemptinfo {
 	char host[MAXHOST];
 	int server;
 	char who[MAXNICK];
 	char reason[MAXREASON];
-};
-
-typedef struct exempts exemptinfo;
-
+}exemptinfo;
 
 typedef struct proxy_type {
 	int type;
 	char name[MAXNICK];
 } proxy_type;
-
-	
-
 
 /* this is the list of exempted hosts/servers */
 
@@ -137,12 +120,12 @@ list_t *exempt;
 int findscan(const void *key1, const void *key2);
 void do_ban(scaninfo *scandata);
 void checkqueue();
-void addtocache(unsigned long ipaddr);
+void addtocache(unsigned long ip);
 
 
 /* proxy.c */
 void start_proxy_scan(lnode_t *scannode);
-int do_status(User *u, char **av, int ac);
+int opsb_cmd_status (CmdParams* cmdparams) ;
 void check_scan_free(scaninfo *scandata);
 int init_libopm();
 char *type_of_proxy(int type);
@@ -152,14 +135,13 @@ int load_ports();
  
 /* help text */
 extern const char *opsb_help_lookup[];
-extern const char *opsb_help_info[];
+extern const char *opsb_about[];
 extern const char *opsb_help_check[];
 extern const char *opsb_help_status[];
 extern const char *opsb_help_exclude[];
 extern const char *opsb_help_remove[];
 extern const char *opsb_help_ports[];
 
-extern const char opsb_help_info_oneline[];
 extern const char opsb_help_status_oneline[];
 extern const char opsb_help_lookup_oneline[];
 extern const char opsb_help_remove_oneline[];
