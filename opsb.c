@@ -127,16 +127,16 @@ int __Bot_Message(char *origin, char **argv, int argc)
 	if (!strcasecmp(argv[1], "help")) {
 		if (argc == 2) {
 			privmsg_list(u->nick, s_opsb, opsb_help);
-			if (UserLevel(u) >= 40)
+			if (UserLevel(u) >= NS_ULEVEL_OPER)
 				privmsg_list(u->nick, s_opsb, opsb_help_oper);
 			privmsg_list(u->nick, s_opsb, opsb_help_on_help);			
 		} else if (!strcasecmp(argv[2], "lookup")) {
 				privmsg_list(u->nick, s_opsb, opsb_help_lookup);
 		} else if (!strcasecmp(argv[2], "info")) {
 				privmsg_list(u->nick, s_opsb, opsb_help_info);
-		} else if ((!strcasecmp(argv[2], "check") && UserLevel(u) >= 40)) {
+		} else if ((!strcasecmp(argv[2], "check") && UserLevel(u) >= NS_ULEVEL_OPER)) {
 				privmsg_list(u->nick, s_opsb, opsb_help_check);
-		} else if ((!strcasecmp(argv[2], "status") && UserLevel(u) >= 40)) {
+		} else if ((!strcasecmp(argv[2], "status") && UserLevel(u) >= NS_ULEVEL_OPER)) {
 				privmsg_list(u->nick, s_opsb, opsb_help_status);
 		} else if ((!strcasecmp(argv[2], "set") && UserLevel(u) >= 100)) {
 				privmsg_list(u->nick, s_opsb, opsb_help_set);
@@ -144,7 +144,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 				privmsg_list(u->nick, s_opsb, opsb_help_ports);
 		} else if ((!strcasecmp(argv[2], "exclude") && UserLevel(u) > 100)) {
 				privmsg_list(u->nick, s_opsb, opsb_help_exclude);
-		} else if ((!strcasecmp(argv[2], "remove") && UserLevel(u) > 40)) {
+		} else if ((!strcasecmp(argv[2], "remove") && UserLevel(u) > NS_ULEVEL_OPER)) {
 				privmsg_list(u->nick, s_opsb, opsb_help_remove);
 		} else {
 			prefmsg(u->nick, s_opsb, "Invalid Syntax. /msg %s help for more info", s_opsb);
@@ -154,7 +154,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		privmsg_list(u->nick, s_opsb, opsb_help_info);
 		return 1;
 	} else if (!strcasecmp(argv[1], "status")) {
-		if (UserLevel(u) < 40) {
+		if (UserLevel(u) < NS_ULEVEL_OPER) {
 			prefmsg(u->nick, s_opsb, "Access Denied");
 			chanalert(s_opsb, "%s tried to view status, but is not an operator", u->nick);
 			return 1;
@@ -162,7 +162,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		send_status(u);
 		return 1;
 	} else if (!strcasecmp(argv[1], "lookup")) {
-		if (UserLevel(u) < 40) {
+		if (UserLevel(u) < NS_ULEVEL_OPER) {
 			prefmsg(u->nick, s_opsb, "Access Denied");
 			chanalert(s_opsb, "%s tried to use lookup, but is not an operator", u->nick);
 			return 1;
@@ -212,7 +212,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		lnode = lnode_create(scandata);
 		list_append(opsbl, lnode);
 	} else if (!strcasecmp(argv[1], "remove")) {
-		if (UserLevel(u) < 40) {
+		if (UserLevel(u) < NS_ULEVEL_OPER) {
 			prefmsg(u->nick, s_opsb, "Access Denied");
 			chanalert(s_opsb, "%s tried to use remove, but does not have access", u->nick);
 			return 0;
@@ -225,7 +225,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		chanalert(s_opsb, "%s attempted to remove an akill for *@%s", u->nick, argv[2]);
 		return 1;
 	} else if (!strcasecmp(argv[1], "check")) {
-		if (UserLevel(u) < 40) {
+		if (UserLevel(u) < NS_ULEVEL_OPER) {
 			prefmsg(u->nick, s_opsb, "Access Denied");
 			chanalert(s_opsb, "%s tried to use check, but does not have access", u->nick);
 			return 0;
