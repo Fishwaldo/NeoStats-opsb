@@ -685,10 +685,10 @@ static int Online(char **av, int ac) {
 
 	SET_SEGV_LOCATION();
 
-	if (init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", __module_info.module_name) == -1 ) {
+	if (init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", services_bot_modes, __module_info.module_name) == -1 ) {
 		/* Nick was in use!!!! */
 		strlcat(s_opsb, "_", MAXNICK);
-		init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", __module_info.module_name);
+		init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", services_bot_modes, __module_info.module_name);
 	}
 	if (opsb.confed == 0) {
 		add_mod_timer("unconf", "Un_configured_warn", "opsb", 60);

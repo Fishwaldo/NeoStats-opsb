@@ -1,6 +1,9 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
-* Version 2.1 * 24/01/2004 * Fish (F)
+* Version 2.2 * 24/01/2004 * Mark (M)
+ - Fixed init_bot code - now uses services_bot_modes not hard coded ones
+
+* Version 2.1 * 24/01/2004 * Fish (F) 
  - Sync up libopm with blitzed version to fix a Socks 5 bug (F)
 
 * Version 2.0 * 29/12/2003 * Fish (F) and Mark (M)
