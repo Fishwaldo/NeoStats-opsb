@@ -140,34 +140,35 @@ int opsb_cmd_remove (CmdParams* cmdparams)
 
 int opsb_cmd_check (CmdParams* cmdparams) 
 {
-	Client *u2;
+	Client *scanuser;
 	scaninfo *scandata;
 
 	if ((list_find(opsbl, cmdparams->av[0], findscan)) || (list_find(opsbq, cmdparams->av[0], findscan))) {
 		irc_prefmsg (opsb_bot, cmdparams->source, "Already Scanning (or in queue) %s. Not Scanning again", cmdparams->av[0]);
 		return NS_SUCCESS;
 	}
-	scandata = malloc(sizeof(scaninfo));
+	scandata = malloc( sizeof( scaninfo ) );
 	scandata->doneban = 0;
 	scandata->reqclient = cmdparams->source;
-	if ((u2 = FindUser(cmdparams->av[0])) != NULL) {
+	scanuser = FindUser( cmdparams->av[0] );
+	if( scanuser ) {
 		/* don't scan users from my server */
-		if (IsMe(u2)) {
+		if (IsMe(scanuser)) {
 			irc_prefmsg (opsb_bot, cmdparams->source, "Error, Can not scan NeoStats Bots");
 			ns_free(scandata);
-			return -1;
+			return NS_SUCCESS;
 		}
-		strlcpy(scandata->who, u2->name, MAXHOST);
-		strlcpy(scandata->lookup, u2->user->hostname, MAXHOST);
-		strlcpy(scandata->server, u2->uplink->name, MAXHOST);
-		scandata->ip.s_addr = u2->ip.s_addr;
+		strlcpy(scandata->who, scanuser->name, MAXHOST);
+		strlcpy(scandata->lookup, scanuser->user->hostname, MAXHOST);
+		strlcpy(scandata->server, scanuser->uplink->name, MAXHOST);
+		scandata->ip.s_addr = scanuser->ip.s_addr;
 		if (scandata->ip.s_addr > 0) {
 			scandata->dnsstate = DO_OPM_LOOKUP;
 		} else {
 			/* if its here, we don't have the IP address yet */
-			irc_prefmsg (opsb_bot, cmdparams->source, "Error: We don't have a IP address for %s yet. Try again soon", u2->name);
+			irc_prefmsg (opsb_bot, cmdparams->source, "Error: We don't have a IP address for %s yet. Try again soon", scanuser->name);
 			ns_free(scandata);
-			return -1;
+			return NS_SUCCESS;
 		}
 	} else {
 		strlcpy(scandata->who, cmdparams->av[0], MAXHOST);
@@ -441,14 +442,27 @@ void addtocache(unsigned long ip)
 
 int checkcache(scaninfo *scandata) 
 {
+	Client *scanclient;
 	lnode_t *node, *node2;
 	cache_entry *ce;
 
 	SET_SEGV_LOCATION();
-	if (scandata->server && ModIsServerExcluded (FindServer(scandata->server)))
-		return 1;
-	if (ModIsUserExcluded (FindUser(scandata->who)))
-		return 2;
+	if( scandata->server )
+	{
+		scanclient = FindServer(scandata->server);
+		if( scanclient && ModIsServerExcluded( scanclient ) )
+		{
+			return 1;
+		}
+	}
+	if( scandata->who )
+	{
+		scanclient = FindUser(scandata->who);
+		if( scanclient && ModIsUserExcluded( scanclient ) )
+		{
+			return 2;
+		}
+	}
 	node = list_first(cache);
 	while (node) {
 		ce = lnode_get(node);
@@ -467,7 +481,8 @@ int checkcache(scaninfo *scandata)
 		if (ce->ip == scandata->ip.s_addr) {
 			dlog (DEBUG1, "OPSB: user %s is already in Cache", scandata->who);
 			opsb.cachehits++;
-			if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "User %s is already in Cache", scandata->who);
+			if (scandata->reqclient) 
+				irc_prefmsg (opsb_bot, scandata->reqclient, "User %s is already in Cache", scandata->who);
 			return 3;
 		}
 		node = list_next(cache, node);
