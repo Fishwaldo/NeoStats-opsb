@@ -484,7 +484,7 @@ int proxy_read(int socknum, char *sockname) {
 	} else {
 		if (i > 0) {
 			nlog(LOG_DEBUG1, LOG_MOD, "OPSB proxy_read(): Got this: %s (%d)",buf, i);
-			/* copy the recieved data onto the buf, but don't overwrite the buffer */
+			/* copy the received data onto the buf, but don't overwrite the buffer */
 			strncat(sockdata->buf, buf, 2047 - strlen(sockdata->buf));
 
 			/* this is a ok HTTP server */
@@ -584,7 +584,7 @@ return 1;
 
 /* proxy connect function trys to connect a socket to a remote proxy 
 *  its set non blocking, so both the send and recieve functions must be used
-*  to tell if the connection is successfull or not
+*  to tell if the connection is successful or not
 *  it also registers the socket with the core neostats socket functions
 */
 
