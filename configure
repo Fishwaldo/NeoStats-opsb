@@ -1265,7 +1265,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
           ac_config_headers="$ac_config_headers modconfig.h"
 
 PACKAGE=OPSB
-VERSION=1.0
+VERSION=2.0Beta1
 DIRINST=~/NeoStats/
 
 CFLAGS="$CFLAGS -O2 -Wall"

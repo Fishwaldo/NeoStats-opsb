@@ -11,9 +11,8 @@ INCLUDES=-I@DIRINST@/include/ -I. -Ilibopm
 SOURCES= opsb.c proxy.c opsb_help.c
 OBJECTS= opsb.o proxy.o opsb_help.o
 TARGET= opsb.so                 
-DOCS=README.opsb
-DATA=
-DISTFILES = $(SOURCES) $(DOCS) modconfig.h.in configure install-sh ChangeLog Makefile.in opsb.h
+DOCS=README.opsb opsb.Settings
+DISTFILES = $(SOURCES) $(DOCS) modconfig.h.in configure install-sh ChangeLog Makefile.in opsb.h libopm/*.c libopm/*.h libopm/README libopm/LICENSE LICENSE libopm/*.in
 distdir = @PACKAGE@-@VERSION@
 
 
@@ -36,10 +35,13 @@ clean:
 install: module
 	 $(INSTALL) -m 644 $(TARGET) $(DIRECTORY)
 	 $(INSTALL) -m 644 $(DOCS) $(DIRECTORY)../doc/
+	 @cd $(DIRECTORY)..; \
+         if ! test -f $(DIRECTORY)../kpconf/OPSB ; then ./kptool -i doc/opsb.Settings; fi
 dist:	
 	@echo -n "Creating Directories"
 	@-rm -rf $(distdir)
 	@mkdir $(distdir)
+	@mkdir $(distdir)/libopm
 	@echo "Done"
 	@echo -n "Coping Core Distribution Files"
 	@for file in $(DISTFILES); do \
@@ -48,7 +50,6 @@ dist:
 	done
 	@echo "Done"
 	@tar -czf $(distdir).tar.gz $(distdir)/*
-	@rm -rf $(distdir)
 	@echo "Tar file $(distdir).tar.gz created, Freshmeat Time"
 
 $(OBJECTS): Makefile
