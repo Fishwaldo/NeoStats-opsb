@@ -1,5 +1,8 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
+* Version 1.1 * 23/09/2003 * Fish
+- Initial import of libopm, to replace our engine.
+
 * Version 1.0 * 12/12/2002 * Fish
 - Fix a coredump when not enough paramaters supplied to the set command
 - OPSB checks the excluded server list when a nick joins on straight away, instead of waiting for the DNS lookups to finish :)

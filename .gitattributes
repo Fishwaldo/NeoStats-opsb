@@ -10,6 +10,7 @@ libopm/.cvsignore -text
 libopm/LICENSE -text
 libopm/Makefile.am -text
 libopm/Makefile.in -text
+libopm/README -text
 libopm/compat.c -text
 libopm/compat.h -text
 libopm/config.c -text
