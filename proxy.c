@@ -4,7 +4,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: proxy.c,v 1.1 2002/08/31 09:28:36 fishwaldo Exp $
+** $Id: proxy.c,v 1.2 2002/08/31 14:36:40 fishwaldo Exp $
 */
 
 
@@ -434,7 +434,6 @@ int proxy_read(int socknum, char *sockname) {
 			log("OPSB proxy_read(): Got this: %s (%d)",buf, i);
 #endif
 			/* we check if this might be a normal http server */
-				do_ban(scandata);
 
 			if (strstr(buf, "Method Not Allowed")) {
 #ifdef DEBUG

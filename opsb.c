@@ -4,7 +4,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: opsb.c,v 1.1 2002/08/31 09:28:35 fishwaldo Exp $
+** $Id: opsb.c,v 1.2 2002/08/31 14:36:40 fishwaldo Exp $
 */
 
 
@@ -415,6 +415,7 @@ int do_set(User *u, char **av, int ac) {
 		prefmsg(u->nick, s_opsb, "Split Time: %d", opsb.timedif);
 		prefmsg(u->nick, s_opsb, "ScanMessage: %s", opsb.scanmsg);
 		prefmsg(u->nick, s_opsb, "Ban Time: %d", opsb.bantime);
+		prefmsg(u->nick, s_opsb, "Cache Time: %d", opsb.cachetime);
 		prefmsg(u->nick, s_opsb, "Configured: %s", (opsb.confed ? "Yes" : "No"));
 		return 0;
 	}
@@ -961,7 +962,7 @@ void _init() {
 
 	
 	/* scan cache is MAX_QUEUE size (why not?) */
-	cache = list_create(2);
+	cache = list_create(MAX_QUEUE);
 
 	exempt = list_create(MAX_EXEMPTS);
 

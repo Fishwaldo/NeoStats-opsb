@@ -28,11 +28,11 @@ clean:
 
 install: module
 	 $(INSTALL) -m 644 $(TARGET) $(DIRECTORY)
-	 $(INSTALL) -m 644 $(DOCS) $(DIRECTORY)/docs/
-	 $(INSTALL) -m 644 $(DATA) $(DIRECTORY)../data/
+	 $(INSTALL) -m 644 $(DOCS) $(DIRECTORY)../doc/
 
 $(OBJECTS): Makefile
 
-opsb.c:		opsb.h 	opsb.c
-proxy.c:	proxy.c  opsb.h
-opsb_help.c:	opsb_help.c
+opsb.c:		opsb.h 
+proxy.c: 	opsb.h 
+opsb_help.c: 	opsb.h
+
