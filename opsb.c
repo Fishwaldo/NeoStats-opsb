@@ -302,12 +302,12 @@ int opsb_cmd_ports (CmdParams* cmdparams)
 
 int do_set_cb (CmdParams* cmdparams, SET_REASON reason)
 {
-	if (reason == SET_LOAD) {
-		return NS_SUCCESS;
+	if( reason == SET_CHANGE )
+	{
+		opsb.confed = 1;
+		DBAStoreConfigInt ("Confed", &opsb.confed);
+		DelTimer("unconf");
 	}
-	opsb.confed = 1;
-	DBAStoreConfigInt ("Confed", &opsb.confed);
-	DelTimer("unconf");
 	return NS_SUCCESS;
 }
 
