@@ -96,8 +96,8 @@ const char *opsb_help_check[] = {
 	"",
 	"This option will scan either a user connected to your",
 	"network, an IP address, or Hostname for Insecure proxies,",
-	"and report the status to you. If a Insecure proxy is found,",
-	"the host will be banned from the network",
+	"and report the status to you. If an Insecure proxy is",
+	"found, the host will be banned from the network",
 	NULL
 };
 
@@ -118,7 +118,7 @@ const char *opsb_help_set[] = {
 	"The Options are:",
 	"    \2TARGETIP\2      - Change the IP address we try to",
 	"                        make the proxies connect to",
-	"                        This should be set to a IP address",
+	"                        This should be set to an IP address",
 	"                        of one of your IRC Servers.",
 	"    \2TARGETPORT\2    - Change the Port number we try to",
 	"                        make proxies connect to. This must",
@@ -137,7 +137,7 @@ const char *opsb_help_set[] = {
 	"                        from a proxy before disconnecting",
 	"    \2TIMEOUT\2       - Time we wait for a proxy to respond",
 	"                        to our servers before disconnecting,",
-	"                        and assuming its not a open Proxy",
+	"                        and assuming its not an open Proxy",
 	"    \2OPENSTRING\2    - The string we expect to see if",
 	"                        there is an Open Proxy",
 	"    \2SPLITTIME\2     - This is used to determine if users",

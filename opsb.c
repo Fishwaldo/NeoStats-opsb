@@ -64,7 +64,7 @@ int online;
 
 Module_Info my_info[] = { {
 	"OPSB",
-	"A Open Proxy Scanning Bot",
+	"An Open Proxy Scanning Bot",
 	"1.0"
 } };
 
@@ -137,7 +137,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 	} else if (!strcasecmp(argv[1], "status")) {
 		if (UserLevel(u) < 40) {
 			prefmsg(u->nick, s_opsb, "Access Denied");
-			chanalert(s_opsb, "%s tried to view status, but is not a operator", u->nick);
+			chanalert(s_opsb, "%s tried to view status, but is not an operator", u->nick);
 			return 1;
 		}
 		send_status(u);
@@ -145,7 +145,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 	} else if (!strcasecmp(argv[1], "lookup")) {
 		if (UserLevel(u) < 40) {
 			prefmsg(u->nick, s_opsb, "Access Denied");
-			chanalert(s_opsb, "%s tried to use lookup, but is not a operator", u->nick);
+			chanalert(s_opsb, "%s tried to use lookup, but is not an operator", u->nick);
 			return 1;
 		}
 		if (argc < 3) {
@@ -203,7 +203,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 			return 0;
 		}
 		srakill_cmd(argv[2], "*");
-		chanalert(s_opsb, "%s attempted to remove a akill for *@%s", u->nick, argv[2]);
+		chanalert(s_opsb, "%s attempted to remove an akill for *@%s", u->nick, argv[2]);
 		return 1;
 	} else if (!strcasecmp(argv[1], "check")) {
 		if (UserLevel(u) < 40) {
@@ -262,7 +262,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 	} else if (!strcasecmp(argv[1], "EXCLUDE")) {
 		if (UserLevel(u) < 50) {
 			prefmsg(u->nick, s_opsb, "Access Denied");
-			chanalert(s_opsb, "%s tried to use exclude, but is not a operator", u->nick);
+			chanalert(s_opsb, "%s tried to use exclude, but is not an operator", u->nick);
 			return 1;
 		}
 		if (argc < 3) {
@@ -1106,7 +1106,7 @@ void reportdns(char *data, adns_answer *a) {
 			prefmsg(data, s_opsb, "%s Does not resolve", dnsinfo->lookup);
 		}
 	} else {
-		prefmsg(data, s_opsb, "A unknown error occured");
+		prefmsg(data, s_opsb, "An unknown error occured");
 	}	
 	
 	list_delete(opsbl, dnslookup);

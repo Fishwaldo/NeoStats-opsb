@@ -102,7 +102,7 @@ void do_ban(scaninfo *scandata) {
 		chanalert(s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
 		globops(s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
 		if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
-		sakill_cmd(inet_ntoa(scandata->ipaddr), "*", s_opsb, opsb.bantime, "Your host is listed as a Open Proxy. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ipaddr));
+		sakill_cmd(inet_ntoa(scandata->ipaddr), "*", s_opsb, opsb.bantime, "Your host is listed as an Open Proxy. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ipaddr));
 	}	
 
 }
@@ -163,7 +163,7 @@ void cleanlist() {
 		while (socknode) {
 			
 			sockdata = lnode_get(socknode);
-			/* if it was a open proxy, don't save the cache */
+			/* if it was an open proxy, don't save the cache */
 			if (sockdata->flags == OPENPROXY) savescan = 0;
 
 			/* if this still has sockets connected, set finished flaged to 0 to not delete scans */
@@ -264,7 +264,7 @@ void send_status(User *u) {
 					prefmsg(u->nick, s_opsb, "Scanning for Open Proxies");
 					break;
 			case GOTOPENPROXY:
-					prefmsg(u->nick, s_opsb, "Contains a Open Proxy");
+					prefmsg(u->nick, s_opsb, "Contains an Open Proxy");
 					break;
 			default:
 					prefmsg(u->nick, s_opsb, "Unknown State (Scan)");
@@ -487,7 +487,7 @@ int proxy_read(int socknum, char *sockname) {
 			/* copy the received data onto the buf, but don't overwrite the buffer */
 			strncat(sockdata->buf, buf, 2047 - strlen(sockdata->buf));
 
-			/* this is a ok HTTP server */
+			/* this is an ok HTTP server */
 			if (strstr(sockdata->buf, "Method Not Allowed")) {
 				nlog(LOG_DEBUG1, LOG_MOD, "closing socket %d due to ok HTTP server", socknum);
 				if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "No Open %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
