@@ -37,6 +37,7 @@
 #include "log.h"
 #include "opm.h"
 #include "opm_types.h"
+#include "opm_error.h"
 
 int proxy_connect(unsigned long ipaddr, int port, char *who);
 void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
@@ -66,8 +67,27 @@ int init_libopm() {
 	opm_callback(scanner, OPM_CALLBACK_TIMEOUT, &timeout, NULL);
       	opm_callback(scanner, OPM_CALLBACK_END, &scan_end, NULL);
         opm_callback(scanner, OPM_CALLBACK_ERROR, &scan_error, NULL);
-        
-        
+	
+	/* max number of socks we allow */
+	opm_config(scanner, OPM_CONFIG_FD_LIMIT, &opsb.socks);
+	/* host to try to connect to */
+	opm_config(scanner, OPM_CONFIG_SCAN_IP, opsb.targethost);
+	/* port to try to connect to */
+	opm_config(scanner, OPM_CONFIG_SCAN_PORT, &opsb.targetport);
+	/* string to look for */
+	opm_config(scanner, OPM_CONFIG_TARGET_STRING, opsb.lookforstring);
+	/* also look for throttle messages */
+	opm_config(scanner, OPM_CONFIG_TARGET_STRING, "ERROR :Trying to reconnect too fast");
+	/* timeout */
+	opm_config(scanner, OPM_CONFIG_TIMEOUT, &opsb.timeout);
+	/* max bytes read */
+	opm_config(scanner, OPM_CONFIG_MAX_READ, &opsb.maxbytes);
+	
+	opm_addtype(scanner, OPM_TYPE_HTTP, 8080);        
+
+
+	/* add the sock poll interface into neo */
+	add_sockpoll("libopm_before_poll", "libopm_after_poll", "opsb", "opsb", scanner);        
         
         return 1;
 }         
@@ -92,12 +112,12 @@ void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused)
 	if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) for Open Proxy - %d(%d)", scandata->who, remote->ip, remote->protocol, remote->port);
 #if 0
 	sakill_cmd(remote->ip, "*", s_opsb, opsb.bantime, "Open Proxy found on your host. %d(%d)", remote->protocol, remote->port);
-#endif
+
 	/* write out to a logfile */
 	if ((fp = fopen("logs/openproxies.log", "a")) == NULL) return;
 	fprintf(fp, "%d:%s:%s\n", remote->protocol, remote->ip, "empty");
         fclose(fp);
-
+#endif
 	/* no point continuing the scan if they are found open */
 	opm_end(scanner, remote);
 
@@ -123,7 +143,7 @@ void negfailed(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) 
 	scandata = remote->data;
 	
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, "Negitiation failed for protocol %d (%d)", remote->protocol, remote->port);
+		prefmsg(scandata->u->nick, s_opsb, "Negitiation failed for protocol %d (%d)", remote->protocol, remote->port);
 	}
 	/*XXX Do anything.. I dont think so */
 }	
@@ -135,7 +155,7 @@ void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
 
 	scandata = remote->data;
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, "Timeout on Protocol %d (%d)", remote->protocol, remote->port);
+		prefmsg(scandata->u->nick, s_opsb, "Timeout on Protocol %d (%d)", remote->protocol, remote->port);
 	}
 	/*XXX Do anything? I don't think so */
 }
@@ -147,7 +167,7 @@ void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
 
 	scandata = remote->data;
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, "scan finished %d %d", remote->protocol, remote->port);
+		prefmsg(scandata->u->nick, s_opsb, "scan finished %d %d", remote->protocol, remote->port);
 	}
 	/*XXX we have to cleanup here */
 }
@@ -167,9 +187,10 @@ void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused) 
 			nlog(LOG_CRITICAL, LOG_MOD, "Ehhh, socks for %s is NULL? WTF?", scandata->who);
 			break;
 		}
+#endif
 	scandata = remote->data;
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, "scan error on Protocol %d (%d)", remote->protocol, remote->port);
+		prefmsg(scandata->u->nick, s_opsb, "scan error on Protocol %d (%d)", remote->protocol, remote->port);
 	}
 
 	/*XXX cleanup */
@@ -240,6 +261,7 @@ void send_status(User *u) {
 void start_proxy_scan(lnode_t *scannode) {
 	scaninfo *scandata;
 	OPM_REMOTE_T *remote;
+	int i;
 
 	SET_SEGV_LOCATION();
 
@@ -254,8 +276,17 @@ void start_proxy_scan(lnode_t *scannode) {
 		nlog(LOG_DEBUG2, LOG_MOD, "Starting Scan on %s", inet_ntoa(scandata->ipaddr));
 		remote  = opm_remote_create(inet_ntoa(scandata->ipaddr));
 		remote->data = scandata;
+	   	switch(i = opm_scan(scanner, remote))
+      		{
+            		case OPM_SUCCESS:
+                        	break;
+                        case OPM_ERR_BADADDR:
+                                printf("Bad address\n");
+                                opm_remote_free(remote);
+				/* XXX do what else ? */
+                        default:
+                                printf("Unknown Error %d\n", i);
+                }
 	}
-	
-
 
 }

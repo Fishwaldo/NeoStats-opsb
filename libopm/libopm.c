@@ -1285,7 +1285,6 @@ void libopm_after_poll(OPM_T *scanner, pollfd *ufds, unsigned int ufdssize)
          }
       }
    }
-   MyFree(ufds);
    libopm_check_closed(scanner);     /* Check for closed or timed out connections       */
 
 }

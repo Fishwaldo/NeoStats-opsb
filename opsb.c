@@ -542,6 +542,7 @@ int Online(char **av, int ac) {
 
 	SET_SEGV_LOCATION();
 
+	init_libopm();
 	if (init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", __module_info.module_name) == -1 ) {
 		/* Nick was in use!!!! */
 		s_opsb = strcat(s_opsb, "_");
@@ -1029,7 +1030,9 @@ void dnsblscan(char *data, adns_answer *a) {
 						nlog(LOG_NOTICE, LOG_MOD, "Got Positive OPM lookup for %s (%s)", scandata->who, scandata->lookup);
 						scandata->dnsstate = OPMLIST;
 						opsb.opmhits++;
+#if 0
 						do_ban(scandata);
+#endif
 						checkqueue();
 					} else 
 						if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "%s does not appear in DNS black list", scandata->lookup);
