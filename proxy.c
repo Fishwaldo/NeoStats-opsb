@@ -20,7 +20,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: proxy.c,v 1.10 2002/11/07 10:50:12 fishwaldo Exp $
+** $Id: proxy.c,v 1.11 2002/11/18 13:45:32 fishwaldo Exp $
 */
 
 
@@ -496,9 +496,10 @@ int proxy_read(int socknum, char *sockname) {
 #ifdef DEBUG
 			log("OPSB proxy_read(): Got this: %s (%d)",buf, i);
 #endif
-			/* we check if this might be a normal http server */
-			strncat(sockdata->buf, buf, 1022);
+			/* copy the recieved data onto the buf, but don't overwrite the buffer */
+			strncat(sockdata->buf, buf, 2047 - strlen(sockdata->buf));
 
+			/* this is a ok HTTP server */
 			if (strstr(sockdata->buf, "Method Not Allowed")) {
 #ifdef DEBUG
 				log("closing socket %d due to ok HTTP server", socknum);
