@@ -4,7 +4,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: opsb.h,v 1.7 2002/11/18 13:45:32 fishwaldo Exp $
+** $Id: opsb.h,v 1.8 2003/01/30 11:29:25 fishwaldo Exp $
 */
 
 
@@ -68,6 +68,8 @@ struct opsb {
 	int confed;
 	int cachetime;
 	int doscan;
+	int cachehits;
+	int opmhits;
 } opsb;
 
 struct sockinfo {

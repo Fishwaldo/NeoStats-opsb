@@ -20,7 +20,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: proxy.c,v 1.11 2002/11/18 13:45:32 fishwaldo Exp $
+** $Id: proxy.c,v 1.12 2003/01/30 11:29:25 fishwaldo Exp $
 */
 
 
@@ -231,6 +231,8 @@ void send_status(User *u) {
 	prefmsg(u->nick, s_opsb, "Proxy Results:");
 	prefmsg(u->nick, s_opsb, "Hosts Scanned: %d Hosts found Open: %d Exceptions %d", opsb.scanned, opsb.open, list_count(exempt));
 	prefmsg(u->nick, s_opsb, "Cache Entries: %d", list_count(cache));
+	prefmsg(u->nick, s_opsb, "Cache Hits: %d", opsb.cachehits);
+	prefmsg(u->nick, s_opsb, "Blacklist Hits: %d", opsb.opmhits);
 	for (i = 0; i < NUM_PROXIES; i++) {
 		prefmsg(u->nick, s_opsb, "Proxy %s (%d) Found %d Open %d", proxy_list[i].type, proxy_list[i].port, proxy_list[i].nofound, proxy_list[i].noopen);
 	}
@@ -241,7 +243,7 @@ void send_status(User *u) {
 		if (scandata->u) 
 			prefmsg(u->nick, s_opsb, "Scanning %s by request of %s", scandata->lookup, scandata->u->nick);
 		else 
-			prefmsg(u->nick, s_opsb, "Scanning %s (%s)", scandata->lookup, inet_ntoa(scandata->ipaddr));
+			prefmsg(u->nick, s_opsb, "Scanning %s (%s) - %s", scandata->lookup, inet_ntoa(scandata->ipaddr), scandata->who);
 		
 		switch(scandata->dnsstate) {
 			case REPORT_DNS:

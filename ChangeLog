@@ -4,6 +4,8 @@ Open Proxy Scanning Bot Module for NeoStats Changelog.
 - Fix a coredump when not enough paramaters supplied to the set command
 - OPSB checks the excluded server list when a nick joins on straight away, instead of waiting for the DNS lookups to finish :)
 - Changed some of the levels to 40 (localoper) so localops can use opsb to check sites/users
+- Bah, really fixed set to not work at all!
+- Added some stats on cachehits and opm hits
 
 * Version 1.0RC3 *  5/11/2002 * Fish
 - Fixed a problem when we delete a scanned user out of the active list when the tcp connect had finished, but not the dns bl lookup...

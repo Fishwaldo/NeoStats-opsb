@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.12 2003/01/18 04:19:12 fishwaldo Exp $
+** $Id: opsb.c,v 1.13 2003/01/30 11:29:25 fishwaldo Exp $
 */
 
 
@@ -322,7 +322,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 			return 0;
 		}
 	} else if (!strcasecmp(argv[1], "SET")) {
-		if (argc <= 4) {
+		if (argc < 3) {
 			prefmsg(u->nick, s_opsb, "Syntax Error. /msg %s help set", s_opsb);
 			return 0;
 		}
@@ -472,7 +472,7 @@ int do_set(User *u, char **av, int ac) {
 		prefmsg(u->nick, s_opsb, "Configured: %s", (opsb.confed ? "Yes" : "No"));
 		return 0;
 	}
-	
+	return 0;	
 }
 
 int Online(char **av, int ac) {
@@ -615,6 +615,7 @@ int checkcache(scaninfo *scandata) {
 #ifdef DEBUG
 			log("OPSB: user %s is already in Cache", scandata->who);
 #endif
+			opsb.cachehits++;
 			if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "User %s is already in Cache", scandata->who);
 			return 3;
 		}
@@ -1013,6 +1014,7 @@ void dnsblscan(char *data, adns_answer *a) {
 						log("Got Positive OPM lookup for %s (%s)", scandata->who, scandata->lookup);
 #endif
 						scandata->dnsstate = OPMLIST;
+						opsb.opmhits++;
 						do_ban(scandata);
 						checkqueue();
 					} else 
@@ -1121,6 +1123,8 @@ void _init() {
 	opsb.cachetime = 3600;
 	opsb.bantime = 86400;
 	opsb.doscan = 1;
+	opsb.cachehits = 1;
+	opsb.opmhits = 1;
 	snprintf(opsb.lookforstring, 512, "*** Looking up your hostname...");
 	snprintf(opsb.scanmsg, 512, "Your Host is being Scanned for Open Proxies");
 }
