@@ -493,11 +493,11 @@ int do_set(User *u, char **av, int ac) {
 	 	if (!strcasecmp(av[3], "0") || !strcasecmp(av[3], "off")) {
 			opsb.doscan = 1;
 			prefmsg(u->nick, s_opsb, "Scanning is now Enabled");
-			chanalert(s_opsb, "%s has Enabled Proxy Scanning", u->nick, av[3]);
+			chanalert(s_opsb, "%s has Enabled Proxy Scanning", u->nick);
 		} else if (!strcasecmp(av[3], "1") || !strcasecmp(av[3], "on")) {
 			opsb.doscan = 0;
 			prefmsg(u->nick, s_opsb, "Scanning is now Disabled");
-			chanalert(s_opsb, "%s has Disabled Proxy Scanning", u->nick, av[3]);
+			chanalert(s_opsb, "%s has Disabled Proxy Scanning", u->nick);
 		} else {
 			prefmsg(u->nick, s_opsb, "Invalid Setting (must be 1 or 0) in DISABLESCAN");
 			return 0;
@@ -513,11 +513,11 @@ int do_set(User *u, char **av, int ac) {
 	 	if (!strcasecmp(av[3], "0") || !strcasecmp(av[3], "off")) {
 			opsb.doban = 0;
 			prefmsg(u->nick, s_opsb, "Akill Bans for Open Proxies is now Disabled");
-			chanalert(s_opsb, "%s has Disabled Akills for Open Proxys", u->nick, av[3]);
+			chanalert(s_opsb, "%s has Disabled Akills for Open Proxys", u->nick);
 		} else if (!strcasecmp(av[3], "1") || !strcasecmp(av[3], "on")) {
 			opsb.doban = 1;
 			prefmsg(u->nick, s_opsb, "Akill Bans for Open Proxies is now Enabled");
-			chanalert(s_opsb, "%s has Enabled Akills for Open Proxies", u->nick, av[3]);
+			chanalert(s_opsb, "%s has Enabled Akills for Open Proxies", u->nick);
 		} else {
 			prefmsg(u->nick, s_opsb, "Invalid Setting (must be 1 or 0) in DOBAN");
 			return 0;
@@ -783,7 +783,7 @@ void addtocache(unsigned long ipaddr) {
 			
 	/* pop off the oldest entry */
 	if (list_isfull(cache)) {
-		nlog(LOG_DEBUG2, LOG_MOD, "OPSB: Deleting Tail of Cache: %d", list_count(cache));
+		nlog(LOG_DEBUG2, LOG_MOD, "OPSB: Deleting Tail of Cache: %d", (int)list_count(cache));
 		cachenode = list_del_last(cache);
 		ce = lnode_get(cachenode);
 		lnode_destroy(cachenode);
@@ -1003,7 +1003,7 @@ int startscan(scaninfo *scandata) {
 					}
 					scannode = lnode_create(scandata);
 					list_append(opsbq, scannode);
-					nlog(LOG_DEBUG1, LOG_MOD, "DNS: Added OPM lookup to queue", scandata->who);
+					nlog(LOG_DEBUG1, LOG_MOD, "DNS: Added OPM lookup to queue: %s", scandata->who);
 					return 1;
 				}
         			d = (unsigned char) (scandata->ipaddr.s_addr >> 24) & 0xFF;
