@@ -1299,7 +1299,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 PACKAGE=OPSB
 MODULE_MAJOR=2
-MODULE_MINOR=4
+MODULE_MINOR=5
 VERSION=$MODULE_MAJOR.$MODULE_MINOR
 
 cat >>confdefs.h <<_ACEOF
@@ -1318,7 +1318,7 @@ _ACEOF
 
 DIRINST=~/NeoStats/
 
-CFLAGS="$CFLAGS -O2 -Wall"
+CFLAGS="$CFLAGS -O2 -Wall -fPIC -DPIC"
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
