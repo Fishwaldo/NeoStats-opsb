@@ -20,7 +20,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: proxy.c,v 1.7 2002/10/27 10:28:47 fishwaldo Exp $
+** $Id: proxy.c,v 1.8 2002/10/27 14:24:51 fishwaldo Exp $
 */
 
 
@@ -67,7 +67,7 @@ void do_ban(scaninfo *scandata) {
 	socklist *sockdata;
 	FILE *fp;
 
-	strcpy(segv_location, "OPSB:dns_lookup");
+	strcpy(segv_location, "OPSB:doban");
 
 	if (scandata->doneban == 1)
 		return;
@@ -80,9 +80,10 @@ void do_ban(scaninfo *scandata) {
 	socknode = list_first(scandata->socks);
 	while (socknode) {
 		sockdata = lnode_get(socknode);
+chanalert(s_opsb, "check %d - %d ", sockdata->flags, OPENPROXY);
 		if (sockdata->flags !=	OPENPROXY) {
 			socknode = list_next(scandata->socks, socknode);
-			break;
+			continue;
 		}
 		scandata->doneban = 1;
 		log("OPSB: Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
@@ -505,7 +506,6 @@ int proxy_read(int socknum, char *sockname) {
 			/* this looks for the ban string or a throttle string */
 			if (strstr(sockdata->buf, opsb.lookforstring) || strstr(sockdata->buf, "ERROR :Your host is trying to (re)connect too fast -- throttled.") || strstr(sockdata->buf, "ERROR :Trying to reconnect too fast.")) {
 				if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Open %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
-				strncpy(sockdata->buf, strtok(buf,"\n"), 1023);
 				++proxy_list[sockdata->type].noopen;
 				scandata->state = GOTOPENPROXY;
 				sockdata->flags = OPENPROXY;
