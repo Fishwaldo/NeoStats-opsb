@@ -10,6 +10,7 @@
 #define OPM_H
 
 #include "opm_common.h"
+#include <sys/poll.h>
 
 /* Stuff to shut up warnings about rcsid being unused. */
 #define USE_VAR(var)    static char sizeof##var = sizeof(sizeof##var) + sizeof(var)
@@ -74,6 +75,10 @@ OPM_ERR_T opm_remote_addtype(OPM_REMOTE_T *, int, unsigned short int);
 OPM_ERR_T opm_callback(OPM_T *, int, OPM_CALLBACK_FUNC *, void *);
 
 void opm_cycle(OPM_T *);
+
+void libopm_after_poll(OPM_T *, struct pollfd *, unsigned int );
+int libopm_before_poll(OPM_T *, struct pollfd *);
+
 
 size_t opm_active(OPM_T *);
 

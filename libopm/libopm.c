@@ -1175,7 +1175,126 @@ static void libopm_check_poll(OPM_T *scanner)
       }
    }
 }
+/* before_poll
+ *
+ * external select/poll routine to setup our fd checks
+ *
+ * Parameters:
+ *    scanner: Scanner to isolate check on
+ * Return:
+ *    pollfds struct. 
+ */
 
+int libopm_before_poll(OPM_T *scanner, struct pollfd *ufds)
+{
+   OPM_NODE_T *node1, *node2;
+   OPM_SCAN_T *scan;
+   OPM_CONNECTION_T *conn;
+
+
+   unsigned int maxsize, size;
+
+   size = 0;
+   libopm_check_queue(scanner);      /* Move scans from the queue to the live scan list */
+   libopm_check_establish(scanner);  /* Make new connections if possible                */
+
+   printf("prepoll %d\n", (int)size);
+
+//   ufds = MyMalloc((sizeof *ufds) * (*(unsigned int *) libopm_config(scanner->config, OPM_CONFIG_FD_LIMIT)));
+   maxsize = (*(unsigned int *) libopm_config(scanner->config, OPM_CONFIG_FD_LIMIT));
+
+   if(LIST_SIZE(scanner->scans) == 0)
+      return -1;
+
+   LIST_FOREACH(node1, scanner->scans->head)
+   {
+      scan = (OPM_SCAN_T *) node1->data;
+      LIST_FOREACH(node2, scan->connections->head)
+      {
+         if(size >= maxsize)
+            break;
+
+         conn = (OPM_CONNECTION_T *) node2->data;
+       
+         if(conn->state < OPM_STATE_ESTABLISHED ||
+            conn->state == OPM_STATE_CLOSED)
+               continue;            
+
+         ufds[size].events = 0;
+         ufds[size].revents = 0;
+         ufds[size].fd = conn->fd;
+         printf("%d %d\n", ufds[size].fd, size);
+
+         /* Check for HUNG UP. */
+         ufds[size].events |= POLLHUP;
+         /* Check for INVALID FD */
+         ufds[size].events |= POLLNVAL;
+
+         switch(conn->state)
+         {
+            case OPM_STATE_ESTABLISHED:
+               ufds[size].events |= POLLOUT;
+               break;
+            case OPM_STATE_NEGSENT:
+               ufds[size].events |= POLLIN;
+               break;
+         }
+         size++;
+      }
+
+   }
+   printf("mysize %d\n", size);
+   return size;
+}
+/* after_poll
+ *
+ * external select/poll routine to check what our fd check
+ *
+ * Parameters:
+ *    scanner: Scanner to isolate check on
+ * Return:
+ *    pollfds struct. 
+ */
+
+void libopm_after_poll(OPM_T *scanner, struct pollfd *ufds, unsigned int ufdssize)
+{
+   OPM_NODE_T *node1, *node2;
+   OPM_SCAN_T *scan;
+   OPM_CONNECTION_T *conn;
+
+   int i;
+printf("after\n");
+   if (opm_active(scanner) < 1) {
+   	return;
+   }
+printf("list\n");
+   LIST_FOREACH(node1, scanner->scans->head)
+   {
+      scan = (OPM_SCAN_T *) node1->data;
+ 
+      LIST_FOREACH(node2, scan->connections->head)
+      {
+         conn = (OPM_CONNECTION_T *) node2->data;
+
+         for(i = 0; i < (int)ufdssize; i++)
+         {
+            if((ufds[i].fd == conn->fd) && (conn->state != OPM_STATE_CLOSED))
+            {
+printf("doing something\n");
+               if(ufds[i].revents & POLLIN)
+                  libopm_do_readready(scanner, scan, conn);
+               if(ufds[i].revents & POLLOUT)
+                  libopm_do_writeready(scanner, scan, conn);
+               if(ufds[i].revents & POLLHUP)
+                  libopm_do_hup(scanner, scan, conn);
+            }
+         }
+      }
+   }
+   MyFree(ufds);
+   libopm_check_closed(scanner);     /* Check for closed or timed out connections       */
+
+}
 
 
 
