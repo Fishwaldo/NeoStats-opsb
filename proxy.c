@@ -1,8 +1,8 @@
-/* NeoStats - IRC Statistical Services Copyright (c) 1999-2002 NeoStats Group Inc.
-** Copyright (c) 1999-2002 Adam Rutter, Justin Hammond
+/* NeoStats - IRC Statistical Services Copyright (c) 1999-2004 NeoStats Group Inc.
+** Copyright (c) 1999-2004 Adam Rutter, Justin Hammond
 ** http://www.neostats.net/
 **
-**  Portions Copyright (c) 2002 Erik Fears
+**  Portions Copyright (c) 2004 Erik Fears
 **
 **  This program is free software; you can redistribute it and/or modify
 **  it under the terms of the GNU General Public License as published by
