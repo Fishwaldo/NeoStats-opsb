@@ -1,3 +1,4 @@
+#Neostats Module Makefile
 CC = @CC@
 CFLAGS = @CFLAGS@
 LDFLAGS = @LIBS@
@@ -13,7 +14,7 @@ TARGET = opsb.so
 DOCS = README.opsb README.opsb.html
 DATA =
 SCRIPTS = 
-DISTFILES = $(SRCS) $(DOCS) modconfig.h.in configure install-sh ChangeLog Makefile.in opsb.h libopm/*.c libopm/*.h libopm/README libopm/LICENSE LICENSE libopm/*.in
+DISTFILES = $(SRCS) $(DOCS) modconfig.h.in configure install-sh ChangeLog Makefile.in opsb.h libopm/*.c libopm/*.h libopm/README libopm/LICENSE LICENSE libopm/*.in RELNOTES
 DISTDIR = @PACKAGE@-@VERSION@
 
 all:	module

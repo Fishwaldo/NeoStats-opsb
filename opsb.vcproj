@@ -158,6 +158,9 @@
 		<File
 			RelativePath=".\Makefile.in">
 		</File>
+		<File
+			RelativePath=".\Relnotes">
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
