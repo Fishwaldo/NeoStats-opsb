@@ -1175,52 +1175,25 @@ void reportdns(char *data, adns_answer *a) {
 	checkqueue();
 }
 
-
-int __ModInit(int modnum, int apiver)
+void LoadConfig(void)
 {
-	strlcpy(s_opsb, "opsb", MAXNICK);
-	char *tmp;
-	char **data;
 	int i;
 	lnode_t *node;
+	char **data;
+	char *tmp;
 	char datapath[512];
 	exemptinfo *exempts;
 
-
-	/* we have to be carefull here. Currently, we have 7 sockets that get opened per connection. Soooo.
-	*  we check that MAX_SCANS is not greater than the maxsockets available / 7
-	*  this way, we *shouldn't* get problems with running out of sockets 
-	*/
-	if (MAX_SCANS > me.maxsocks / 7) {
-		opsbl = list_create(me.maxsocks /7);
-		opsb.socks = me.maxsocks /7;
-	} else {
-		opsbl = list_create(MAX_SCANS);
-		opsb.socks = MAX_SCANS;
-	}
-	/* queue can be anything we want */
-	opsbq = list_create(MAX_QUEUE);
-
-	
-	/* scan cache is MAX_QUEUE size (why not?) */
-	cache = list_create(MAX_QUEUE);
-
-	exempt = list_create(MAX_EXEMPTS);
-
-	opsb.ports = list_create(MAX_PORTS);
-
-	online = 0;				
-
 	if (GetConf((void *)&tmp, CFGSTR, "OpmDomain") <= 0) {
-		ircsnprintf(opsb.opmdomain, MAXHOST, "%s", "opm.blitzed.org");
+		strlcpy(opsb.opmdomain, "opm.blitzed.org", MAXHOST);
 	} else {
-		strncpy(opsb.opmdomain, tmp, MAXHOST);
+		strlcpy(opsb.opmdomain, tmp, MAXHOST);
 		free(tmp);
 	}
 	if (GetConf((void *)&tmp, CFGSTR, "TargetHost") <= 0) {
-		ircsnprintf(opsb.targethost, MAXHOST, "%s", me.uplink);
+		strlcpy(opsb.targethost, me.uplink, MAXHOST);
 	} else {
-		strncpy(opsb.targethost, tmp, MAXHOST);
+		strlcpy(opsb.targethost, tmp, MAXHOST);
 		free(tmp);
 	}
 	if (GetConf((void *)&opsb.targetport, CFGINT, "TargetPort") <= 0) {
@@ -1252,15 +1225,15 @@ int __ModInit(int modnum, int apiver)
 	}
 
 	if (GetConf((void *)&tmp, CFGSTR, "TriggerString") <= 0) {
-		ircsnprintf(opsb.lookforstring, 512, "*** Looking up your hostname...");
+		strlcpy(opsb.lookforstring, "*** Looking up your hostname...", 512);
 	} else {
-		strncpy(opsb.lookforstring, tmp, 512);
+		strlcpy(opsb.lookforstring, tmp, 512);
 		free(tmp);
 	}
 	if (GetConf((void *)&tmp, CFGSTR, "ScanMsg") <= 0) {
-		ircsnprintf(opsb.scanmsg, 512, "Your Host is being Scanned for Open Proxies");
+		strlcpy(opsb.scanmsg, "Your Host is being Scanned for Open Proxies", 512);
 	} else {
-		strncpy(opsb.scanmsg, tmp, 512);
+		strlcpy(opsb.scanmsg, tmp, 512);
 		free(tmp);
 	}
 	
@@ -1268,25 +1241,25 @@ int __ModInit(int modnum, int apiver)
 		/* try */
 		for (i = 0; data[i] != NULL; i++) {
 			exempts = malloc(sizeof(exemptinfo));
-			strncpy(exempts->host, data[i], MAXHOST);
+			strlcpy(exempts->host, data[i], MAXHOST);
 	
 			ircsnprintf(datapath, MAXHOST, "Exempt/%s/Who", data[i]);
 			if (GetConf((void *)&tmp, CFGSTR, datapath) <= 0) {
 				free(exempts);
 				continue;
 			} else {
-				strncpy(exempts->who, tmp, MAXNICK);
+				strlcpy(exempts->who, tmp, MAXNICK);
 				free(tmp);
 			}
-			snprintf(datapath, MAXHOST, "Exempt/%s/Reason", data[i]);
+			ircsnprintf(datapath, MAXHOST, "Exempt/%s/Reason", data[i]);
 			if (GetConf((void *)&tmp, CFGSTR, datapath) <= 0) {
 				free(exempts);
 				continue;
 			} else {
-				strncpy(exempts->reason, tmp, MAXHOST);
+				strlcpy(exempts->reason, tmp, MAXHOST);
 				free(tmp);
 			}
-			snprintf(datapath, MAXHOST, "Exempt/%s/Server", data[i]);
+			ircsnprintf(datapath, MAXHOST, "Exempt/%s/Server", data[i]);
 			if (GetConf((void *)&exempts->server, CFGINT, datapath) <= 0) {
 				free(exempts);
 				continue;
@@ -1299,13 +1272,44 @@ int __ModInit(int modnum, int apiver)
 		}
 	}
 	free(data);	
+}
+
+int __ModInit(int modnum, int apiver)
+{
+	strlcpy(s_opsb, "opsb", MAXNICK);
+
+	/* we have to be careful here. Currently, we have 7 sockets that get opened per connection. Soooo.
+	*  we check that MAX_SCANS is not greater than the maxsockets available / 7
+	*  this way, we *shouldn't* get problems with running out of sockets 
+	*/
+	if (MAX_SCANS > me.maxsocks / 7) {
+		opsbl = list_create(me.maxsocks /7);
+		opsb.socks = me.maxsocks /7;
+	} else {
+		opsbl = list_create(MAX_SCANS);
+		opsb.socks = MAX_SCANS;
+	}
+	/* queue can be anything we want */
+	opsbq = list_create(MAX_QUEUE);
+
+	LoadConfig();
+
+	/* scan cache is MAX_QUEUE size (why not?) */
+	cache = list_create(MAX_QUEUE);
+
+	exempt = list_create(MAX_EXEMPTS);
+
+	opsb.ports = list_create(MAX_PORTS);
+
+	online = 0;				
+
 	opsb.open = 0;
 	opsb.scanned = 0;
 	opsb.cachehits = 1;
 	opsb.opmhits = 1;
 
 	if (load_ports() != 1) {
-		nlog(LOG_WARNING, LOG_MOD, "Can't Load opsb. No Ports Defined for Scanned. Did you install Correctly?");
+		nlog(LOG_WARNING, LOG_MOD, "Can't Load opsb. No Ports Defined for Scanner. Did you install Correctly?");
 		return -1;
 	}
 	init_libopm();
@@ -1324,10 +1328,10 @@ void save_exempts(exemptinfo *exempts) {
 	char path[255];
 
 	nlog(LOG_DEBUG1, LOG_MOD, "Saving Exempt List %s", exempts->host);
-	snprintf(path, 255, "Exempt/%s/Who", exempts->host);
+	ircsnprintf(path, 255, "Exempt/%s/Who", exempts->host);
 	SetConf((void *)exempts->who, CFGSTR, path);
-	snprintf(path, 255, "Exempt/%s/Reason", exempts->host);
+	ircsnprintf(path, 255, "Exempt/%s/Reason", exempts->host);
 	SetConf((void *)exempts->reason, CFGSTR, path);
-	snprintf(path, 255, "Exempt/%s/Server", exempts->host);
+	ircsnprintf(path, 255, "Exempt/%s/Server", exempts->host);
 	SetConf((void *)exempts->server, CFGINT, path);
 }
