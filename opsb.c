@@ -173,8 +173,8 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		}
 		scandata = malloc(sizeof(scaninfo));
 		scandata->dnsstate = REPORT_DNS;
-		strncpy(scandata->who, u->nick, MAXNICK);
-		strncpy(scandata->lookup, argv[2], MAXHOST);
+		strlcpy(scandata->who, u->nick, MAXNICK);
+		strlcpy(scandata->lookup, argv[2], MAXHOST);
 		/* if the lists are full, don't add it, and alert the user */
 		if (list_isfull(opsbl)) {
 			if (list_isfull(opsbq)) {
@@ -247,9 +247,9 @@ int __Bot_Message(char *origin, char **argv, int argc)
 				prefmsg(u->nick, s_opsb, "Error, Can not scan NeoStats Bots");
 				return -1;
 			}
-			strncpy(scandata->who, u2->nick, MAXHOST);
-			strncpy(scandata->lookup, u2->hostname, MAXHOST);
-			strncpy(scandata->server, u2->server->name, MAXHOST);
+			strlcpy(scandata->who, u2->nick, MAXHOST);
+			strlcpy(scandata->lookup, u2->hostname, MAXHOST);
+			strlcpy(scandata->server, u2->server->name, MAXHOST);
 			scandata->ipaddr.s_addr = u2->ipaddr.s_addr;
 			if (scandata->ipaddr.s_addr > 0) {
 				scandata->dnsstate = DO_OPM_LOOKUP;
@@ -262,8 +262,8 @@ int __Bot_Message(char *origin, char **argv, int argc)
 				}
 			}
 		} else {
-			strncpy(scandata->who, argv[2], MAXHOST);
-			strncpy(scandata->lookup, argv[2], MAXHOST);
+			strlcpy(scandata->who, argv[2], MAXHOST);
+			strlcpy(scandata->lookup, argv[2], MAXHOST);
 			bzero(scandata->server, MAXHOST);
 			if (inet_aton(argv[2], &scandata->ipaddr) > 0) {
 				scandata->dnsstate = DO_OPM_LOOKUP;
@@ -991,10 +991,10 @@ static int ScanNick(char **av, int ac) {
 	scandata = malloc(sizeof(scaninfo));
 	scandata->u = NULL;
 	scandata->doneban = 0;
-	strncpy(scandata->who, u->nick, MAXHOST);
-	strncpy(scandata->lookup, u->hostname, MAXHOST);
-	strncpy(scandata->server, u->server->name, MAXHOST);
-	strncpy(scandata->connectstring, recbuf, BUFSIZE);
+	strlcpy(scandata->who, u->nick, MAXHOST);
+	strlcpy(scandata->lookup, u->hostname, MAXHOST);
+	strlcpy(scandata->server, u->server->name, MAXHOST);
+	strlcpy(scandata->connectstring, recbuf, BUFSIZE);
 	scandata->ipaddr.s_addr = u->ipaddr.s_addr;
 	if (scandata->ipaddr.s_addr > 0) {
 		scandata->dnsstate = DO_OPM_LOOKUP;
