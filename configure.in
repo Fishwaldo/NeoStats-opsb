@@ -23,6 +23,35 @@ AC_CHECK_FILE($DIRINST/include/dl.h,
 [AC_MSG_ERROR(Can't find existing NeoStats Installation please supply with --with-neostats option)])
 
 
+CPPFLAGS="$CPPFLAGS -I$INCLUDEDIR"
+dnl Check we are running the latest supported version of NeoStats
+AC_MSG_CHECKING(Version of NeoStats...)
+AC_TRY_RUN(
+[
+#include <config.h>
+#include <stdlib.h>
+int main(void) {
+	if (MAJOR >= 2) {
+		if (MINOR >= 5) {
+			if (REV >= 2) {
+				exit(0);
+			}
+		}
+	}
+	exit(1);
+}
+],	ns_version_ok='yes',
+	ns_version_ok='no',
+	ns_version_ok='no')
+if test "$ns_version_ok" = "yes"; then
+	AC_MSG_RESULT(Compatible Version);
+else
+	AC_MSG_ERROR(This Module requires NeoStats 2.5.2 or Higher)
+fi
+
+
+
+
 dnl check if we are running with Debug....
 AC_MSG_CHECKING(Whether to Enable Debuging...)
 AC_ARG_ENABLE(debug,

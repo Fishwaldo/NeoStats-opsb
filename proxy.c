@@ -20,7 +20,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: proxy.c,v 1.14 2003/02/14 17:42:57 fishwaldo Exp $
+** $Id: proxy.c,v 1.15 2003/04/17 15:55:47 fishwaldo Exp $
 */
 
 
@@ -34,6 +34,7 @@
 #include "dl.h"
 #include "stats.h"
 #include "opsb.h"
+#include "log.h"
 
 int proxy_connect(unsigned long ipaddr, int port, char *who);
 int http_proxy(int sock);
@@ -85,7 +86,7 @@ void do_ban(scaninfo *scandata) {
 			continue;
 		}
 		scandata->doneban = 1;
-		log("OPSB: Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
+		nlog(LOG_CRITICAL, LOG_MOD, "OPSB: Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		chanalert(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		globops(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
@@ -97,7 +98,7 @@ void do_ban(scaninfo *scandata) {
 	}
 	if (scandata->dnsstate == OPMLIST) {
 		scandata->doneban = 1;
-		log("OPSB: Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
+		nlog(LOG_CRITICAL, LOG_MOD, "OPSB: Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
 		chanalert(s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
 		globops(s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
 		if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
@@ -153,7 +154,7 @@ void cleanlist() {
 		if (scandata->dnsstate == OPMLIST) savescan = 0;
 		/* if this is not valid, exit  (ie, the scan hasn't started yet) */
 		if (scandata->socks == NULL) {
-			log("Ehhh, socks for %s is NULL? WTF?", scandata->who);
+			nlog(LOG_CRITICAL, LOG_MOD, "Ehhh, socks for %s is NULL? WTF?", scandata->who);
 			break;
 		}
 		/* check for open sockets */
@@ -172,9 +173,7 @@ void cleanlist() {
 					/* it still has open socks */
 					snprintf(sockname, 64, "%s %d", scandata->who, sockdata->type);
 					sockdata->flags = UNCONNECTED;
-#ifdef DEBUG	
-					log("Closing Socket %s in cleanlist function for timeout()", sockname);
-#endif	
+					nlog(LOG_DEBUG1, LOG_MOD, "Closing Socket %s in cleanlist function for timeout()", sockname);
 					if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Timeout Connecting to Proxy %s on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		
 					sock_disconnect(sockname);
@@ -186,10 +185,8 @@ void cleanlist() {
 		}
 
 		if (timedout == 1 || finished == 1) {
-#ifdef DEBUG
-			if (timedout == 1) log("Deleting Old Scannode %s out of active list (Timeout)", scandata->who );
-			if (finished == 1) log("Deleting Old Scannode %s out of active list (Finished)", scandata->who );
-#endif
+			if (timedout == 1) nlog(LOG_DEBUG1, LOG_MOD, "Deleting Old Scannode %s out of active list (Timeout)", scandata->who );
+			if (finished == 1) nlog(LOG_DEBUG1, LOG_MOD, "Deleting Old Scannode %s out of active list (Finished)", scandata->who );
 			if (savescan == 1) 
 				addtocache(scandata->ipaddr.s_addr);
 
@@ -198,9 +195,7 @@ void cleanlist() {
 				socknode = list_first(scandata->socks);
 				while (socknode) {
 					sockdata = lnode_get(socknode);
-#ifdef DEBUG	
-					log("freeing sockdata %s %d", scandata->who, sockdata->type);
-#endif
+					nlog(LOG_DEBUG1, LOG_MOD, "freeing sockdata %s %d", scandata->who, sockdata->type);
 					free(sockdata);
 					socknode = list_next(scandata->socks, socknode);
 				}
@@ -319,9 +314,7 @@ void start_proxy_scan(lnode_t *scannode) {
 
 	if ((opsb.doscan == 1) || (scandata->u)) {
 		for (i = 0; i <  NUM_PROXIES; i++) {
-#ifdef DEBUG	
-			log("OPSB proxy_connect(): host %ul (%s), port %d", scandata->ipaddr,inet_ntoa(scandata->ipaddr), proxy_list[i].port);
-#endif
+			nlog(LOG_DEBUG1, LOG_MOD, "OPSB proxy_connect(): host %ul (%s), port %d", scandata->ipaddr,inet_ntoa(scandata->ipaddr), proxy_list[i].port);
 			sockname = malloc(64);
 			sprintf(sockname, "%s %d", scandata->who, i);
 			j = proxy_connect(scandata->ipaddr.s_addr, proxy_list[i].port, sockname);
@@ -353,9 +346,6 @@ int http_proxy(int sock) {
 	int i;
 	buf = malloc(512);
 	i = snprintf(buf, 512, "CONNECT %s:%d HTTP/1.0\r\n\r\n", opsb.targethost, opsb.targetport);
-#ifdef DEBUG
-	log("sending http request");
-#endif
 	i= send(sock, buf, i, MSG_NOSIGNAL);
 	free(buf);
 	return i;
@@ -369,7 +359,7 @@ int sock4_proxy(int sock) {
 	int len;
  
 	if (inet_aton(opsb.targethost, &addr) == 0) {
-		log("OPSB socks4_proxy() : %s is not a valid IP",
+		nlog(LOG_WARNING, LOG_MOD, "OPSB socks4_proxy() : %s is not a valid IP",
 		    opsb.targethost);
 	    	return 0;
 	}
@@ -394,7 +384,7 @@ int sock5_proxy(int sock) {
         char *buf;
 
         if (inet_aton(opsb.targethost, &addr) == 0) {
-                log("OPSB socks5_proxy() : %s is not a valid IP",
+                nlog(LOG_DEBUG1, LOG_MOD, "OPSB socks5_proxy() : %s is not a valid IP",
                     opsb.targethost);
         }
 
@@ -465,7 +455,7 @@ int proxy_read(int socknum, char *sockname) {
 
 	scandata = find_scandata(sockname);
 	if (!scandata) {
-		log("ehh, wtf, can find scan data");
+		nlog(LOG_CRITICAL, LOG_MOD, "ehh, wtf, can find scan data for read (Sock %d Name %s)", socknum, sockname);
 		return 1;
 	}
 	socknode = list_first(scandata->socks);
@@ -478,16 +468,14 @@ int proxy_read(int socknum, char *sockname) {
 		socknode = list_next(scandata->socks, socknode);
 	}		
 	if (i == 0) {
-		log("ehh can't find socket info %s (%d) for proxy_read()", sockname, socknum);
+		nlog(LOG_CRITICAL, LOG_MOD, "ehh can't find socket info %s (%d) for proxy_read()", sockname, socknum);
 		return 1;
 	}
 	buf = malloc(512);
 	bzero(buf, 512);
 	i = recv(socknum, buf, 512, 0);
 	if (i < 0) {
-#ifdef DEBUG
-		log("OPSB proxy_read(): %d has the following error: %s", socknum, strerror(errno));
-#endif
+		nlog(LOG_DEBUG1, LOG_MOD, "OPSB proxy_read(): %d has the following error: %s", socknum, strerror(errno));
 		if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "No %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		sock_disconnect(sockname);
 		sockdata->flags = UNCONNECTED;
@@ -495,17 +483,13 @@ int proxy_read(int socknum, char *sockname) {
 		return -1;
 	} else {
 		if (i > 0) {
-#ifdef DEBUG
-			log("OPSB proxy_read(): Got this: %s (%d)",buf, i);
-#endif
+			nlog(LOG_DEBUG1, LOG_MOD, "OPSB proxy_read(): Got this: %s (%d)",buf, i);
 			/* copy the recieved data onto the buf, but don't overwrite the buffer */
 			strncat(sockdata->buf, buf, 2047 - strlen(sockdata->buf));
 
 			/* this is a ok HTTP server */
 			if (strstr(sockdata->buf, "Method Not Allowed")) {
-#ifdef DEBUG
-				log("closing socket %d due to ok HTTP server", socknum);
-#endif
+				nlog(LOG_DEBUG1, LOG_MOD, "closing socket %d due to ok HTTP server", socknum);
 				if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "No Open %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 				sockdata->flags = UNCONNECTED;
 				sock_disconnect(sockname);
@@ -527,9 +511,7 @@ int proxy_read(int socknum, char *sockname) {
 			sockdata->bytes += i;
 			/* avoid reading too much data */
 			if (sockdata->bytes > opsb.maxbytes) {
-#ifdef DEBUG
-				log("OPSB proxy_read(): Closing %d due to too much data", socknum);
-#endif
+				nlog(LOG_DEBUG1, LOG_MOD, "OPSB proxy_read(): Closing %d due to too much data", socknum);
 				if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "No Open %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 				sock_disconnect(sockname);
 				sockdata->flags = UNCONNECTED;
@@ -556,7 +538,7 @@ int proxy_write(int socknum, char *sockname) {
 
 	scandata = find_scandata(sockname);
 	if (!scandata) {
-		log("ehh, wtf, can find scan data");
+		nlog(LOG_CRITICAL, LOG_MOD, "ehh, wtf, can find scan data (write) (Sock %d sockname %s)", socknum, sockname);
 		return 1;
 	}
 	socknode = list_first(scandata->socks);
@@ -569,7 +551,7 @@ int proxy_write(int socknum, char *sockname) {
 		socknode = list_next(scandata->socks, socknode);
 	}		
 	if (i == 0) {
-		log("ehhh, can't find socket %s %d for proxy_write()", sockname, socknum);
+		nlog(LOG_CRITICAL, LOG_MOD, "ehhh, can't find socket %s %d for proxy_write()", sockname, socknum);
 		return 1;
 	}			
 	if (sockdata->flags == CONNECTING || sockdata->flags == SOCKCONNECTED) {
@@ -579,9 +561,7 @@ int proxy_write(int socknum, char *sockname) {
 		else 
 			i = send(socknum, "", 1, MSG_NOSIGNAL);
 		if (i < 0) {
-#ifdef DEBUG
-			log("OPSB proxy_write(): %d has the following error: %s", socknum, strerror(errno));
-#endif
+			nlog(LOG_DEBUG1, LOG_MOD, "OPSB proxy_write(): %d has the following error: %s", socknum, strerror(errno));
 			if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "No %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 			sock_disconnect(sockname);
 			sockdata->flags = UNCONNECTED;
@@ -597,6 +577,7 @@ int proxy_write(int socknum, char *sockname) {
 /* proxy error function */
 
 int proxy_err(int socknum, char *sockname) {
+	nlog(LOG_NORMAL, LOG_MOD, "Hrm, Got SockErr on %d for %s", socknum, sockname);
 return 1;
 }
 

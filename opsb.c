@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.14 2003/02/14 13:13:56 fishwaldo Exp $
+** $Id: opsb.c,v 1.15 2003/04/17 15:55:46 fishwaldo Exp $
 */
 
 
@@ -32,6 +32,7 @@
 #include "dl.h"
 #include "stats.h"
 #include "opsb.h"
+#include "log.h"
 
 const char opsbversion_date[] = __DATE__;
 const char opsbversion_time[] = __TIME__;
@@ -101,7 +102,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 	
 	u = finduser(origin); 
 	if (!u) { 
-		log("Unable to find user %s (opsb)", origin); 
+		nlog(LOG_WARNING, LOG_MOD, "Unable to find user %s (opsb)", origin); 
 		return -1; 
 	} 
 	if (!strcasecmp(argv[1], "help")) {
@@ -552,9 +553,7 @@ void addtocache(unsigned long ipaddr) {
 			
 	/* pop off the oldest entry */
 	if (list_isfull(cache)) {
-#ifdef DEBUG
-		log("OPSB: Deleting Tail of Cache: %d", list_count(cache));
-#endif
+		nlog(LOG_DEBUG2, LOG_MOD, "OPSB: Deleting Tail of Cache: %d", list_count(cache));
 		cachenode = list_del_last(cache);
 		ce = lnode_get(cachenode);
 		lnode_destroy(cachenode);
@@ -564,9 +563,7 @@ void addtocache(unsigned long ipaddr) {
 	while (cachenode) {
 		ce = lnode_get(cachenode);
 		if (ce->ip == ipaddr) {
-#ifdef DEBUG
-			log("OPSB: Not adding %ld to cache as it already exists", ipaddr);
-#endif
+			nlog(LOG_DEBUG2, LOG_MOD,"OPSB: Not adding %ld to cache as it already exists", ipaddr);
 			return;
 		}
 		cachenode = list_next(cache, cachenode);
@@ -592,17 +589,13 @@ int checkcache(scaninfo *scandata) {
 		if ((exempts->server == 1) && (scandata->server)) {
 			/* match a server */
 			if (fnmatch(exempts->host, scandata->server, 0) == 0) {
-#ifdef DEBUG
-				log("OPSB: User %s exempt. Matched server entry %s in Exemptions", scandata->who, exempts->host);
-#endif 
+				nlog(LOG_DEBUG1, LOG_MOD, "OPSB: User %s exempt. Matched server entry %s in Exemptions", scandata->who, exempts->host);
 				if (scandata->u) prefmsg(scandata->u->nick, s_opsb,"%s Matches a Server Exception %s", scandata->who, exempts->host);
 				return 1;
 			}
 		} else {
 			if (fnmatch(exempts->host, scandata->lookup, 0) == 0) {
-#ifdef DEBUG
-				log("OPSB: User %s exempt. Matched host entry %s in exemptions", scandata->who, exempts->host);
-#endif
+				nlog(LOG_DEBUG1, LOG_MOD, "OPSB: User %s exempt. Matched host entry %s in exemptions", scandata->who, exempts->host);
 				if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "%s Matches a Host Exception %s", scandata->who, exempts->host);
 				return 2;
 			}
@@ -616,9 +609,7 @@ int checkcache(scaninfo *scandata) {
 		/* delete any old cache entries */
 	
 		if ((time(NULL) - ce->when) > opsb.cachetime) {
-#ifdef DEBUG
-			log("OPSB: Deleting old cache entry %ld", ce->ip);
-#endif
+			nlog(LOG_DEBUG1, LOG_MOD, "OPSB: Deleting old cache entry %ld", ce->ip);
 			node2 = list_next(cache, node);			
 			list_delete(cache, node);
 			lnode_destroy(node);
@@ -627,9 +618,7 @@ int checkcache(scaninfo *scandata) {
 			break;
 		}
 		if (ce->ip == scandata->ipaddr.s_addr) {
-#ifdef DEBUG
-			log("OPSB: user %s is already in Cache", scandata->who);
-#endif
+			nlog(LOG_DEBUG1, LOG_MOD, "OPSB: user %s is already in Cache", scandata->who);
 			opsb.cachehits++;
 			if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "User %s is already in Cache", scandata->who);
 			return 3;
@@ -648,7 +637,7 @@ void savecache() {
 	strcpy(segv_location, "OPSB:savecache");
 	
 	if (!fp) {
-		log("OPSB: warning, Can not open cache file for writting");
+		nlog(LOG_WARNING, LOG_MOD, "OPSB: warning, Can not open cache file for writting");
 		chanalert(s_opsb, "Warning, Can not open cache file for writting");
 		return;
 	}
@@ -694,7 +683,7 @@ void loadcache() {
 	strcpy(segv_location, "OPSB:loadcache");
 
 	if (!fp) {
-		log("OPSB: Warning, Can not open Cache file for Reading");
+		nlog(LOG_WARNING, LOG_MOD, "OPSB: Warning, Can not open Cache file for Reading");
 		chanalert(s_opsb, "Warning, Can not open Cache file for Reading");
 		return;
 	}
@@ -785,7 +774,7 @@ static int ScanNick(char **av, int ac) {
 							
 	u = finduser(av[0]);
 	if (!u) {
-		log("OPSB: Ehhh, Can't find user %s", av[0]);
+		nlog(LOG_WARNING, LOG_MOD, "OPSB: Ehhh, Can't find user %s", av[0]);
 		return -1;
 	}
 	
@@ -801,9 +790,7 @@ static int ScanNick(char **av, int ac) {
 		if (exempts->server == 1) {
 			/* match a server */
 			if (fnmatch(exempts->host, u->server->name, 0) == 0) {
-#ifdef DEBUG
-				log("OPSB: User %s exempt. Matched server entry %s in Exemptions", u->nick, exempts->host);
-#endif 
+				nlog(LOG_DEBUG1, LOG_MOD, "OPSB: User %s exempt. Matched server entry %s in Exemptions", u->nick, exempts->host);
 				return -1;
 			}
 		}
@@ -811,18 +798,14 @@ static int ScanNick(char **av, int ac) {
 	}
 
 	if (time(NULL) - u->TS > opsb.timedif) {
-#ifdef DEBUG
-		log("Netsplit Nick %s, Not Scanning", av[0]);
-#endif
+		nlog(LOG_DEBUG1, LOG_MOD, "Netsplit Nick %s, Not Scanning", av[0]);
 		return -1;
 	}
 
 	scannode = list_find(opsbl, av[0], findscan);
 	if (!scannode) scannode = list_find(opsbq, av[0], findscan);
 	if (scannode) {
-#ifdef DEBUG
-		log("ScanNick(): Not scanning %s as we are already scanning them", av[0]);
-#endif
+		nlog(LOG_DEBUG1, LOG_MOD, "ScanNick(): Not scanning %s as we are already scanning them", av[0]);
 		return -1;
 	}
 	prefmsg(u->nick, s_opsb, "%s", opsb.scanmsg);
@@ -847,7 +830,7 @@ static int ScanNick(char **av, int ac) {
 	}
 	if (!startscan(scandata)) {
 		chanalert(s_opsb, "Warning Can't scan %s", u->nick);
-		log("OBSB ScanNick(): Can't scan %s. Check logs for possible errors", u->nick);
+		nlog(LOG_WARNING, LOG_MOD, "OBSB ScanNick(): Can't scan %s. Check logs for possible errors", u->nick);
 	}
 	return 1;
 
@@ -881,23 +864,19 @@ int startscan(scaninfo *scandata) {
 				if (list_isfull(opsbl)) {
 					if (list_isfull(opsbq)) {
 						chanalert(s_opsb, "Warning, Both Current and queue lists are full. Not Adding additional scans");
-#ifdef DEBUG
-						log("OPSB: dropped scaning of %s, as queue is full", scandata->who);
-#endif
+						nlog(LOG_DEBUG1, LOG_MOD, "OPSB: dropped scaning of %s, as queue is full", scandata->who);
 						if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "To Busy. Try again later");
 						free(scandata);
 						return 0;
 					}
 					scannode = lnode_create(scandata);
 					list_append(opsbq, scannode);
-#ifdef DEBUG
-					log("DNS: Added %s to dns queue", scandata->who);
-#endif
+					nlog(LOG_DEBUG1, LOG_MOD, "DNS: Added %s to dns queue", scandata->who);
 					if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Your Request has been added to the Queue");
 					return 1;
 				}
 				if (dns_lookup(scandata->lookup, adns_r_a, dnsblscan, scandata->who) != 1) {
-					log("DNS: startscan() GET_NICK_IP dns_lookup() failed");
+					nlog(LOG_WARNING, LOG_MOD, "DNS: startscan() GET_NICK_IP dns_lookup() failed");
 					free(scandata);
 					checkqueue();
 					return 0;
@@ -905,9 +884,7 @@ int startscan(scaninfo *scandata) {
 
 				scannode = lnode_create(scandata);
 				list_append(opsbl, scannode);
-#ifdef DEBUG
-				log("DNS: Added getnickip to DNS active list");
-#endif
+				nlog(LOG_DEBUG1, LOG_MOD, "DNS: Added getnickip to DNS active list");
 				return 1;		
 				break;
 		case DO_OPM_LOOKUP:
@@ -920,9 +897,7 @@ int startscan(scaninfo *scandata) {
 					}
 					scannode = lnode_create(scandata);
 					list_append(opsbq, scannode);
-#ifdef DEBUG
-					log("DNS: Added OPM lookup to queue", scandata->who);
-#endif
+					nlog(LOG_DEBUG1, LOG_MOD, "DNS: Added OPM lookup to queue", scandata->who);
 					return 1;
 				}
         			d = (unsigned char) (scandata->ipaddr.s_addr >> 24) & 0xFF;
@@ -936,7 +911,7 @@ int startscan(scaninfo *scandata) {
                                                      
                                 snprintf(buf, buflen, "%d.%d.%d.%d.%s", d, c, b, a, opsb.opmdomain);
 				if (dns_lookup(buf, adns_r_a, dnsblscan, scandata->who) != 1) {
-					log("DNS: startscan() DO_OPM_LOOKUP dns_lookup() failed");
+					nlog(LOG_WARNING, LOG_MOD, "DNS: startscan() DO_OPM_LOOKUP dns_lookup() failed");
 					free(scandata);
 					free(buf);
 					checkqueue();
@@ -944,16 +919,14 @@ int startscan(scaninfo *scandata) {
 				}
 				scannode = lnode_create(scandata);
 				list_append(opsbl, scannode);
-#ifdef DEBUG
-				log("DNS: Added OPM %s lookup to DNS active list", buf);
-#endif
+				nlog(LOG_DEBUG1, LOG_MOD, "DNS: Added OPM %s lookup to DNS active list", buf);
 				free(buf);
 				start_proxy_scan(scannode);
 				++opsb.scanned;
 				return 1;
 				break;
 		default:
-				log("Warning, Unknown Status in startscan()");
+				nlog(LOG_WARNING, LOG_MOD, "Warning, Unknown Status in startscan()");
 				free(scandata);
 				return -1;
 	}
@@ -971,7 +944,7 @@ void dnsblscan(char *data, adns_answer *a) {
 
 	scannode = list_find(opsbl, data, findscan);
 	if (!scannode) {
-		log("dnsblscan(): Ehhh, Something is wrong here - Can't find %s", data);
+		nlog(LOG_CRITICAL, LOG_MOD, "dnsblscan(): Ehhh, Something is wrong here - Can't find %s", data);
 		return;
 	}
 	scandata = lnode_get(scannode);
@@ -990,9 +963,7 @@ void dnsblscan(char *data, adns_answer *a) {
 					adns_rr_info(a->type, 0, 0, &len, 0, 0);
 					ri = adns_rr_info(a->type, 0, 0, 0, a->rrs.bytes, &show);
 					if (!ri) {
-#ifdef DEBUG
-						log("DNS: Got IP for %s -> %s", scandata->who, show);
-#endif
+						nlog(LOG_DEBUG1, LOG_MOD, "DNS: Got IP for %s -> %s", scandata->who, show);
 						if (a->nrrs > 1) {
 							chanalert(s_opsb, "Warning, More than one IP address for %s. Using %s only", scandata->lookup, show);
 							if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Warning, More than one IP address for %s. Using %s only", scandata->lookup, show);
@@ -1003,7 +974,7 @@ void dnsblscan(char *data, adns_answer *a) {
 							lnode_destroy(scannode);
 							startscan(scandata);
 						} else {
-							log("DNS: dnsblscan() GETNICKIP failed-> %s", show);
+							nlog(LOG_CRITICAL, LOG_MOD, "DNS: dnsblscan() GETNICKIP failed-> %s", show);
 							chanalert(s_opsb, "Warning, Couldn't get the address for %s", scandata->who);
 					        	list_delete(opsbl, scannode);
 			        			lnode_destroy(scannode);
@@ -1012,7 +983,7 @@ void dnsblscan(char *data, adns_answer *a) {
 						}
 
 					} else {
-						log("DNS: dnsblscan GETNICKIP rr_info failed");
+						nlog(LOG_CRITICAL, LOG_MOD, "DNS: dnsblscan GETNICKIP rr_info failed");
 						chanalert(s_opsb, "Warning, Couldnt get the address for %s. rr_info failed", scandata->who); 
 						list_delete(opsbl, scannode);
 						lnode_destroy(scannode);
@@ -1025,22 +996,18 @@ void dnsblscan(char *data, adns_answer *a) {
 					if (a->nrrs > 0) {
 						/* TODO: print out what type of open proxy it is based on IP address returned */
 						if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "%s apears in DNS blacklist", scandata->lookup);
-#ifdef DEBUG
-						log("Got Positive OPM lookup for %s (%s)", scandata->who, scandata->lookup);
-#endif
+						nlog(LOG_NOTICE, LOG_MOD, "Got Positive OPM lookup for %s (%s)", scandata->who, scandata->lookup);
 						scandata->dnsstate = OPMLIST;
 						opsb.opmhits++;
 						do_ban(scandata);
 						checkqueue();
 					} else 
 						if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "%s does not appear in DNS black list", scandata->lookup);
-#ifdef DEBUG
-						log("Got Negative OPM lookup for %s (%s)", scandata->who, scandata->lookup);
-#endif
+						nlog(LOG_DEBUG1, LOG_MOD, "Got Negative OPM lookup for %s (%s)", scandata->who, scandata->lookup);
 						scandata->dnsstate = NOOPMLIST;
 					break;
 			default:
-					log("Warning, Unknown Status in dnsblscan()");
+					nlog(LOG_WARNING, LOG_MOD, "Warning, Unknown Status in dnsblscan()");
 			        	list_delete(opsbl, scannode);
 			        	lnode_destroy(scannode);
 			        	free(scandata);
@@ -1049,7 +1016,7 @@ void dnsblscan(char *data, adns_answer *a) {
 		return;
 			
 	} else {
-		log("OPSP() Answer is Empty!");
+		nlog(LOG_CRITICAL, LOG_MOD, "OPSP() Answer is Empty!");
         	list_delete(opsbl, scannode);
         	lnode_destroy(scannode);
         	free(scandata);
@@ -1070,7 +1037,7 @@ void reportdns(char *data, adns_answer *a) {
 					
 	dnslookup = list_find(opsbl, data, findscan);
 	if (!dnslookup) {
-		log("reportdns(): Ehhh, something wrong here");
+		nlog(LOG_CRITICAL, LOG_MOD, "reportdns(): Ehhh, something wrong here %s", data);
 		return;
 	}
 	dnsinfo = lnode_get(dnslookup);
