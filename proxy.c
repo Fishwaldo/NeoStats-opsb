@@ -1,10 +1,26 @@
-/* NetStats - IRC Statistical Services Copyright (c) 1999 Adam Rutter,
-** Justin Hammond http://codeworks.kamserve.com
-*
-** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
-*
-** NetStats CVS Identification
-** $Id: proxy.c,v 1.2 2002/08/31 14:36:40 fishwaldo Exp $
+/* NeoStats - IRC Statistical Services Copyright (c) 1999-2002 NeoStats Group Inc.
+** Copyright (c) 1999-2002 Adam Rutter, Justin Hammond
+** http://www.neostats.net/
+**
+**  Portions Copyright (c) 2002 Erik Fears
+**
+**  This program is free software; you can redistribute it and/or modify
+**  it under the terms of the GNU General Public License as published by
+**  the Free Software Foundation; either version 2 of the License, or
+**  (at your option) any later version.
+**
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU General Public License for more details.
+**
+**  You should have received a copy of the GNU General Public License
+**  along with this program; if not, write to the Free Software
+**  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+**  USA
+**
+** NeoStats CVS Identification
+** $Id: proxy.c,v 1.3 2002/09/04 08:52:34 fishwaldo Exp $
 */
 
 
@@ -52,6 +68,12 @@ void do_ban(scaninfo *scandata) {
 	int doneban = 0;
 	FILE *fp;
 
+	strcpy(segv_location, "OPSB:dns_lookup");
+
+	if (scandata->doneban == 1)
+		return;
+	
+
 	++opsb.open;
 
 	
@@ -59,28 +81,23 @@ void do_ban(scaninfo *scandata) {
 	socknode = list_first(scandata->socks);
 	while (socknode) {
 		sockdata = lnode_get(socknode);
-		if ((sockdata->flags !=	OPENPROXY) || (doneban == 1)) {
+		if (sockdata->flags !=	OPENPROXY) {
 			socknode = list_next(scandata->socks, socknode);
 			break;
 		}
+		scandata->doneban = 1;
 		log("OPSB: Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		chanalert(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		globops(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		sakill_cmd(inet_ntoa(scandata->ipaddr), "*", s_opsb, opsb.bantime, "Open Proxy found on your host. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ipaddr));
-		if (doneban != 1) {
-			if ((fp = fopen("logs/opsb.log", "a")) == NULL) return;
-               		fprintf(fp, "%s: %s\n", proxy_list[sockdata->type].type, inet_ntoa(scandata->ipaddr));
-                        fclose(fp);
-		} else {
-			doneban = 1;
-		}		
+		if ((fp = fopen("logs/opsb.log", "a")) == NULL) return;
+       		fprintf(fp, "%s: %s\n", proxy_list[sockdata->type].type, inet_ntoa(scandata->ipaddr));
+                fclose(fp);
 		socknode = list_next(scandata->socks, socknode);
 	}
-	if (doneban == 1)
-		return;
-	
 	if (scandata->dnsstate == OPMLIST) {
+		scandata->doneban = 1;
 		log("OPSB: Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
 		chanalert(s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
 		globops(s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
@@ -115,6 +132,8 @@ void cleanlist() {
 	socklist *sockdata;
 	char sockname[64];
 	int savescan, timedout = 0, finished;
+
+	strcpy(segv_location, "OPSB:cleanlist");
 
 	scannode = list_first(opsbl);
 	while (scannode) {
@@ -185,6 +204,9 @@ void send_status(User *u) {
 	lnode_t *node, *socknode;
 	scaninfo *scandata;
 	socklist *sockinfo;
+
+	strcpy(segv_location, "OPSB:send_status");
+	
 	prefmsg(u->nick, s_opsb, "Proxy Results:");
 	prefmsg(u->nick, s_opsb, "Hosts Scanned: %d Hosts found Open: %d Exceptions %d", opsb.scanned, opsb.open, list_count(exempt));
 	prefmsg(u->nick, s_opsb, "Cache Entries: %d", list_count(cache));
@@ -256,6 +278,8 @@ void start_proxy_scan(lnode_t *scannode) {
 	char *sockname;
 	int i, j;
 
+	strcpy(segv_location, "OPSB:start_proxy_scan");
+
 
 	scandata = lnode_get(scannode);
 	if (scandata->u) chanalert(s_opsb, "Starting proxy scan on %s (%s) by Request of %s", scandata->who, scandata->lookup, scandata->u->nick);
@@ -284,6 +308,13 @@ void start_proxy_scan(lnode_t *scannode) {
 	/* this is so we can timeout scans */
 	scandata->started = time(NULL);
 }
+
+/* the following functions (http_proxy, sock4_proxy, sock5_proxy, cisco_proxy and wingate_proxy
+** were borrowed from the BOPM proxy scanning bot. 
+** This code is Copyrighted by Erik Fears (strtok@blitzed.org) and is used with thanks
+** this code is used under the GPL license, as the original BOPM is licensed under
+*/
+
 
 int http_proxy(int sock) {
 	char *buf;
@@ -396,7 +427,8 @@ int proxy_read(int socknum, char *sockname) {
 	scaninfo *scandata;
 	lnode_t	*socknode;
 	socklist *sockdata = NULL;
-	
+
+	strcpy(segv_location, "OPSB:proxy_read");
 
 	scandata = find_scandata(sockname);
 	if (!scandata) {
@@ -483,6 +515,9 @@ int proxy_write(int socknum, char *sockname) {
 	scaninfo *scandata;
 	lnode_t	*socknode;
 	socklist *sockdata = NULL;
+
+	strcpy(segv_location, "OPSB:proxy_write");
+
 
 	scandata = find_scandata(sockname);
 	if (!scandata) {

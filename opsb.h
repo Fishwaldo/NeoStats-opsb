@@ -4,7 +4,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: opsb.h,v 1.1 2002/08/31 09:28:35 fishwaldo Exp $
+** $Id: opsb.h,v 1.2 2002/09/04 08:52:34 fishwaldo Exp $
 */
 
 
@@ -43,6 +43,7 @@ struct scanq {
 	int doreport;
 	list_t *socks;
 	time_t started;
+	int doneban;
 };
 
 typedef struct scanq scaninfo;

@@ -1,10 +1,24 @@
-/* NetStats - IRC Statistical Services Copyright (c) 1999 Adam Rutter,
-** Justin Hammond http://codeworks.kamserve.com
-*
-** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
-*
-** NetStats CVS Identification
-** $Id: opsb.c,v 1.2 2002/08/31 14:36:40 fishwaldo Exp $
+/* NeoStats - IRC Statistical Services Copyright (c) 1999-2002 NeoStats Group Inc.
+** Copyright (c) 1999-2002 Adam Rutter, Justin Hammond
+** http://www.neostats.net/
+**
+**  This program is free software; you can redistribute it and/or modify
+**  it under the terms of the GNU General Public License as published by
+**  the Free Software Foundation; either version 2 of the License, or
+**  (at your option) any later version.
+**
+**  This program is distributed in the hope that it will be useful,
+**  but WITHOUT ANY WARRANTY; without even the implied warranty of
+**  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+**  GNU General Public License for more details.
+**
+**  You should have received a copy of the GNU General Public License
+**  along with this program; if not, write to the Free Software
+**  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+**  USA
+**
+** NeoStats CVS Identification
+** $Id: opsb.c,v 1.3 2002/09/04 08:52:34 fishwaldo Exp $
 */
 
 
@@ -80,6 +94,8 @@ int __Bot_Message(char *origin, char **argv, int argc)
 	exemptinfo *exempts;
 	int lookuptype, i;
 
+	strcpy(segv_location, "OPSB:Bot_Message");
+	
 	u = finduser(origin); 
 	if (!u) { 
 		log("Unable to find user %s (opsb)", origin); 
@@ -177,6 +193,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 			return 0;
 		}
 		scandata = malloc(sizeof(scaninfo));
+		scandata->doneban = 0;
 		scandata->u = u;
 		if ((u2 = finduser(argv[2])) != NULL) {
 			/* don't scan users from my server */
@@ -302,6 +319,8 @@ int __Bot_Message(char *origin, char **argv, int argc)
 
 int do_set(User *u, char **av, int ac) {
 	char *buf;
+
+	strcpy(segv_location, "OPSB:do_set");
 	
 	if (UserLevel(u) < 100) {
 		prefmsg(u->nick, s_opsb, "Access Denied");
@@ -426,6 +445,8 @@ int Online(char **av, int ac) {
 	struct sockaddr_in sa;
 	socklen_t ulen = sizeof(struct sockaddr_in);
 
+	strcpy(segv_location, "OPSB:Online");
+
 	if (init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+xd", my_info[0].module_name) == -1 ) {
 		/* Nick was in use!!!! */
 		s_opsb = strcat(s_opsb, "_");
@@ -454,6 +475,8 @@ void unconf() {
 void checkqueue() {
 	lnode_t *scannode;
 	scaninfo *scandata;
+
+	strcpy(segv_location, "OPSB:checkqueue");
 	
 	/* exit, if the list is full */
 	if (list_isfull(opsbl) || list_isempty(opsbq))
@@ -470,6 +493,9 @@ void checkqueue() {
 void addtocache(unsigned long ipaddr) {
 	lnode_t *cachenode;
 	C_entry *ce;
+
+	strcpy(segv_location, "OPSB:addtocache");
+			
 	/* pop off the oldest entry */
 	if (list_isfull(cache)) {
 #ifdef DEBUG
@@ -487,7 +513,7 @@ void addtocache(unsigned long ipaddr) {
 #ifdef DEBUG
 			log("OPSB: Not adding %ld to cache as it already exists", ipaddr);
 #endif
-//			return;
+			return;
 		}
 		cachenode = list_next(cache, cachenode);
 	}
@@ -503,6 +529,9 @@ int checkcache(scaninfo *scandata) {
 	lnode_t *node, *node2;
 	C_entry *ce;
 	exemptinfo *exempts;
+
+	strcpy(segv_location, "OPSB:checkcache");	
+
 	node = list_first(exempt);
 	while (node) {
 		exempts = lnode_get(node);
@@ -561,6 +590,8 @@ void savecache() {
 	exemptinfo *exempts;
 	FILE *fp = fopen("data/opsb.db", "w");	
 
+	strcpy(segv_location, "OPSB:savecache");
+	
 	if (!fp) {
 		log("OPSB: warning, Can not open cache file for writting");
 		chanalert(s_opsb, "Warning, Can not open cache file for writting");
@@ -603,6 +634,8 @@ void loadcache() {
 	int gotcache = 0;
 	FILE *fp = fopen("data/opsb.db", "r");
 	char *tmp;
+
+	strcpy(segv_location, "OPSB:loadcache");
 
 	if (!fp) {
 		log("OPSB: Warning, Can not open Cache file for Reading");
@@ -681,6 +714,8 @@ static int ScanNick(char **av, int ac) {
 	User *u;
 	scaninfo *scandata;
 	lnode_t *scannode;
+
+	strcpy(segv_location, "OPSB:ScanNick");
 	
 	u = finduser(av[0]);
 	if (!u) {
@@ -709,6 +744,7 @@ static int ScanNick(char **av, int ac) {
 	prefmsg(u->nick, s_opsb, "%s", opsb.scanmsg);
 	scandata = malloc(sizeof(scaninfo));
 	scandata->u = NULL;
+	scandata->doneban = 0;
 	strncpy(scandata->who, u->nick, MAXHOST);
 	strncpy(scandata->lookup, u->hostname, MAXHOST);
 	strncpy(scandata->server, u->server->name, MAXHOST);
@@ -742,6 +778,9 @@ int startscan(scaninfo *scandata) {
 	char *buf;
 	int buflen;
 	int i;
+
+	strcpy(segv_location, "OPSB:Startscan");
+	
 	i = checkcache(scandata);
 	if ((i > 0) && (!scandata->u)) {
 		free(scandata);
@@ -835,6 +874,8 @@ void dnsblscan(char *data, adns_answer *a) {
 	char *show;
 	int len, ri;
 
+	strcpy(segv_location, "OPSB:dnsblscan");
+
 	scannode = list_find(opsbl, data, findscan);
 	if (!scannode) {
 		log("dnsblscan(): Ehhh, Something is wrong here");
@@ -868,18 +909,22 @@ void dnsblscan(char *data, adns_answer *a) {
 							list_delete(opsbl, scannode);
 							lnode_destroy(scannode);
 							startscan(scandata);
-							break;
 						} else {
 							log("DNS: dnsblscan() GETNICKIP failed-> %s", show);
+					        	list_delete(opsbl, scannode);
+			        			lnode_destroy(scannode);
+			        			free(scandata);
 							checkqueue();
 						}
 
+					} else {
+						log("DNS: dnsblscan GETNICKIP rr_info failed");
+						list_delete(opsbl, scannode);
+						lnode_destroy(scannode);
+						free(scandata);
+						checkqueue();
 					}
-					log("DNS: dnsblscan GETNICKIP rr_info failed");
-					list_delete(opsbl, scannode);
-					lnode_destroy(scannode);
-					free(scandata);
-					checkqueue();
+					free(show);
 					break;
 			case DO_OPM_LOOKUP:
 					if (a->nrrs > 0) {
@@ -893,11 +938,21 @@ void dnsblscan(char *data, adns_answer *a) {
 					break;
 			default:
 					log("Warning, Unknown Status in dnsblscan()");
+			        	list_delete(opsbl, scannode);
+			        	lnode_destroy(scannode);
+			        	free(scandata);
 					return;
 		}
 		return;
 			
-	}
+	} else {
+		log("OPSP() Answer is Empty!");
+        	list_delete(opsbl, scannode);
+        	lnode_destroy(scannode);
+        	free(scandata);
+        }
+                                                                                                                                                checkqueue();
+	
 }
 
 /* this function is to send the results to the user after a lookup command */
@@ -907,7 +962,9 @@ void reportdns(char *data, adns_answer *a) {
 	scaninfo *dnsinfo;
 	char *show;
 	int i, len, ri;
-	
+
+	strcpy(segv_location, "OPSB:reportdns");	
+					
 	dnslookup = list_find(opsbl, data, findscan);
 	if (!dnslookup) {
 		log("reportdns(): Ehhh, something wrong here");

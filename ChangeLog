@@ -1,0 +1,9 @@
+Open Proxy Scanning Bot Module for NeoStats Changelog.
+==============================================================================
+* Version 1.0Beta2 * 2/8/2002 * Fish
+- Added GPL headers and credit to BOPM authors
+- A few fixes in a attempt to find this socket/checklist bug
+- Stopped setting Glines multiple times if we find a multiple open proxies, or host is listed in OPM
+
+* Version 1.0Beta1 * 31/8/2002 * Fish
+- Initial Release
