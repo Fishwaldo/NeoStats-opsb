@@ -6,7 +6,7 @@
 /* #undef DEBUG */
 
 /* Version number of package */
-#define MODULE_VERSION "3.0.a2-dev"
+#define MODULE_VERSION "3.0.a2"
 
 /* Major Version */
 #define MODULE_MAJOR "3"
@@ -15,7 +15,7 @@
 #define MODULE_MINOR "0"
 
 /* Revision */
-#define MODULE_REV "a2-dev"
+#define MODULE_REV "a2"
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 /* #undef HAVE_DLFCN_H */

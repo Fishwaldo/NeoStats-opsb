@@ -1,4 +1,4 @@
-* OPSB * M & Fish * Version 3.0.a2-dev
+* OPSB * M & Fish * Version 3.0.a2
 ==============================================================================
 Important information you should know: (READ THIS!)
 ==============================================================================
@@ -18,7 +18,9 @@ system. You must provide all information required as listed in the README
 section on support or your entry will be removed.
 
 Settings and data files from 2.5.x will not work with 3.0. Settings for a1 
-may not be compatible with this version.
+may not be compatible with this version. You should delete all files with
+"config" in the filename from the directory ~/NeoStats 3.0/data before 
+using this version.
 
 Known issues that we are aware of and should not be reported:
 
