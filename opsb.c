@@ -367,7 +367,7 @@ static BotInfo opsb_botinfo =
 int ModSynch (void)
 {
 	SET_SEGV_LOCATION();
-	opsb_bot = init_bot(&opsb_botinfo);
+	opsb_bot = AddBot (&opsb_botinfo);
 	if (opsb.confed == 0) {
 		add_timer (TIMER_TYPE_INTERVAL, unconf, "unconf", 60);
 		unconf();
