@@ -285,7 +285,7 @@ int do_status(User *u, char **av, int ac)
 			case REPORT_DNS:
 					prefmsg(u->nick, s_opsb, "Looking up IP Address");
 					break;
-			case GET_NICK_IP:
+			case DO_DNS_HOST_LOOKUP:
 					prefmsg(u->nick, s_opsb, "Looking up IP address for Scan");
 					break;
 			case DO_OPM_LOOKUP:
@@ -325,6 +325,13 @@ void start_proxy_scan(lnode_t *scannode) {
 
 
 	scandata = lnode_get(scannode);
+	/* if we are configured not to scan, and its not a request, bail out */
+	if ((opsb.doscan == 0) && (!scandata->u)) {
+		scandata->state = FIN_SCAN;
+		check_scan_free(scandata);
+		return;
+	}
+
 	if (scandata->u) chanalert(s_opsb, "Starting proxy scan on %s (%s) by Request of %s", scandata->who, scandata->lookup, scandata->u->nick);
 	scandata->state = DOING_SCAN;
 	/* this is so we can timeout scans */
@@ -349,7 +356,7 @@ void start_proxy_scan(lnode_t *scannode) {
 }
 void check_scan_free(scaninfo *scandata) {
 	lnode_t *scannode;
-	if ((scandata->dnsstate == DO_OPM_LOOKUP) || (scandata->dnsstate == GET_NICK_IP) || (scandata->state == DOING_SCAN)) {
+	if ((scandata->dnsstate == DO_OPM_LOOKUP) || (scandata->dnsstate == DO_DNS_HOST_LOOKUP) || (scandata->state == DOING_SCAN)) {
 		nlog(LOG_DEBUG2, LOG_MOD, "Not Cleaning up Scaninfo for %s yet. Scan hasn't completed", scandata->who);
 		return;
 	}

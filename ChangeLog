@@ -8,6 +8,8 @@ Open Proxy Scanning Bot Module for NeoStats Changelog.
  - Ported to core command processor (M)
  - Add verbose option so we can turn off some messages from OPSB (M)
  - Fixed socklen_t compile problems on older bsd's (F)
+ - OPSB now uses the core's NICKIP support rather than our own. This will reduce double lookups on hostnames for IRCd's that don't provide NICKIP (F)
+ - Fix a problem where when disablescan was enabled, the scan queue would grow out of control (F)
 
 * Version 2.1 * 24/01/2004 * Fish (F) 
  - Sync up libopm with blitzed version to fix a Socks 5 bug (F)

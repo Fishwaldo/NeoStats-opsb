@@ -124,7 +124,7 @@ list_t *exempt;
 
 /* these are some state flags */
 #define REPORT_DNS 	0x0001
-#define GET_NICK_IP	0x0002
+#define DO_DNS_HOST_LOOKUP	0x0002
 #define DO_OPM_LOOKUP	0x0004
 #define DOING_SCAN	0x0008
 #define GOTOPENPROXY	0x0010

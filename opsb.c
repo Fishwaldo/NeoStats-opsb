@@ -152,6 +152,7 @@ int do_check(User *u, char **argv, int argc)
 		/* don't scan users from my server */
 		if (!strcasecmp(u2->server->name, me.name)) {
 			prefmsg(u->nick, s_opsb, "Error, Can not scan NeoStats Bots");
+			free(scandata);
 			return -1;
 		}
 		strlcpy(scandata->who, u2->nick, MAXHOST);
@@ -161,21 +162,20 @@ int do_check(User *u, char **argv, int argc)
 		if (scandata->ipaddr.s_addr > 0) {
 			scandata->dnsstate = DO_OPM_LOOKUP;
 		} else {
-			if (inet_aton(u2->hostname, &scandata->ipaddr) > 0)
-				scandata->dnsstate = DO_OPM_LOOKUP;
-			else {
-				scandata->dnsstate = GET_NICK_IP;
-				scandata->ipaddr.s_addr = 0;
-			}
+			/* if its here, we don't have the IP address yet */
+			prefmsg(u->nick, s_opsb, "Error: We don't have a IP address for %s yet. Try again soon", u2->nick);
+			free(scandata);
+			return -1;
 		}
 	} else {
 		strlcpy(scandata->who, argv[2], MAXHOST);
 		strlcpy(scandata->lookup, argv[2], MAXHOST);
 		bzero(scandata->server, MAXHOST);
+		/* is it a ip address or host */
 		if (inet_aton(argv[2], &scandata->ipaddr) > 0) {
 			scandata->dnsstate = DO_OPM_LOOKUP;
 		} else {
-			scandata->dnsstate = GET_NICK_IP;
+			scandata->dnsstate = DO_DNS_HOST_LOOKUP;
 			scandata->ipaddr.s_addr = 0;
 		}
 	}
@@ -573,7 +573,7 @@ int checkcache(scaninfo *scandata) {
 
 EventFnList __module_events[] = {
 	{ EVENT_ONLINE, 	Online},
-	{ EVENT_SIGNON, 	ScanNick},
+	{ EVENT_GOTNICKIP, 	ScanNick},
 	{ NULL, 	NULL}
 };
 
@@ -639,20 +639,16 @@ static int ScanNick(char **av, int ac) {
 	if (scandata->ipaddr.s_addr > 0) {
 		scandata->dnsstate = DO_OPM_LOOKUP;
 	} else {
-		if (inet_aton(u->hostname, &scandata->ipaddr) > 0)
-			scandata->dnsstate = DO_OPM_LOOKUP;
-		else {
-			scandata->dnsstate = GET_NICK_IP;
-			scandata->ipaddr.s_addr = 0;
-		}
+		/* if we get here, and don't have a IP address, something is fcked up */
+		nlog(LOG_WARNING, LOG_MOD, "Eh, Event_GOTNICKIP called without a IP for %s", u->nick);
+		free(scandata);
+		return -1;		
 	}
 	if (!startscan(scandata)) {
 		chanalert(s_opsb, "Warning Can't scan %s", u->nick);
 		nlog(LOG_WARNING, LOG_MOD, "OBSB ScanNick(): Can't scan %s. Check logs for possible errors", u->nick);
 	}
 	return 1;
-
-
 }
 
 /* this function is the entry point for all scans. Any scan you want to kick off is started with this function. */
@@ -676,7 +672,7 @@ int startscan(scaninfo *scandata) {
 		}
 	}
 	switch(scandata->dnsstate) {
-		case GET_NICK_IP:
+		case DO_DNS_HOST_LOOKUP:
 				if (list_isfull(opsbl)) {
 					if (list_isfull(opsbq)) {
 						chanalert(s_opsb, "Warning, Both Current and queue lists are full. Not Adding additional scans");
@@ -692,7 +688,7 @@ int startscan(scaninfo *scandata) {
 					return 1;
 				}
 				if (dns_lookup(scandata->lookup, adns_r_a, dnsblscan, scandata->who) != 1) {
-					nlog(LOG_WARNING, LOG_MOD, "DNS: startscan() GET_NICK_IP dns_lookup() failed");
+					nlog(LOG_WARNING, LOG_MOD, "DNS: startscan() DO_DNS_HOST_LOOKUP dns_lookup() failed");
 					free(scandata);
 					checkqueue();
 					return 0;
@@ -766,7 +762,7 @@ void dnsblscan(char *data, adns_answer *a) {
 	scandata = lnode_get(scannode);
 	if (a) {
 		switch(scandata->dnsstate) {
-			case GET_NICK_IP:
+			case DO_DNS_HOST_LOOKUP:
 					if (a->nrrs < 1) {
 						chanalert(s_opsb, "No Record for %s. Aborting Scan", scandata->lookup);
 						if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "No A record for %s. Aborting Scan", scandata->lookup);
@@ -1043,6 +1039,8 @@ int __ModInit(int modnum, int apiver)
 		return -1;
 	}
 	init_libopm();
+	/* tell NeoStats we want nickip */
+	me.want_nickip = 1;
 	return 1;
 }
 
