@@ -1298,8 +1298,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
           ac_config_headers="$ac_config_headers modconfig.h"
 
 PACKAGE=OPSB
-MODULE_MAJOR=2
-MODULE_MINOR=3
+MODULE_MAJOR=3
+MODULE_MINOR=0
 VERSION=$MODULE_MAJOR.$MODULE_MINOR
 
 cat >>confdefs.h <<_ACEOF
@@ -4612,9 +4612,9 @@ echo "$as_me:$LINENO: result: $DIRINST" >&5
 echo "${ECHO_T}$DIRINST" >&6
 
 
-as_ac_File=`echo "ac_cv_file_$DIRINST/include/dl.h" | $as_tr_sh`
-echo "$as_me:$LINENO: checking for $DIRINST/include/dl.h" >&5
-echo $ECHO_N "checking for $DIRINST/include/dl.h... $ECHO_C" >&6
+as_ac_File=`echo "ac_cv_file_$DIRINST/include/neostats.h" | $as_tr_sh`
+echo "$as_me:$LINENO: checking for $DIRINST/include/neostats.h" >&5
+echo $ECHO_N "checking for $DIRINST/include/neostats.h... $ECHO_C" >&6
 if eval "test \"\${$as_ac_File+set}\" = set"; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
@@ -4622,7 +4622,7 @@ else
   { { echo "$as_me:$LINENO: error: cannot check for file existence when cross compiling" >&5
 echo "$as_me: error: cannot check for file existence when cross compiling" >&2;}
    { (exit 1); exit 1; }; }
-if test -r "$DIRINST/include/dl.h"; then
+if test -r "$DIRINST/include/neostats.h"; then
   eval "$as_ac_File=yes"
 else
   eval "$as_ac_File=no"
@@ -4656,11 +4656,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #include <config.h>
 #include <stdlib.h>
 int main(void) {
-	if (MAJOR >= 2) {
-		if (MINOR >= 5) {
-			if (REV >= 17) {
-				exit(0);
-			}
+	if (MAJOR >= 3) {
+		if (MINOR >= 0) {
+			exit(0);
 		}
 	}
 	exit(1);
@@ -4693,8 +4691,8 @@ if test "$ns_version_ok" = "yes"; then
 	echo "$as_me:$LINENO: result: Compatible Version" >&5
 echo "${ECHO_T}Compatible Version" >&6;
 else
-	{ { echo "$as_me:$LINENO: error: This Module requires NeoStats 2.5.8 or Higher" >&5
-echo "$as_me: error: This Module requires NeoStats 2.5.8 or Higher" >&2;}
+	{ { echo "$as_me:$LINENO: error: This Module requires NeoStats 3.0 or Higher" >&5
+echo "$as_me: error: This Module requires NeoStats 3.0 or Higher" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
