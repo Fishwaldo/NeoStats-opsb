@@ -7,6 +7,7 @@ Open Proxy Scanning Bot Module for NeoStats Changelog.
 - added REMOVE function to help remove akills set by OPSB
 - Bah, really fixed set to not work at all!
 - Added some stats on cachehits and opm hits
+- Added details about what open proxy was found
 
 * Version 1.0RC3 *  5/11/2002 * Fish
 - Fixed a problem when we delete a scanned user out of the active list when the tcp connect had finished, but not the dns bl lookup...
