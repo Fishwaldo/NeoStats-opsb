@@ -1,0 +1,38 @@
+#Neostats Module Makefile!
+CC=@CC@
+CFLAGS=@CFLAGS@
+LDFLAGS= @LIBS@
+INSTALL = @INSTALL@                                                                                                                 
+INSTALL_PROGRAM = @INSTALL_PROGRAM@                                                                                                 
+INSTALL_DATA = @INSTALL_DATA@
+DIRECTORY=@DIRINST@/dl/
+INCLUDES=-I@DIRINST@/include/ -I.
+
+SOURCES= opsb.c proxy.c opsb_help.c
+OBJECTS= opsb.o proxy.o opsb_help.o
+TARGET= opsb.so                 
+DOCS=README.opsb
+DATA=
+
+
+all:	 module
+
+.c.o:	
+	 $(CC) -c $(CFLAGS) $(INCLUDES) $<
+
+module:	 $(OBJECTS)
+	 $(LD) -shared -o $(TARGET) $(LDFLAGS) $(OBJECTS)
+
+clean:
+	 /bin/rm -rf $(TARGET) *.o Makefile *.log modconfig.h
+
+install: module
+	 $(INSTALL) -m 644 $(TARGET) $(DIRECTORY)
+	 $(INSTALL) -m 644 $(DOCS) $(DIRECTORY)/docs/
+	 $(INSTALL) -m 644 $(DATA) $(DIRECTORY)../data/
+
+$(OBJECTS): Makefile
+
+opsb.c:		opsb.h 	opsb.c
+proxy.c:	proxy.c  opsb.h
+opsb_help.c:	opsb_help.c
