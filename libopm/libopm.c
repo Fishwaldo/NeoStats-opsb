@@ -1190,8 +1190,6 @@ int libopm_before_poll(OPM_T *scanner, pollfd *ufds)
    OPM_NODE_T *node1, *node2;
    OPM_SCAN_T *scan;
    OPM_CONNECTION_T *conn;
-
-
    unsigned int maxsize, size;
 
    size = 0;
@@ -1200,7 +1198,7 @@ int libopm_before_poll(OPM_T *scanner, pollfd *ufds)
    libopm_check_establish(scanner);  /* Make new connections if possible                */
 
 
-//   ufds = MyMalloc((sizeof *ufds) * (*(unsigned int *) libopm_config(scanner->config, OPM_CONFIG_FD_LIMIT)));
+/*   ufds = MyMalloc((sizeof *ufds) * (*(unsigned int *) libopm_config(scanner->config, OPM_CONFIG_FD_LIMIT))); */
    maxsize = (*(unsigned int *) libopm_config(scanner->config, OPM_CONFIG_FD_LIMIT));
 
    if(LIST_SIZE(scanner->scans) == 0)
