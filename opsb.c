@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.9 2002/11/18 13:45:32 fishwaldo Exp $
+** $Id: opsb.c,v 1.10 2002/12/13 11:33:10 fishwaldo Exp $
 */
 
 
@@ -62,7 +62,7 @@ int online;
 Module_Info my_info[] = { {
 	"OPSB",
 	"A Open Proxy Scanning Bot",
-	"1.0RC3a"
+	"1.0RC3"
 } };
 
 
@@ -322,7 +322,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 			return 0;
 		}
 	} else if (!strcasecmp(argv[1], "SET")) {
-		if (argc < 3) {
+		if (argc <= 3) {
 			prefmsg(u->nick, s_opsb, "Syntax Error. /msg %s help set", s_opsb);
 			return 0;
 		}
