@@ -1321,7 +1321,7 @@ _ACEOF
 
 DIRINST=~/NeoStats3.0/
 
-CFLAGS="$CFLAGS -O2 -Wall"
+CFLAGS="$CFLAGS -O2 -Wall -fno-strict-aliasing"
 
 case "$host_os" in
 *openbsd*)

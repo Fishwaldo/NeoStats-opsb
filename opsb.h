@@ -51,7 +51,6 @@ extern Bot *opsb_bot;
 typedef struct scaninfo{
 	char who[MAXHOST];
 	int state;
-	int dnsstate;
 	char lookup[MAXHOST];
 	char server[MAXHOST];
 	struct in_addr ip;
@@ -106,13 +105,13 @@ typedef struct proxy_type {
 
 /* these are some state flags */
 #define REPORT_DNS 	0x0001
-#define DO_DNS_HOST_LOOKUP	0x0002
-#define DO_OPM_LOOKUP	0x0004
+#define DO_DNS_HOST_LOOKUP	0x0002 
+/* #define DO_OPM_LOOKUP	0x0004 */
 #define DOING_SCAN	0x0008
 #define GOTOPENPROXY	0x0010
 #define OPMLIST		0x0020
-#define	NOOPMLIST	0x0040
-#define FIN_SCAN	0x0080
+#define NOOPMLIST		0x0040
+#define FIN_SCAN		0x0080
 
 
 /* opsb.c */

@@ -1,5 +1,5 @@
-#ifndef LIST_H
-#define LIST_H
+#ifndef OPMLIST_H
+#define OPMLIST_H
 
 
 /*  Copyright (C) 2002 by the past and present ircd coders, and others.

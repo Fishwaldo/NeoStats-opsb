@@ -28,7 +28,7 @@
 #endif
 
 #include "opm_common.h"
-#include "list.h"
+#include "opmlist.h"
 #include "malloc.h"
 #include "opm.h"
 

@@ -31,23 +31,33 @@
 #include <arpa/nameser.h>
 #endif
 #include "opsb.h"
-#include "opm.h"
-#include "opm_types.h"
-#include "opm_error.h"
 
 int proxy_connect(unsigned long ip, int port, char *who);
+#if 0
 void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
 void negfailed(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
 void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
 void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
 void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused);
+#endif
 
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
+
+typedef struct conninfo {
+	int type;
+	int port;
+	scaninfo *scandata;
+	int status;
+};
    
-   
-OPM_T *scanner;
+#define PTYPE_HTTP 	0
+#define PTYPE_SOCKS4 	1 
+#define PTYPE_SOCKS5	2
+#define PTYPE_WINGATE	3
+#define PTYPE_ROUTER	4
+#define PTYPE_HTTPPOST	5
 
 char *defaultports[] = {
 	"80 8080 8000 3128",
@@ -59,12 +69,12 @@ char *defaultports[] = {
 };
 
 proxy_type proxy_list[] = {
-	{ OPM_TYPE_HTTP, "HTTP" },
-	{ OPM_TYPE_SOCKS4, "SOCKS4" },
-	{ OPM_TYPE_SOCKS5, "SOCKS5" },
-	{ OPM_TYPE_WINGATE, "WINGATE" },
-	{ OPM_TYPE_ROUTER, "ROUTER"},
-	{ OPM_TYPE_HTTPPOST, "HTTPPOST" },
+	{ PTYPE_HTTP, "HTTP" },
+	{ PTYPE_SOCKS4, "SOCKS4" },
+	{ PTYPE_SOCKS5, "SOCKS5" },
+	{ PTYPE_WINGATE, "WINGATE" },
+	{ PTYPE_ROUTER, "ROUTER"},
+	{ PTYPE_HTTPPOST, "HTTPPOST" },
 	{ 0, "" }
 };
 
@@ -79,9 +89,6 @@ int get_proxy_by_name(const char *name) {
 		}
 	}
 	return 0;
-}
-void add_port(int type, int port) {
-	opm_addtype(scanner, type, port);
 }
 
 void save_ports() 
@@ -158,147 +165,88 @@ int load_ports() {
 }
 
 int init_libopm() {
-	lnode_t *pn;
-	port_list *pl;
-
-	scanner = opm_create();
-	/* setup the callbacks to our code */
-	opm_callback(scanner, OPM_CALLBACK_OPENPROXY, &open_proxy, NULL);
-	opm_callback(scanner, OPM_CALLBACK_NEGFAIL, &negfailed, NULL);
-	opm_callback(scanner, OPM_CALLBACK_TIMEOUT, &timeout, NULL);
-      	opm_callback(scanner, OPM_CALLBACK_END, &scan_end, NULL);
-        opm_callback(scanner, OPM_CALLBACK_ERROR, &scan_error, NULL);
-	
-	/* max number of socks we allow */
-	opm_config(scanner, OPM_CONFIG_FD_LIMIT, &opsb.socks);
-	/* host to try to connect to */
-	opm_config(scanner, OPM_CONFIG_SCAN_IP, opsb.targetip);
-	/* port to try to connect to */
-	opm_config(scanner, OPM_CONFIG_SCAN_PORT, &opsb.targetport);
-	/* string to look for */
-	opm_config(scanner, OPM_CONFIG_TARGET_STRING, opsb.openstring);
-	/* also look for throttle messages */
-	opm_config(scanner, OPM_CONFIG_TARGET_STRING, "ERROR :Trying to reconnect too fast");
-	/* timeout */
-	opm_config(scanner, OPM_CONFIG_TIMEOUT, &opsb.timeout);
-	/* max bytes read */
-	opm_config(scanner, OPM_CONFIG_MAX_READ, &opsb.maxbytes);
-	
-
-
-	/* read the proxy types directly from keeper :) */
-	pn = list_first(opsb.ports);
-	while (pn) {
-		pl = lnode_get(pn);
-		opm_addtype(scanner, pl->type, pl->port);
-		pn = list_next(opsb.ports, pn);
-	}
-	       
-
-	/* add the sock poll interface into neo */
-	add_sockpoll("opsb", scanner, libopm_before_poll, libopm_after_poll);
-        
-        return 1;
+	return NS_SUCCESS;
 }         
 
-void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused)
-      {
-#if 0
-	FILE *fp;
-#endif
-	scaninfo *scandata;
+void start_proxy_scan(scaninfo *scandata) 
+{
+	int i;
 
 	SET_SEGV_LOCATION();
 
-	scandata = remote->data;
+	if (scandata->reqclient) irc_chanalert (opsb_bot, "Starting proxy scan on %s (%s) by Request of %s", scandata->who, scandata->lookup, scandata->reqclient->name);
+	scandata->state = DOING_SCAN;
+	/* this is so we can timeout scans */
+	scandata->started = time(NULL);
+
+	
+#if 0
+	if ((opsb.doscan == 1) || (scandata->reqclient)) {
+
+		remote  = opm_remote_create(inet_ntoa(scandata->ip));
+		remote->data = scandata;
+	   	switch(i = opm_scan(scanner, remote))
+      		{
+            		case OPM_SUCCESS:
+				dlog (DEBUG2, "Starting Scan on %s", inet_ntoa(scandata->ip));
+                        	break;
+                        case OPM_ERR_BADADDR:
+				nlog (LOG_WARNING, "Scan of %s %s Failed. Bad Address?", scandata->who, inet_ntoa(scandata->ip));
+                                opm_remote_free(remote);
+				scandata->state = FIN_SCAN;
+				check_scan_free(scandata);
+                }
+	}
+#endif
+}
+void check_scan_free(scaninfo *scandata) {
+	lnode_t *scannode;
+	if (scandata->state == DOING_SCAN) {
+		dlog (DEBUG2, "Not Cleaning up Scaninfo for %s yet. Scan hasn't completed", scandata->who);
+		return;
+	}
+	if (scandata->state != GOTOPENPROXY) {
+		addtocache(scandata->ip.s_addr);	
+		dlog (DEBUG1, "%s's Host is clean. Adding to Cache", scandata->who);
+	}
+	scannode = list_find(opsbl, scandata->who, findscan);
+	if (scannode) {
+		dlog (DEBUG1, "%s scan finished. Cleaning up", scandata->who);
+		list_delete(opsbl, scannode);
+		lnode_destroy(scannode);
+		scandata->reqclient = NULL;
+		ns_free(scandata);
+	} else {
+		nlog (LOG_WARNING, "Damn, Can't find ScanNode %s. Something is fubar", scandata->who);
+	}
+	checkqueue();												
+}
+
+
+
+void open_proxy(conninfo *connection)
+      {
+	scaninfo *scandata = connection->scandata;
+
+	SET_SEGV_LOCATION();
 
 	if (scandata->doneban == 1)
 		return;
 
 	++opsb.open;
 
-	nlog (LOG_CRITICAL, "OPSB: Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
-	irc_chanalert (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
-	irc_globops  (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
-	if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
+	nlog (LOG_CRITICAL, "OPSB: Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->ip, type_of_proxy(connection->type), connection->port);
+	irc_chanalert (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->ip, type_of_proxy(connection->type), connection->port);
+	irc_globops  (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->ip, type_of_proxy(connection->type), connection->port);
+	if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->ip, type_of_proxy(connection->type), connection->port);
 	if (opsb.doakill) 
-		irc_akill (opsb_bot, remote->ip, "*", opsb.akilltime, "Open Proxy found on your host. %s(%d)", type_of_proxy(remote->protocol), remote->port);
-#if 0
-	/* write out to a logfile */
-	if ((fp = fopen("logs/openproxies.log", "a")) == NULL) return;
-	fprintf(fp, "%d:%s:%s\n", remote->protocol, remote->ip, "empty");
-        fclose(fp);
-#endif
+		irc_akill (opsb_bot, remote->ip, "*", opsb.akilltime, "Open Proxy found on your host. %s(%d)", type_of_proxy(connection->type), connection->port);
+
 	/* no point continuing the scan if they are found open */
 	scandata->state = GOTOPENPROXY;
-	opm_end(scanner, remote);
-
-
-#if 0
-	if (scandata->dnsstate == OPMLIST) {
-		scandata->doneban = 1;
-		nlog (LOG_CRITICAL, "OPSB: Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
-		irc_chanalert (opsb_bot, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
-		irc_globops  (opsb_bot, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
-		if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
-		irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.akilltime, "Your host is listed as an Open Proxy. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ip));
-	}	
-#endif
-}
-
-void negfailed(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
-	scaninfo *scandata;
-
-	SET_SEGV_LOCATION();
-
-	scandata = remote->data;
+	/* XXX end scan */
 	
-	if (scandata->reqclient) {
-		irc_prefmsg (opsb_bot, scandata->reqclient, "Negitiation failed for protocol %s(%d)", type_of_proxy(remote->protocol), remote->port);
-	}
-}	
-
-void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
-	scaninfo *scandata;
-
-	SET_SEGV_LOCATION();
-
-	scandata = remote->data;
-	if (scandata->reqclient) {
-		irc_prefmsg (opsb_bot, scandata->reqclient, "Timeout on Protocol %s(%d)", type_of_proxy(remote->protocol), remote->port);
-	}
 }
-
-void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
-	scaninfo *scandata;
-
-	SET_SEGV_LOCATION();
-
-	scandata = remote->data;
-	if (scandata->reqclient) {
-		irc_prefmsg (opsb_bot, scandata->reqclient, "scan finished on %s", scandata->who);
-	}
-	opm_remote_free(remote);
-	if (scandata->state != GOTOPENPROXY) scandata->state = FIN_SCAN;
-	check_scan_free(scandata);
-}
-
-void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused) {
-	scaninfo *scandata;
-
-	SET_SEGV_LOCATION();
-	scandata = remote->data;
-	if (scandata->reqclient) {
-		if (opmerr == 5) {
-			irc_prefmsg (opsb_bot, scandata->reqclient, "Closed Proxy on Protocol %s (%d)", type_of_proxy(remote->protocol), remote->port);
-		} else {
-			irc_prefmsg (opsb_bot, scandata->reqclient, "scan error on Protocol %s (%d) - %d", type_of_proxy(remote->protocol), remote->port, opmerr);
-		}
-	}
-
-}
-
-
 
 int opsb_cmd_status (CmdParams* cmdparams) 
 {
@@ -326,25 +274,6 @@ int opsb_cmd_status (CmdParams* cmdparams)
 		else 
 			irc_prefmsg (opsb_bot, cmdparams->source, "Scanning %s (%s) - %s", scandata->lookup, inet_ntoa(scandata->ip), scandata->who);
 		
-		switch(scandata->dnsstate) {
-			case REPORT_DNS:
-					irc_prefmsg (opsb_bot, cmdparams->source, "Looking up IP Address");
-					break;
-			case DO_DNS_HOST_LOOKUP:
-					irc_prefmsg (opsb_bot, cmdparams->source, "Looking up IP address for Scan");
-					break;
-			case DO_OPM_LOOKUP:
-					irc_prefmsg (opsb_bot, cmdparams->source, "Looking up DNS blacklist");
-					break;
-			case OPMLIST:
-					irc_prefmsg (opsb_bot, cmdparams->source, "Host is listed in %s", opsb.opmdomain);
-					break;
-			case NOOPMLIST:
-					irc_prefmsg (opsb_bot, cmdparams->source, "Host is Not listed in %s", opsb.opmdomain);
-					break;
-			default:
-					irc_prefmsg (opsb_bot, cmdparams->source, "Unknown State (DNS)");
-		}
 		switch(scandata->state) {
 			case DOING_SCAN:
 					irc_prefmsg (opsb_bot, cmdparams->source, "Scanning for Open Proxies");
@@ -361,60 +290,3 @@ int opsb_cmd_status (CmdParams* cmdparams)
 }
 
 
-void start_proxy_scan(scaninfo *scandata) 
-{
-	OPM_REMOTE_T *remote;
-	int i;
-
-	SET_SEGV_LOCATION();
-	/* if we are configured not to scan, and its not a request, bail out */
-	if ((opsb.doscan == 0) && (!scandata->reqclient)) {
-		scandata->state = FIN_SCAN;
-		check_scan_free(scandata);
-		return;
-	}
-
-	if (scandata->reqclient) irc_chanalert (opsb_bot, "Starting proxy scan on %s (%s) by Request of %s", scandata->who, scandata->lookup, scandata->reqclient->name);
-	scandata->state = DOING_SCAN;
-	/* this is so we can timeout scans */
-	scandata->started = time(NULL);
-
-	if ((opsb.doscan == 1) || (scandata->reqclient)) {
-		remote  = opm_remote_create(inet_ntoa(scandata->ip));
-		remote->data = scandata;
-	   	switch(i = opm_scan(scanner, remote))
-      		{
-            		case OPM_SUCCESS:
-				dlog (DEBUG2, "Starting Scan on %s", inet_ntoa(scandata->ip));
-                        	break;
-                        case OPM_ERR_BADADDR:
-				nlog (LOG_WARNING, "Scan of %s %s Failed. Bad Address?", scandata->who, inet_ntoa(scandata->ip));
-                                opm_remote_free(remote);
-				scandata->state = FIN_SCAN;
-				check_scan_free(scandata);
-                }
-	}
-
-}
-void check_scan_free(scaninfo *scandata) {
-	lnode_t *scannode;
-	if ((scandata->dnsstate == DO_OPM_LOOKUP) || (scandata->dnsstate == DO_DNS_HOST_LOOKUP) || (scandata->state == DOING_SCAN)) {
-		dlog (DEBUG2, "Not Cleaning up Scaninfo for %s yet. Scan hasn't completed", scandata->who);
-		return;
-	}
-	if ((scandata->dnsstate != OPMLIST) && (scandata->state != GOTOPENPROXY)) {
-		addtocache(scandata->ip.s_addr);	
-		dlog (DEBUG1, "%s's Host is clean. Adding to Cache", scandata->who);
-	}
-	scannode = list_find(opsbl, scandata->who, findscan);
-	if (scannode) {
-		dlog (DEBUG1, "%s scan finished. Cleaning up", scandata->who);
-		list_delete(opsbl, scannode);
-		lnode_destroy(scannode);
-		scandata->reqclient = NULL;
-		ns_free(scandata);
-	} else {
-		nlog (LOG_WARNING, "Damn, Can't find ScanNode %s. Something is fubar", scandata->who);
-	}
-	checkqueue();												
-}

@@ -1,6 +1,7 @@
 #ifndef LIBOPM_H
 #define LIBOPM_H
 
+#include <neostats.h>
 #include "config.h"
 #include "inet.h"
 #include "opm_common.h"
@@ -31,7 +32,7 @@ struct _OPM_CONNECTION {
 
    OPM_PROTOCOL_T     *protocol;        /* Pointer to specific protocol this connection handles */
    unsigned short int  port;            /* Some protocols have multiple ports, eg. HTTP */
-
+   Sock 		    *Sock;
    int                fd;               /* Allocated file descriptor, 0 if not yet allocated */
    unsigned short int bytes_read;       /* Bytes read so far in this connection */
    char               readbuf[READBUFLEN + 1]; /* 128 byte read buffer, anything over 128 is probably not of use */

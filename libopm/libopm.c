@@ -27,13 +27,15 @@
 #include "modconfig.h"
 #endif
 
+#include <neostats.h>
+#include <event.h>
 #include "config.h"
 #include "libopm.h"
 #include "malloc.h"
 #include "opm_error.h"
 #include "opm_types.h"
 #include "opm_common.h"
-#include "list.h"
+#include "opmlist.h"
 #include "inet.h"
 #include "proxy.h"
 
@@ -56,6 +58,8 @@
 #ifdef HAVE_STRING_H
 # include <string.h>
 #endif
+
+
 
 RCSID("$Id$");
 
@@ -1030,10 +1034,12 @@ static void libopm_check_closed(OPM_T *scanner)
 static void libopm_do_connect(OPM_T * scanner, OPM_SCAN_T *scan, OPM_CONNECTION_T *conn)
 {
    opm_sockaddr *bind_ip;
-
+   struct timeval timeout;
    struct sockaddr_in *addr;   /* Outgoing host */
+   char tmpbuf[BUFSIZE];
+#if 0
    struct sockaddr_in local_addr; /* For binding */
- 
+#endif 
    addr = (struct sockaddr_in *) &(scan->addr.sa4); /* Already have the IP in byte format from opm_scan */
 
    addr->sin_family   = AF_INET;
@@ -1041,7 +1047,21 @@ static void libopm_do_connect(OPM_T * scanner, OPM_SCAN_T *scan, OPM_CONNECTION_
 
 
    bind_ip = (opm_sockaddr *) libopm_config(scanner->config, OPM_CONFIG_BIND_IP);   
+   
+   conn->fd = sock_connect(SOCK_STREAM, scan->addr.sa4.sin_addr, conn->port);
+   if (conn->fd == -1) 
+   {
+      libopm_do_callback(scanner, libopm_setup_remote(scan->remote, conn), OPM_CALLBACK_ERROR, OPM_ERR_NOFD);
+      conn->state = OPM_STATE_CLOSED;
+      return;
+   }
+   ircsnprintf(tmpbuf, BUFSIZE, "OPSB-%d-%d", conn->fd, conn->port);
+   timeout.tv_sec = *(int *) libopm_config(scanner->config, OPM_CONFIG_TIMEOUT);
+   timeout.tv_usec = 0;
+   conn->Sock = AddSock(SOCK_NATIVE, tmpbuf, conn->fd, libopm_do_readready, libopm_do_writeready, EV_WRITE|EV_TIMEOUT, (void *)conn, &timeout); 
 
+
+#if 0   
    conn->fd = socket(PF_INET, SOCK_STREAM, 0);
    scanner->fd_use++;         /* Increase file descriptor use */
 
@@ -1077,11 +1097,14 @@ static void libopm_do_connect(OPM_T * scanner, OPM_SCAN_T *scan, OPM_CONNECTION_
    fcntl(conn->fd, F_SETFL, O_NONBLOCK);
 #endif
    connect(conn->fd, (struct sockaddr *) addr, sizeof(*addr));
+#endif /* new sock code */
 
    conn->state = OPM_STATE_ESTABLISHED;
    time(&(conn->creation));   /* Stamp creation time, for timeout */
 }
 
+
+#if 0
 
 /* check_poll
  *
@@ -1299,7 +1322,7 @@ void libopm_after_poll(OPM_T *scanner, pollfd *ufds, unsigned int ufdssize)
 
 }
 
-
+#endif
 
 /* do_readready
  *

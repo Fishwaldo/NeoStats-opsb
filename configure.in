@@ -13,7 +13,7 @@ AC_DEFINE_UNQUOTED(MODULE_MINOR, "$MODULE_MINOR")
 AC_DEFINE_UNQUOTED(MODULE_REV, "$MODULE_REV")
 DIRINST=~/NeoStats3.0/
 AC_PREFIX_DEFAULT(~/NeoStats3.0/)
-CFLAGS="$CFLAGS -O2 -Wall"
+CFLAGS="$CFLAGS -O2 -Wall -fno-strict-aliasing"
 
 case "$host_os" in
 *openbsd*)

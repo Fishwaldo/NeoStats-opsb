@@ -33,7 +33,7 @@
 #include "opm_error.h"
 #include "opm_types.h"
 #include "opm_common.h"
-#include "list.h"
+#include "opmlist.h"
 
 #ifdef STDC_HEADERS
 # include <string.h>

@@ -24,14 +24,14 @@ libopm/inet.h -text
 libopm/libopm.c -text
 libopm/libopm.h -text
 libopm/libopm.vcproj -text
-libopm/list.c -text
-libopm/list.h -text
 libopm/malloc.c -text
 libopm/malloc.h -text
 libopm/opm.h -text
 libopm/opm_common.h -text
 libopm/opm_error.h -text
 libopm/opm_types.h -text
+libopm/opmlist.c -text
+libopm/opmlist.h -text
 libopm/proxy.c -text
 libopm/proxy.h -text
 libopm/test.c -text

@@ -6,7 +6,7 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@                                                                                                 
 INSTALL_DATA = @INSTALL_DATA@
 DIRECTORY = @DIRINST@/modules/
-INCLUDES = -I@DIRINST@/include/ -I. -Ilibopm
+INCLUDES = -I@DIRINST@/include/ -I.
 
 SRCS = opsb.c proxy.c opsb_help.c
 OBJS = ${SRCS:.c=.o}
@@ -14,7 +14,7 @@ TARGET = opsb.so
 DOCS = README.opsb README.opsb.html
 DATA =
 SCRIPTS = 
-DISTFILES = $(SRCS) $(DOCS) modconfig.h.in configure install-sh ChangeLog Makefile.in opsb.h libopm/*.c libopm/*.h libopm/README libopm/LICENSE LICENSE libopm/*.in libopm/*.vcproj RELNOTES opsb.vcproj modconfigwin32.h
+DISTFILES = $(SRCS) $(DOCS) modconfig.h.in configure install-sh ChangeLog Makefile.in opsb.h LICENSE RELNOTES opsb.vcproj modconfigwin32.h
 DISTDIR = @PACKAGE@-@VERSION@
 
 all:	module
@@ -29,14 +29,11 @@ all:	module
 	$(CC) -c $(CFLAGS) $(INCLUDES) $<
 	$(CC) -MM $(INCLUDES) -c $< > $*.d
 
-libopm.a:
-	 (cd libopm; $(MAKE) $@)
 	 
-module:	 libopm.a $(OBJS)
-	 $(LD) -shared -o $(TARGET) $(LDFLAGS) $(OBJS) libopm/libopm.a
+module:	 $(OBJS)
+	 $(LD) -shared -o $(TARGET) $(LDFLAGS) $(OBJS)
 
 clean:   
-	 (cd libopm; $(MAKE) $@)
 	 /bin/rm -rf $(TARGET) *.o Makefile *.log modconfig.h
 
 install: module
