@@ -4,7 +4,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: opsb.h,v 1.3 2002/09/06 04:33:28 fishwaldo Exp $
+** $Id: opsb.h,v 1.4 2002/09/06 06:07:34 fishwaldo Exp $
 */
 
 
@@ -72,6 +72,7 @@ struct sockinfo {
 	int flags;
 	int type;
 	int bytes;
+	char buf[1024];
 };
 
 typedef struct sockinfo socklist;
@@ -97,6 +98,8 @@ list_t *cache;
 struct exempts {
 	char host[MAXHOST];
 	int server;
+	char who[MAXNICK];
+	char reason[MAXHOST];
 };
 
 typedef struct exempts exemptinfo;

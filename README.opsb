@@ -1,4 +1,4 @@
-Open Proxy Scanning Bot Version 1.0 Beta1 - fish@dynam.ac
+Open Proxy Scanning Bot Version 1.0 Beta2 - fish@dynam.ac
 +++++++++++++++++++++++++++++++++++++++++
 
 Thanks for Downloading opsb. opsb is a bot for the NeoStats IRC services
@@ -106,13 +106,14 @@ What you should change from defaults:
 	user re-connects within the cache time, they will not be scanned again. it
 	is default to 1 hour.
 
-/msg opsb exclude add <serviceshostname> 1
+/msg opsb exclude add <serviceshostname> 1 <reason>
 	opsb scans every user that joins the network, including users that
 	come from your services host. (such as ChanServ or
 	Reserved Nicks). You *SHOULD* add a exclusion, so that users from your
 	services server are not scanned. servershostname is the name of your
 	services as seen on IRC. (eg, in /map or /links)
 	The "1" specifies a IRC server, a 0 specifies a true internet hostname. 
+	The reason field allows you to add a comment to the exclusion for reference.
 
 There are many other options that you configure, though you should consult
 the help interface to what they do (/msg opsb help set and /msg opsb

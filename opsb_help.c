@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb_help.c,v 1.2 2002/09/04 08:52:34 fishwaldo Exp $
+** $Id: opsb_help.c,v 1.3 2002/09/06 06:07:34 fishwaldo Exp $
 */
 
 #include "stats.h"
@@ -95,7 +95,8 @@ const char *opsb_help_set[] = {
 "Usage: \2SET <OPTIONS> <SETTING>\2",
 "",
 "This command will set various options relating to OPSB.",
-"The Settings take effect imediatly",
+"You can view the settings by typing \2SET LIST\2",
+"The Settings take effect straight away",
 "The Options are:",
 "    \2TARGETIP\2      - Change the IP address we try to make the proxies connect to",
 "                        This should be set to a IP address of on of your IRC Servers.",
@@ -126,10 +127,11 @@ const char *opsb_help_exclude[] = {
 "The Options are:",
 "    \2LIST\2         - This will list the current exceptions and the positions in the list",
 "                       If you wish to remove a entry, you must exaime the list position first",
-"    \2ADD <hostname> <1/0>\2",
+"    \2ADD <hostname> <1/0> <reason>\2",
 "                     - This option will add a entry of <hostname> to the exception list",
 "                       a Value of 1 after the hostname indicates a Servername (eg, services.irc-chat.net)",
 "                       a Value of 0 after the hostname indicates a hostname (eg, *.adsl.home.com)",
+"                       The final portion of the string is a description of the exclusion for future reference",
 "                       Wildcards such as * and ? may be used in the hostname portion",
 "    \2DEL <NUM>\2    - This will delete entry numbered <NUM> in the list from the exclusions"
 "",

@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.4 2002/09/06 04:33:28 fishwaldo Exp $
+** $Id: opsb.c,v 1.5 2002/09/06 06:07:34 fishwaldo Exp $
 */
 
 
@@ -60,7 +60,7 @@ extern const char *opsb_help_exclude[];
 Module_Info my_info[] = { {
 	"OPSB",
 	"A Open Proxy Scanning Bot",
-	"1.0Beta1"
+	"1.0Beta2"
 } };
 
 
@@ -93,6 +93,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 	scaninfo *scandata;
 	exemptinfo *exempts;
 	int lookuptype, i;
+	char *buf;
 
 	strcpy(segv_location, "OPSB:Bot_Message");
 	
@@ -134,6 +135,11 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		send_status(u);
 		return 1;
 	} else if (!strcasecmp(argv[1], "lookup")) {
+		if (UserLevel(u) < 50) {
+			prefmsg(u->nick, s_opsb, "Access Denied");
+			chanalert(s_opsb, "%s tried to use lookup, but is not a operator", u->nick);
+			return 1;
+		}
 		if (argc < 3) {
 			prefmsg(u->nick, s_opsb, "Invalid Syntax. /msg %s help lookup for more help", s_opsb);
 			return 0;
@@ -233,6 +239,11 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		
 		return 1;
 	} else if (!strcasecmp(argv[1], "EXCLUDE")) {
+		if (UserLevel(u) < 50) {
+			prefmsg(u->nick, s_opsb, "Access Denied");
+			chanalert(s_opsb, "%s tried to use exclude, but is not a operator", u->nick);
+			return 1;
+		}
 		if (argc < 3) {
 			prefmsg(u->nick, s_opsb, "Syntax Error. /msg %s help exclude", s_opsb);
 			return 0;
@@ -243,14 +254,14 @@ int __Bot_Message(char *origin, char **argv, int argc)
 			prefmsg(u->nick, s_opsb, "Exception List:");
 			while (lnode) {
 				exempts = lnode_get(lnode);
-				prefmsg(u->nick, s_opsb, "%d) %s %s", i, exempts->host, (exempts->server ? "(Server)" : "(Client)"));
+				prefmsg(u->nick, s_opsb, "%d) %s %s Added by %s for %s", i, exempts->host, (exempts->server ? "(Server)" : "(Client)"), exempts->who, exempts->reason);
 				++i;
 				lnode = list_next(exempt, lnode);
 			}
 			prefmsg(u->nick, s_opsb, "End of List.");
 			chanalert(s_opsb, "%s requested Exception List", u->nick);
 		} else if (!strcasecmp(argv[2], "ADD")) {
-			if (argc < 5) {
+			if (argc < 6) {
 				prefmsg(u->nick, s_opsb, "Syntax Error. /msg %s help exclude", s_opsb);
 				return 0;
 			}
@@ -268,6 +279,10 @@ int __Bot_Message(char *origin, char **argv, int argc)
 				exempts->server = 1;
 			else 
 				exempts->server = 0;
+			snprintf(exempts->who, MAXNICK, "%s", u->nick);
+			buf = joinbuf(argv, argc, 5);
+			snprintf(exempts->reason, MAXHOST, "%s", buf);
+			free(buf);
 			lnode = lnode_create(exempts);
 			list_append(exempt, lnode);
 			prefmsg(u->nick, s_opsb, "Added %s (%s) exception to list", exempts->host, (exempts->server ? "(Server)" : "(Client)"));
@@ -613,7 +628,7 @@ void savecache() {
 	node = list_first(exempt);
 	while (node) {
 		exempts = lnode_get(node);
-		fprintf(fp, "%s %d\n", exempts->host, exempts->server);
+		fprintf(fp, "%s %d %s %s\n", exempts->host, exempts->server, exempts->who, exempts->reason);
 		node = list_next(exempt, node);
 	}
 	fprintf(fp, "#CACHE\n");
@@ -675,6 +690,8 @@ void loadcache() {
 			exempts = malloc(sizeof(exemptinfo));
 			snprintf(exempts->host, MAXHOST, "%s", strtok(buf, " "));
 			exempts->server = atoi(strtok(NULL, " "));
+			snprintf(exempts->who, MAXNICK, "%s", strtok(NULL, " "));
+			snprintf(exempts->reason, MAXHOST, "%s", strtok(NULL, "\n"));
 			node = lnode_create(exempts);
 			list_prepend(exempt, node);			
 		} else {
@@ -1061,7 +1078,6 @@ void _init() {
 
 
 void _fini() {
-	globops(me.name, "OPSB Module Unloaded");
 };
 
 

@@ -6,6 +6,8 @@ Open Proxy Scanning Bot Module for NeoStats Changelog.
 - Stopped setting Glines multiple times if we find a multiple open proxies, or host is listed in OPM
 - Think I finally fixed the socket/checklist bug
 - Fixed a few mem leaks I believe
+- Added actual string to opsb.log for detection and OPM reporting
+- added to exclusion list who added the exclusion, and the reason
 
 * Version 1.0Beta1 * 31/8/2002 * Fish
 - Initial Release

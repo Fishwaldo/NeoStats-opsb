@@ -20,7 +20,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: proxy.c,v 1.4 2002/09/06 04:33:28 fishwaldo Exp $
+** $Id: proxy.c,v 1.5 2002/09/06 06:07:34 fishwaldo Exp $
 */
 
 
@@ -91,7 +91,7 @@ void do_ban(scaninfo *scandata) {
 		if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		sakill_cmd(inet_ntoa(scandata->ipaddr), "*", s_opsb, opsb.bantime, "Open Proxy found on your host. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ipaddr));
 		if ((fp = fopen("logs/opsb.log", "a")) == NULL) return;
-       		fprintf(fp, "%s: %s\n", proxy_list[sockdata->type].type, inet_ntoa(scandata->ipaddr));
+       		fprintf(fp, "%s:%s:%s\n", proxy_list[sockdata->type].type, inet_ntoa(scandata->ipaddr), sockdata->buf);
                 fclose(fp);
 		socknode = list_next(scandata->socks, socknode);
 	}
@@ -501,6 +501,7 @@ int proxy_read(int socknum, char *sockname) {
 			/* this looks for the ban string */
 			if (strstr(buf, opsb.lookforstring)) {
 				if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Open %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
+				strncpy(sockdata->buf, strtok(buf,"\n"), 1023);
 				++proxy_list[sockdata->type].noopen;
 				scandata->state = GOTOPENPROXY;
 				sockdata->flags = OPENPROXY;
