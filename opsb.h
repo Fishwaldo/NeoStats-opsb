@@ -16,7 +16,6 @@
 typedef struct proxy_types {
 	char *type;
 	int port;
-	int (*scan)(int sock);
 	int nofound;
 	int noopen;
 } proxy_types;
@@ -43,7 +42,6 @@ struct scanq {
 	struct in_addr ipaddr;
 	User *u;
 	int doreport;
-	list_t *socks;
 	time_t started;
 	int doneban;
 	char connectstring[BUFSIZE];
@@ -72,14 +70,6 @@ struct opsb {
 	int opmhits;
 } opsb;
 
-struct sockinfo {
-	int sock;
-	int (*function)(int sock);
-	int flags;
-	int type;
-	int bytes;
-	char buf[2048];
-};
 
 typedef struct sockinfo socklist;
 
@@ -122,12 +112,8 @@ list_t *exempt;
 #define GOTOPENPROXY	0x0010
 #define OPMLIST		0x0020
 #define	NOOPMLIST	0x0040
+#define FIN_SCAN	0x0080
 
-/* this is some socklist flags */
-#define CONNECTING	0x0001
-#define SOCKCONNECTED	0x0002
-#define UNCONNECTED	0x0004
-#define OPENPROXY	0x0008
 
 /* opsb.c */
 int findscan(const void *key1, const void *key2);
@@ -139,6 +125,6 @@ void addtocache(unsigned long ipaddr);
 /* proxy.c */
 void start_proxy_scan(lnode_t *scannode);
 void send_status(User *u);
-
+void check_scan_free(scaninfo *scandata);
 
 #endif /* OPSB_H */

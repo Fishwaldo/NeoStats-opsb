@@ -217,7 +217,6 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		scandata = malloc(sizeof(scaninfo));
 		scandata->doneban = 0;
 		scandata->u = u;
-		scandata->socks = NULL;
 		if ((u2 = finduser(argv[2])) != NULL) {
 			/* don't scan users from my server */
 			if (!strcasecmp(u2->server->name, me.name)) {
@@ -843,7 +842,6 @@ static int ScanNick(char **av, int ac) {
 	scandata = malloc(sizeof(scaninfo));
 	scandata->u = NULL;
 	scandata->doneban = 0;
-	scandata->socks = NULL;
 	strncpy(scandata->who, u->nick, MAXHOST);
 	strncpy(scandata->lookup, u->hostname, MAXHOST);
 	strncpy(scandata->server, u->server->name, MAXHOST);
@@ -1034,10 +1032,12 @@ void dnsblscan(char *data, adns_answer *a) {
 						do_ban(scandata);
 #endif
 						checkqueue();
-					} else 
+					} else {
 						if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "%s does not appear in DNS black list", scandata->lookup);
 						nlog(LOG_DEBUG1, LOG_MOD, "Got Negative OPM lookup for %s (%s)", scandata->who, scandata->lookup);
 						scandata->dnsstate = NOOPMLIST;
+					}
+					check_scan_free(scandata);
 					break;
 			default:
 					nlog(LOG_WARNING, LOG_MOD, "Warning, Unknown Status in dnsblscan()");

@@ -84,7 +84,21 @@ int init_libopm() {
 	opm_config(scanner, OPM_CONFIG_MAX_READ, &opsb.maxbytes);
 	
 	opm_addtype(scanner, OPM_TYPE_HTTP, 8080);        
-
+	opm_addtype(scanner, OPM_TYPE_HTTP, 80);        
+	opm_addtype(scanner, OPM_TYPE_HTTP, 3128);        
+	opm_addtype(scanner, OPM_TYPE_HTTP, 31); 
+	opm_addtype(scanner, OPM_TYPE_HTTP, 8000); 
+	opm_addtype(scanner, OPM_TYPE_HTTPPOST, 8080);        
+	opm_addtype(scanner, OPM_TYPE_HTTPPOST, 80);        
+	opm_addtype(scanner, OPM_TYPE_HTTPPOST, 3128);        
+	opm_addtype(scanner, OPM_TYPE_HTTPPOST, 31); 
+	opm_addtype(scanner, OPM_TYPE_HTTPPOST, 8000); 
+	opm_addtype(scanner, OPM_TYPE_WINGATE, 23);        
+	opm_addtype(scanner, OPM_TYPE_ROUTER, 23); 
+	opm_addtype(scanner, OPM_TYPE_SOCKS4, 1080);        
+	opm_addtype(scanner, OPM_TYPE_SOCKS5, 1080); 
+	
+	       
 
 	/* add the sock poll interface into neo */
 	add_sockpoll("libopm_before_poll", "libopm_after_poll", "opsb", "opsb", scanner);        
@@ -119,8 +133,8 @@ void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused)
         fclose(fp);
 #endif
 	/* no point continuing the scan if they are found open */
+	scandata->state = GOTOPENPROXY;
 	opm_end(scanner, remote);
-
 
 
 #if 0
@@ -145,7 +159,6 @@ void negfailed(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) 
 	if (scandata->u) {
 		prefmsg(scandata->u->nick, s_opsb, "Negitiation failed for protocol %d (%d)", remote->protocol, remote->port);
 	}
-	/*XXX Do anything.. I dont think so */
 }	
 
 void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
@@ -157,7 +170,6 @@ void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
 	if (scandata->u) {
 		prefmsg(scandata->u->nick, s_opsb, "Timeout on Protocol %d (%d)", remote->protocol, remote->port);
 	}
-	/*XXX Do anything? I don't think so */
 }
 
 void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
@@ -169,7 +181,8 @@ void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
 	if (scandata->u) {
 		prefmsg(scandata->u->nick, s_opsb, "scan finished %d %d", remote->protocol, remote->port);
 	}
-	/*XXX we have to cleanup here */
+	if (scandata->state != GOTOPENPROXY) scandata->state = FIN_SCAN;
+	check_scan_free(scandata);
 }
 
 void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused) {
@@ -190,9 +203,8 @@ void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused) 
 #endif
 	scandata = remote->data;
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, s_opsb, "scan error on Protocol %d (%d)", remote->protocol, remote->port);
+		prefmsg(scandata->u->nick, s_opsb, "scan error on Protocol %d (%d) - %d", remote->protocol, remote->port, opmerr);
 	}
-
 	/*XXX cleanup */
 
 }
@@ -273,20 +285,41 @@ void start_proxy_scan(lnode_t *scannode) {
 	scandata->started = time(NULL);
 
 	if ((opsb.doscan == 1) || (scandata->u)) {
-		nlog(LOG_DEBUG2, LOG_MOD, "Starting Scan on %s", inet_ntoa(scandata->ipaddr));
 		remote  = opm_remote_create(inet_ntoa(scandata->ipaddr));
 		remote->data = scandata;
 	   	switch(i = opm_scan(scanner, remote))
       		{
             		case OPM_SUCCESS:
+				nlog(LOG_DEBUG2, LOG_MOD, "Starting Scan on %s", inet_ntoa(scandata->ipaddr));
                         	break;
                         case OPM_ERR_BADADDR:
-                                printf("Bad address\n");
+				nlog(LOG_WARNING, LOG_MOD, "Scan of %s %s Failed. Bad Address?", scandata->who, inet_ntoa(scandata->ipaddr));
                                 opm_remote_free(remote);
-				/* XXX do what else ? */
-                        default:
-                                printf("Unknown Error %d\n", i);
+				scandata->state = FIN_SCAN;
+				check_scan_free(scandata);
                 }
 	}
 
+}
+void check_scan_free(scaninfo *scandata) {
+	lnode_t *scannode;
+	if ((scandata->dnsstate == DO_OPM_LOOKUP) || (scandata->dnsstate == GET_NICK_IP) || (scandata->state == DOING_SCAN)) {
+		nlog(LOG_DEBUG2, LOG_MOD, "Not Cleaning up Scaninfo for %s yet. Scan hasn't completed", scandata->who);
+		return;
+	}
+	if ((scandata->dnsstate != OPMLIST) && (scandata->state != GOTOPENPROXY)) {
+		addtocache(scandata->ipaddr.s_addr);	
+		nlog(LOG_DEBUG1, LOG_MOD, "%s's Host is clean. Adding to Cache", scandata->who);
+	}
+	scannode = list_find(opsbl, scandata->who, findscan);
+	if (scannode) {
+		nlog(LOG_DEBUG1, LOG_MOD, "%s scan finished. Cleaning up", scandata->who);
+		list_delete(opsbl, scannode);
+		lnode_destroy(scannode);
+		scandata->u = NULL;
+		free(scandata);
+	} else {
+		nlog(LOG_WARNING, LOG_MOD, "Damn, Can't find ScanNode %s. Something is fubar", scandata->who);
+	}
+	checkqueue();												
 }
