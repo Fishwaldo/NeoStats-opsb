@@ -62,7 +62,7 @@ int online;
 ModuleInfo __module_info = {
 	"OPSB",
 	"An Open Proxy Scanning Bot",
-	"1.0",
+	"2.0",
 	__DATE__,
 	__TIME__
 };
