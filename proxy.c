@@ -110,6 +110,8 @@ int load_ports() {
 				nlog(LOG_DEBUG1, LOG_MOD, "Added Port %d for Protocol %s", prtlst->port, proxy_list[i].name);
 				ok = 1;
 			}
+			free(av);
+			free(portname);
 		}
 	}
 	return ok;				
@@ -235,6 +237,7 @@ void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
 	if (scandata->u) {
 		prefmsg(scandata->u->nick, s_opsb, "scan finished on %s", scandata->who);
 	}
+	opm_remote_free(remote);
 	if (scandata->state != GOTOPENPROXY) scandata->state = FIN_SCAN;
 	check_scan_free(scandata);
 }

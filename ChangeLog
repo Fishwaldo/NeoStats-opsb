@@ -7,6 +7,7 @@ Open Proxy Scanning Bot Module for NeoStats Changelog.
 - Changed to use new module export API (M)
 - OPSB now doesnt save cache between restarts. (F)
 - OPSB now uses keeper to store configuration information (F)
+- Some Mem Leak Cleanups (F)
 
 * Version 1.0 * 12/12/2002 * Fish
 - Fix a coredump when not enough paramaters supplied to the set command
