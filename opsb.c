@@ -327,10 +327,8 @@ static bot_setting opsb_settings[]=
 	{"SCAN",		&opsb.doscan,		SET_TYPE_BOOLEAN,	0,	0,			NS_ULEVEL_ADMIN, NULL,	opsb_help_set_doscan,		do_set_cb, (void*)1 },
 	{"TARGETIP",	&opsb.targetip,		SET_TYPE_IPV4,		0,	0,			NS_ULEVEL_ADMIN, NULL,	opsb_help_set_targetip,		do_set_cb },
 	{"TARGETPORT",	&opsb.targetport,	SET_TYPE_INT,		0,	65535,		NS_ULEVEL_ADMIN, NULL,	opsb_help_set_targetport,	do_set_cb },
-	{"OPMDOMAIN",	&opsb.opmdomain,	SET_TYPE_HOST,		0,	MAXHOST,	NS_ULEVEL_ADMIN, NULL,	opsb_help_set_opmdomain,	do_set_cb, (void*)"opm.blitzed.org" },
-	
-	{"AKILL",		&opsb.doakill,		SET_TYPE_BOOLEAN,	0,	0,			NS_ULEVEL_ADMIN, NULL,	opsb_help_set_akill,		do_set_cb, (void*)1 },
-	
+	{"OPMDOMAIN",	&opsb.opmdomain,	SET_TYPE_HOST,		0,	MAXHOST,	NS_ULEVEL_ADMIN, NULL,	opsb_help_set_opmdomain,	do_set_cb, (void*)"opm.blitzed.org" },	
+	{"AKILL",		&opsb.doakill,		SET_TYPE_BOOLEAN,	0,	0,			NS_ULEVEL_ADMIN, NULL,	opsb_help_set_akill,		do_set_cb, (void*)1 },	
 	{"AKILLTIME",	&opsb.akilltime,	SET_TYPE_INT,		0,	20736000,	NS_ULEVEL_ADMIN, NULL,	opsb_help_set_akilltime,	do_set_cb, (void*)86400 },
 	{"MAXBYTES",	&opsb.maxbytes,		SET_TYPE_INT,		0,	100000,		NS_ULEVEL_ADMIN, NULL,	opsb_help_set_maxbytes,		do_set_cb, (void*)500 },
 	{"TIMEOUT",		&opsb.timeout,		SET_TYPE_INT,		0,	120,		NS_ULEVEL_ADMIN, NULL,	opsb_help_set_timeout,		do_set_cb, (void*)30 },
