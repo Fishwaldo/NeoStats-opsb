@@ -68,7 +68,7 @@ ModuleInfo module_info = {
 
 int findscan(const void *key1, const void *key2) {
         const scaninfo *chan1 = key1;
-        return (strcasecmp(chan1->who, key2));
+        return (ircstrcasecmp (chan1->who, key2));
 }
 
 int ports_sort(const void *key1, const void *key2) {
@@ -103,7 +103,7 @@ int opsb_cmd_lookup (CmdParams* cmdparams)
 		if (list_isfull(opsbq)) {
 			irc_prefmsg (opsb_bot, cmdparams->source, "Too Busy. Try again Later");
 			free(scandata);
-			return 0;
+			return NS_SUCCESS;
 		}
 		irc_prefmsg (opsb_bot, cmdparams->source, "OPSB list is full, queuing your request");
 		lnode = lnode_create(scandata);
@@ -113,13 +113,13 @@ int opsb_cmd_lookup (CmdParams* cmdparams)
 		lookuptype = adns_r_ptr;
 	} else {
 		if (cmdparams->ac == 2) {
-			if (!strcasecmp(cmdparams->av[1], "txt"))
+			if (!ircstrcasecmp (cmdparams->av[1], "txt"))
 				lookuptype = adns_r_txt;
-			else if (!strcasecmp(cmdparams->av[1], "rp"))
+			else if (!ircstrcasecmp (cmdparams->av[1], "rp"))
 				lookuptype = adns_r_rp;
-			else if (!strcasecmp(cmdparams->av[1], "ns"))
+			else if (!ircstrcasecmp (cmdparams->av[1], "ns"))
 				lookuptype = adns_r_ns;
-			else if (!strcasecmp(cmdparams->av[1], "soa"))
+			else if (!ircstrcasecmp (cmdparams->av[1], "soa"))
 				lookuptype = adns_r_soa;
 			else 
 				lookuptype = adns_r_a;
@@ -130,18 +130,18 @@ int opsb_cmd_lookup (CmdParams* cmdparams)
 	if (dns_lookup(scandata->lookup, lookuptype, reportdns, scandata->who) != 1) {
 		irc_prefmsg (opsb_bot, cmdparams->source, "DnsLookup Failed.");
 		free(scandata);
-		return 0;
+		return NS_FAILURE;
 	} 
 	lnode = lnode_create(scandata);
 	list_append(opsbl, lnode);
-	return 0;
+	return NS_SUCCESS;
 }
 
 int opsb_cmd_remove (CmdParams* cmdparams) 
 {
 	irc_rakill (opsb_bot, cmdparams->av[0], "*");
 	irc_chanalert (opsb_bot, "%s attempted to remove an akill for *@%s", cmdparams->source->name, cmdparams->av[0]);
-	return 0;
+	return NS_SUCCESS;
 }
 
 int opsb_cmd_check (CmdParams* cmdparams) 
@@ -151,14 +151,14 @@ int opsb_cmd_check (CmdParams* cmdparams)
 
 	if ((list_find(opsbl, cmdparams->av[0], findscan)) || (list_find(opsbq, cmdparams->av[0], findscan))) {
 		irc_prefmsg (opsb_bot, cmdparams->source, "Already Scanning (or in queue) %s. Not Scanning again", cmdparams->av[0]);
-		return 0;
+		return NS_SUCCESS;
 	}
 	scandata = malloc(sizeof(scaninfo));
 	scandata->doneban = 0;
 	scandata->reqclient = cmdparams->source;
 	if ((u2 = find_user(cmdparams->av[0])) != NULL) {
 		/* don't scan users from my server */
-		if (!strcasecmp(u2->uplink->name, me.name)) {
+		if (!ircstrcasecmp (u2->uplink->name, me.name)) {
 			irc_prefmsg (opsb_bot, cmdparams->source, "Error, Can not scan NeoStats Bots");
 			free(scandata);
 			return -1;
@@ -190,109 +190,128 @@ int opsb_cmd_check (CmdParams* cmdparams)
 	irc_prefmsg (opsb_bot, cmdparams->source, "Checking %s for open Proxies", cmdparams->av[0]);
 	if (!startscan(scandata)) 
 		irc_prefmsg (opsb_bot, cmdparams->source, "Check Failed");
-	return 0;
+	return NS_SUCCESS;
 }
 
-int opsb_cmd_ports (CmdParams* cmdparams) 
+int opsb_cmd_ports_list (CmdParams* cmdparams) 
 {
 	port_list *pl;
 	int i;
 	lnode_t *lnode;
 
-	if (!strcasecmp(cmdparams->av[0], "LIST")) {
+	lnode = list_first(opsb.ports);
+	i = 1;
+	irc_prefmsg (opsb_bot, cmdparams->source, "Port List:");
+	while (lnode) {
+		pl = lnode_get(lnode);
+		irc_prefmsg (opsb_bot, cmdparams->source, "%d) %s Port: %d", i, type_of_proxy(pl->type), pl->port);
+		++i;
+		lnode = list_next(opsb.ports, lnode);
+	}
+	irc_prefmsg (opsb_bot, cmdparams->source, "End of list.");
+	irc_chanalert (opsb_bot, "%s requested Port List", cmdparams->source->name);
+	return NS_SUCCESS;
+}
+
+int opsb_cmd_ports_list (CmdParams* cmdparams) 
+{
+	port_list *pl;
+	int i;
+	lnode_t *lnode;
+
+	if (cmdparams->ac < 3) {
+		return NS_SYNTAX_ERROR;
+	}
+	if (list_isfull(opsb.ports)) {
+		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Ports list is full");
+		return NS_SUCCESS;
+	}
+	if (!atoi(cmdparams->av[2])) {
+		irc_prefmsg (opsb_bot, cmdparams->source, "Port field does not contain a vaild port");
+		return NS_SUCCESS;
+	}
+	if (get_proxy_by_name(cmdparams->av[1]) < 1) {
+		irc_prefmsg (opsb_bot, cmdparams->source, "Unknown Proxy type %s", cmdparams->av[1]);
+		return NS_SUCCESS;
+	}
+	/* check for duplicates */
+	lnode = list_first(opsb.ports);
+	while (lnode) {
+		pl = lnode_get(lnode);
+		if ((pl->type == get_proxy_by_name(cmdparams->av[1])) && (pl->port == atoi(cmdparams->av[2]))) {
+			irc_prefmsg (opsb_bot, cmdparams->source, "Duplicate Entry for Protocol %s", cmdparams->av[1]);
+			return NS_SUCCESS;
+		}
+		lnode = list_next(opsb.ports, lnode);
+	}
+	pl = malloc(sizeof(port_list));
+	pl->type = get_proxy_by_name(cmdparams->av[1]);
+	pl->port = atoi(cmdparams->av[2]);
+		
+	lnode = lnode_create(pl);
+	list_append(opsb.ports, lnode);
+	list_sort(opsb.ports, ports_sort);
+	save_ports();
+	add_port(pl->type, pl->port);
+	irc_prefmsg (opsb_bot, cmdparams->source, "Added Port %d for Protocol %s to Ports list", pl->port, cmdparams->av[1]);
+	irc_chanalert (opsb_bot, "%s added port %d for protocol %s to Ports list", cmdparams->source->name, pl->port, cmdparams->av[1]);
+	return NS_SUCCESS;
+}
+
+int opsb_cmd_ports_del (CmdParams* cmdparams) 
+{
+	port_list *pl;
+	int i;
+	lnode_t *lnode;
+
+	if (cmdparams->ac < 1) {
+		return NS_SYNTAX_ERROR;
+	}
+	if (atoi(cmdparams->av[1]) != 0) {
 		lnode = list_first(opsb.ports);
 		i = 1;
-		irc_prefmsg (opsb_bot, cmdparams->source, "Port List:");
 		while (lnode) {
-			pl = lnode_get(lnode);
-			irc_prefmsg (opsb_bot, cmdparams->source, "%d) %s Port: %d", i, type_of_proxy(pl->type), pl->port);
+			if (i == atoi(cmdparams->av[1])) {
+				/* delete the entry */
+				pl = lnode_get(lnode);
+				list_delete(opsb.ports, lnode);
+				irc_prefmsg (opsb_bot, cmdparams->source, "Deleted Port %d of Protocol %s out of Ports list", pl->port, type_of_proxy(pl->type));
+				irc_prefmsg (opsb_bot, cmdparams->source, "You need to Restart OPSB for the changes to take effect");
+				irc_chanalert (opsb_bot, "%s deleted port %d of Protocol %s out of Ports list", cmdparams->source->name, pl->port, type_of_proxy(pl->type));
+				free(pl);
+				/* just to be sure, lets sort the list */
+				list_sort(opsb.ports, ports_sort);
+				save_ports();
+				return 1;
+			}
 			++i;
 			lnode = list_next(opsb.ports, lnode);
-		}
-		irc_prefmsg (opsb_bot, cmdparams->source, "End of List.");
-		irc_chanalert (opsb_bot, "%s requested Port List", cmdparams->source->name);
-	} else if (!strcasecmp(cmdparams->av[0], "ADD")) {
-		if (cmdparams->ac < 3) {
-			irc_prefmsg (opsb_bot, cmdparams->source, "Syntax Error. /msg %s help ports", opsb_bot);
-			return 0;
-		}
-		if (list_isfull(opsb.ports)) {
-			irc_prefmsg (opsb_bot, cmdparams->source, "Error, Ports list is full");
-			return 0;
-		}
-		if (!atoi(cmdparams->av[2])) {
-			irc_prefmsg (opsb_bot, cmdparams->source, "Port field does not contain a vaild port");
-			return 0;
-		}
-		if (get_proxy_by_name(cmdparams->av[1]) < 1) {
-			irc_prefmsg (opsb_bot, cmdparams->source, "Unknown Proxy type %s", cmdparams->av[1]);
-			return 0;
-		}
-		/* check for duplicates */
-		lnode = list_first(opsb.ports);
-		while (lnode) {
-			pl = lnode_get(lnode);
-			if ((pl->type == get_proxy_by_name(cmdparams->av[1])) && (pl->port == atoi(cmdparams->av[2]))) {
-				irc_prefmsg (opsb_bot, cmdparams->source, "Duplicate Entry for Protocol %s", cmdparams->av[1]);
-				return 0;
-			}
-			lnode = list_next(opsb.ports, lnode);
-		}
-		pl = malloc(sizeof(port_list));
-		pl->type = get_proxy_by_name(cmdparams->av[1]);
-		pl->port = atoi(cmdparams->av[2]);
-			
-		lnode = lnode_create(pl);
-		list_append(opsb.ports, lnode);
-		list_sort(opsb.ports, ports_sort);
-		save_ports();
-		add_port(pl->type, pl->port);
-		irc_prefmsg (opsb_bot, cmdparams->source, "Added Port %d for Protocol %s to Ports list", pl->port, cmdparams->av[1]);
-		irc_chanalert (opsb_bot, "%s added port %d for protocol %s to Ports list", cmdparams->source->name, pl->port, cmdparams->av[1]);
-	} else if (!strcasecmp(cmdparams->av[0], "DEL")) {
-		if (cmdparams->ac < 1) {
-			irc_prefmsg (opsb_bot, cmdparams->source, "Syntax Error. /msg %s help ports", opsb_bot);
-			return 0;
-		}
-		if (atoi(cmdparams->av[1]) != 0) {
-			lnode = list_first(opsb.ports);
-			i = 1;
-			while (lnode) {
-				if (i == atoi(cmdparams->av[1])) {
-					/* delete the entry */
-					pl = lnode_get(lnode);
-					list_delete(opsb.ports, lnode);
-					irc_prefmsg (opsb_bot, cmdparams->source, "Deleted Port %d of Protocol %s out of Ports list", pl->port, type_of_proxy(pl->type));
-					irc_prefmsg (opsb_bot, cmdparams->source, "You need to Restart OPSB for the changes to take effect");
-					irc_chanalert (opsb_bot, "%s deleted port %d of Protocol %s out of Ports list", cmdparams->source->name, pl->port, type_of_proxy(pl->type));
-					free(pl);
-					/* just to be sure, lets sort the list */
-					list_sort(opsb.ports, ports_sort);
-					save_ports();
-					return 1;
-				}
-				++i;
-				lnode = list_next(opsb.ports, lnode);
-			}		
-			/* if we get here, then we can't find the entry */
-			irc_prefmsg (opsb_bot, cmdparams->source, "Error, Can't find entry %d. /msg %s ports list", atoi(cmdparams->av[1]), opsb_bot);
-			return 0;
-		} else {
-			irc_prefmsg (opsb_bot, cmdparams->source, "Error, Out of Range");
-			return 0;
-		}
+		}		
+		/* if we get here, then we can't find the entry */
+		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Can't find entry %d. /msg %s ports list", atoi(cmdparams->av[1]), opsb_bot);
 	} else {
-		irc_prefmsg (opsb_bot, cmdparams->source, "Syntax Error. /msg %s help ports", opsb_bot);
-		return 0;
+		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Out of Range");
 	}
-	return 0;
+	return NS_SUCCESS;
+}
+
+int opsb_cmd_ports (CmdParams* cmdparams) 
+{
+	if (!ircstrcasecmp (cmdparams->av[0], "LIST")) {
+		return opsb_cmd_ports_list (cmdparams);
+	} else if (!ircstrcasecmp (cmdparams->av[0], "ADD")) {
+		return opsb_cmd_ports_list (cmdparams);
+	} else if (!ircstrcasecmp (cmdparams->av[0], "DEL")) {
+		return opsb_cmd_ports_del (cmdparams);
+	}
+	return NS_SYNTAX_ERROR;
 }
 
 int do_set_cb (CmdParams* cmdparams, SET_REASON reason)
 {
 	SetConf((void *)1, CFGINT, "Confed");
 	del_timer("unconf");
-	return 0;
+	return NS_SUCCESS;
 }
 
 static bot_cmd opsb_commands[]=
@@ -372,7 +391,7 @@ static int unconf(void)
 		irc_chanalert (opsb_bot, "Warning, OPSB is configured with default Settings. Please Update this ASAP");
 		irc_globops  (opsb_bot, "Warning, OPSB is configured with default Settings, Please Update this ASAP");
 	}
-	return 0;
+	return NS_SUCCESS;
 }
 
 void save_ports() 

@@ -35,7 +35,7 @@ int opsb_cmd_exclude (CmdParams* cmdparams)
 	int i;
 	lnode_t *lnode;
 
-	if (!strcasecmp(cmdparams->av[0], "LIST")) {
+	if (!ircstrcasecmp (cmdparams->av[0], "LIST")) {
 		lnode = list_first(exempt);
 		i = 1;
 		irc_prefmsg (opsb_bot, cmdparams->source, "Exception List:");
@@ -45,9 +45,9 @@ int opsb_cmd_exclude (CmdParams* cmdparams)
 			++i;
 			lnode = list_next(exempt, lnode);
 		}
-		irc_prefmsg (opsb_bot, cmdparams->source, "End of List.");
+		irc_prefmsg (opsb_bot, cmdparams->source, "End of list.");
 		irc_chanalert (opsb_bot, "%s requested Exception List", cmdparams->source->name);
-	} else if (!strcasecmp(cmdparams->av[0], "ADD")) {
+	} else if (!ircstrcasecmp (cmdparams->av[0], "ADD")) {
 		if (cmdparams->ac < 6) {
 			irc_prefmsg (opsb_bot, cmdparams->source, "Syntax Error. /msg %s help exclude", opsb_bot);
 			return 0;
@@ -76,7 +76,7 @@ int opsb_cmd_exclude (CmdParams* cmdparams)
 
 		irc_prefmsg (opsb_bot, cmdparams->source, "Added %s (%s) exception to list", exempts->host, (exempts->server ? "(Server)" : "(Client)"));
 		irc_chanalert (opsb_bot, "%s added %s (%s) exception to list", cmdparams->source->name, exempts->host, (exempts->server ? "(Server)" : "(Client)"));
-	} else if (!strcasecmp(cmdparams->av[0], "DEL")) {
+	} else if (!ircstrcasecmp (cmdparams->av[0], "DEL")) {
 		if (cmdparams->ac < 1) {
 			irc_prefmsg (opsb_bot, cmdparams->source, "Syntax Error. /msg %s help exclude", opsb_bot);
 			return 0;
