@@ -69,20 +69,6 @@ ModuleInfo __module_info = {
 	__TIME__
 };
 
-int new_m_version(char *origin, char **av, int ac) {
-	snumeric_cmd(RPL_VERSION,origin, "Module OPSB Loaded, Version: %s %s %s",__module_info.module_version,__module_info.module_build_date,__module_info.module_build_time);
-	return 0;
-}
-
-Functions __module_functions[] = {
-	{ MSG_VERSION,	new_m_version,	1 },
-#ifdef GOTTOKENSUPPORT
-	{ TOK_VERSION,	new_m_version,	1 },
-#endif
-	{ NULL,		NULL,		0 }
-};
-
-
 int findscan(const void *key1, const void *key2) {
         const scaninfo *chan1 = key1;
         return (strcasecmp(chan1->who, key2));
