@@ -2,6 +2,7 @@ Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
 * Version 2.0 * 29/12/2003 * Fish (F) and Mark (M)
  - Fixed incorrect parameters to printf style functions (M)
+ - Use more appropriate defines for buffer sizes since MAXHOST differs between IRCds (M)
 
 * Version 2.0 * 29/12/2003 * Fish (F) and Mark (M)
 - Some segv updates from M (mark@ctcp.net) (M/F)

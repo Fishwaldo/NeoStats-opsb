@@ -693,7 +693,7 @@ int do_set(User *u, char **av, int ac) {
 	return 0;	
 }
 
-int Online(char **av, int ac) {
+static int Online(char **av, int ac) {
 	struct sockaddr_in sa;
 	socklen_t ulen = sizeof(struct sockaddr_in);
 
@@ -729,28 +729,28 @@ void unconf() {
 void save_ports() {
 	lnode_t *pn;
 	port_list *pl;
-	char confpath[MAXHOST];
-	char ports[MAXHOST];
-	char tmpports[MAXHOST];
+	char confpath[CONFBUFSIZE];
+	char ports[CONFBUFSIZE];
+	char tmpports[CONFBUFSIZE];
 	int lasttype = -1;
 	pn = list_first(opsb.ports);
 	while (pn) {
 		pl = lnode_get(pn);
 		/* if the port is different from the last round, and its not the first round, save it */
 		if ((pl->type != lasttype) && (lasttype != -1)) {
-			strlcpy(confpath, type_of_proxy(lasttype), MAXHOST);
+			strlcpy(confpath, type_of_proxy(lasttype), CONFBUFSIZE);
 			SetConf((void *)ports, CFGSTR, confpath);
 		} 
 		if (pl->type != lasttype) {
-			ircsnprintf(ports, MAXHOST, "%d", pl->port);
+			ircsnprintf(ports, CONFBUFSIZE, "%d", pl->port);
 		} else {
-			ircsnprintf(tmpports, MAXHOST, "%s %d", ports, pl->port);
-			strlcpy(ports, tmpports, MAXHOST);
+			ircsnprintf(tmpports, CONFBUFSIZE, "%s %d", ports, pl->port);
+			strlcpy(ports, tmpports, CONFBUFSIZE);
 		}
 		lasttype = pl->type;
 		pn = list_next(opsb.ports, pn);
 	}
-	strlcpy(confpath, type_of_proxy(lasttype), MAXHOST);
+	strlcpy(confpath, type_of_proxy(lasttype), CONFBUFSIZE);
 	SetConf((void *)ports, CFGSTR, confpath);
 	flush_keeper();
 } 
@@ -1243,7 +1243,7 @@ void LoadConfig(void)
 			exempts = malloc(sizeof(exemptinfo));
 			strlcpy(exempts->host, data[i], MAXHOST);
 	
-			ircsnprintf(datapath, MAXHOST, "Exempt/%s/Who", data[i]);
+			ircsnprintf(datapath, CONFBUFSIZE, "Exempt/%s/Who", data[i]);
 			if (GetConf((void *)&tmp, CFGSTR, datapath) <= 0) {
 				free(exempts);
 				continue;
@@ -1251,15 +1251,15 @@ void LoadConfig(void)
 				strlcpy(exempts->who, tmp, MAXNICK);
 				free(tmp);
 			}
-			ircsnprintf(datapath, MAXHOST, "Exempt/%s/Reason", data[i]);
+			ircsnprintf(datapath, CONFBUFSIZE, "Exempt/%s/Reason", data[i]);
 			if (GetConf((void *)&tmp, CFGSTR, datapath) <= 0) {
 				free(exempts);
 				continue;
 			} else {
-				strlcpy(exempts->reason, tmp, MAXHOST);
+				strlcpy(exempts->reason, tmp, MAXREASON);
 				free(tmp);
 			}
-			ircsnprintf(datapath, MAXHOST, "Exempt/%s/Server", data[i]);
+			ircsnprintf(datapath, CONFBUFSIZE, "Exempt/%s/Server", data[i]);
 			if (GetConf((void *)&exempts->server, CFGINT, datapath) <= 0) {
 				free(exempts);
 				continue;

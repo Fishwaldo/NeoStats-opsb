@@ -34,6 +34,8 @@ extern char s_opsb[MAXNICK];
 /* max no of ports to scan */
 #define MAX_PORTS 50
 
+#define MAXREASON		128
+
 struct scanq {
 	char who[MAXHOST];
 	int state;
@@ -98,7 +100,7 @@ struct exempts {
 	char host[MAXHOST];
 	int server;
 	char who[MAXNICK];
-	char reason[MAXHOST];
+	char reason[MAXREASON];
 };
 
 typedef struct exempts exemptinfo;
