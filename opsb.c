@@ -512,7 +512,7 @@ int checkcache(scaninfo *scandata)
 
 ModuleEvent module_events[] = 
 {
-	{ EVENT_GOTNICKIP, 	ScanNick, EVENT_FLAG_EXCLUDE_ME},
+	{ EVENT_NICKIP, 	ScanNick, EVENT_FLAG_EXCLUDE_ME},
 	{ EVENT_NULL, 	NULL}
 };
 
