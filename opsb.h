@@ -12,14 +12,14 @@
 #define OPSB_H
 
 #include "modconfig.h"
+#include "opm_types.h"
 
-typedef struct proxy_types {
-	char *type;
+typedef struct port_list {
+	int type;
 	int port;
 	int nofound;
 	int noopen;
-} proxy_types;
-
+} port_list;
 
 
 char *s_opsb;
@@ -31,7 +31,8 @@ char *s_opsb;
 #define MAX_QUEUE MAX_SCANS * 100
 /* max no of exempt entries */
 #define MAX_EXEMPTS 20
-
+/* max no of ports to scan */
+#define MAX_PORTS 50
 
 struct scanq {
 	char who[MAXHOST];
@@ -68,6 +69,7 @@ struct opsb {
 	int doscan;
 	int cachehits;
 	int opmhits;
+	list_t *ports;
 } opsb;
 
 
@@ -100,6 +102,15 @@ struct exempts {
 
 typedef struct exempts exemptinfo;
 
+
+typedef struct proxy_type {
+	int type;
+	char name[MAXNICK];
+} proxy_type;
+
+	
+
+
 /* this is the list of exempted hosts/servers */
 
 list_t *exempt;
@@ -126,5 +137,6 @@ void addtocache(unsigned long ipaddr);
 void start_proxy_scan(lnode_t *scannode);
 void send_status(User *u);
 void check_scan_free(scaninfo *scandata);
+int init_libopm();
 
 #endif /* OPSB_H */

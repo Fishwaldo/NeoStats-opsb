@@ -53,6 +53,7 @@ extern const char *opsb_help_status[];
 extern const char *opsb_help_set[];
 extern const char *opsb_help_exclude[];
 extern const char *opsb_help_remove[];
+extern const char *opsb_help_ports[];
 
 int online;
 
@@ -83,7 +84,23 @@ int findscan(const void *key1, const void *key2) {
         return (strcasecmp(chan1->who, key2));
 }
 
-
+int ports_sort(const void *key1, const void *key2) {
+	port_list *pl1 = (port_list *)key1;
+	port_list *pl2 = (port_list *)key2;
+	if (pl1->type == pl2->type) {
+		if (pl1->port == pl2->port) {
+			return 0;
+		} else if (pl1->port > pl2->port) {
+			return 1;
+		} else {
+			return -1;
+		}
+	} else if (pl1->type > pl2->type) {
+		return 1;
+	} else {
+		return -1;
+	}
+}
 
 
 int __Bot_Message(char *origin, char **argv, int argc)
@@ -92,6 +109,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 	lnode_t *lnode;
 	scaninfo *scandata;
 	exemptinfo *exempts;
+	port_list *pl;
 	int lookuptype, i;
 	char *buf;
 
@@ -118,6 +136,8 @@ int __Bot_Message(char *origin, char **argv, int argc)
 				privmsg_list(u->nick, s_opsb, opsb_help_status);
 		} else if ((!strcasecmp(argv[2], "set") && UserLevel(u) >= 100)) {
 				privmsg_list(u->nick, s_opsb, opsb_help_set);
+		} else if ((!strcasecmp(argv[2], "ports") && UserLevel(u) >= 100)) {
+				privmsg_list(u->nick, s_opsb, opsb_help_ports);
 		} else if ((!strcasecmp(argv[2], "exclude") && UserLevel(u) > 100)) {
 				privmsg_list(u->nick, s_opsb, opsb_help_exclude);
 		} else if ((!strcasecmp(argv[2], "remove") && UserLevel(u) > 40)) {
@@ -334,6 +354,95 @@ int __Bot_Message(char *origin, char **argv, int argc)
 			prefmsg(u->nick, s_opsb, "Syntax Error. /msg %s help exclude", s_opsb);
 			return 0;
 		}
+	} else if (!strcasecmp(argv[1], "PORTS")) {
+		if (UserLevel(u) < 100) {
+			prefmsg(u->nick, s_opsb, "Access Denied");
+			chanalert(s_opsb, "%s tried to use ports, but is not an operator", u->nick);
+			return 1;
+		}
+		if (argc < 3) {
+			prefmsg(u->nick, s_opsb, "Syntax Error. /msg %s help ports", s_opsb);
+			return 0;
+		}
+		if (!strcasecmp(argv[2], "LIST")) {
+			lnode = list_first(opsb.ports);
+			i = 1;
+			prefmsg(u->nick, s_opsb, "Port List:");
+			while (lnode) {
+				pl = lnode_get(lnode);
+				prefmsg(u->nick, s_opsb, "%d) %s Port: %d", i, type_of_proxy(pl->type), pl->port);
+				++i;
+				lnode = list_next(opsb.ports, lnode);
+			}
+			prefmsg(u->nick, s_opsb, "End of List.");
+			chanalert(s_opsb, "%s requested Port List", u->nick);
+		} else if (!strcasecmp(argv[2], "ADD")) {
+			if (argc < 5) {
+				prefmsg(u->nick, s_opsb, "Syntax Error. /msg %s help ports", s_opsb);
+				return 0;
+			}
+			if (list_isfull(opsb.ports)) {
+				prefmsg(u->nick, s_opsb, "Error, Ports list is full", s_opsb);
+				return 0;
+			}
+			if (!atoi(argv[4])) {
+				prefmsg(u->nick, s_opsb, "Port field does not contain a vaild port");
+				return 0;
+			}
+			if (get_proxy_by_name(argv[3]) < 1) {
+				prefmsg(u->nick, s_opsb, "Unknown Proxy type %s", argv[3]);
+				return 0;
+			}
+			pl = malloc(sizeof(port_list));
+			pl->type = get_proxy_by_name(argv[3]);
+			pl->port = atoi(argv[4]);
+			lnode = lnode_create(pl);
+			list_append(opsb.ports, lnode);
+			list_sort(opsb.ports, ports_sort);
+#if 0
+			save_ports();
+#endif
+			add_port(pl->type, pl->port);
+			prefmsg(u->nick, s_opsb, "Added Port %d for Protocol %s to Ports list", pl->port, argv[3]);
+			chanalert(s_opsb, "%s added port %d for protocol %s to Ports list", u->nick, pl->port, argv[3]);
+		} else if (!strcasecmp(argv[2], "DEL")) {
+			if (argc < 3) {
+				prefmsg(u->nick, s_opsb, "Syntax Error. /msg %s help ports", s_opsb);
+				return 0;
+			}
+			if (atoi(argv[3]) != 0) {
+				lnode = list_first(opsb.ports);
+				i = 1;
+				while (lnode) {
+					if (i == atoi(argv[3])) {
+						/* delete the entry */
+						pl = lnode_get(lnode);
+						list_delete(opsb.ports, lnode);
+						prefmsg(u->nick, s_opsb, "Deleted Port %d of Protocol %s out of Ports list", pl->port, type_of_proxy(pl->type));
+						prefmsg(u->nick, s_opsb, "You need to Restart OPSB for the changes to take effect");
+						chanalert(s_opsb, "%s deleted port %d of Protocol %s out of Ports list", u->nick, pl->port, type_of_proxy(pl->type));
+						free(pl);
+						/* just to be sure, lets sort the list */
+						list_sort(opsb.ports, ports_sort);
+#if 0
+						save_ports();
+#endif
+						return 1;
+					}
+					++i;
+					lnode = list_next(opsb.ports, lnode);
+				}		
+				/* if we get here, then we can't find the entry */
+				prefmsg(u->nick, s_opsb, "Error, Can't find entry %d. /msg %s ports list", atoi(argv[3]), s_opsb);
+				return 0;
+			} else {
+				prefmsg(u->nick, s_opsb, "Error, Out of Range");
+				return 0;
+			}
+		} else {
+			prefmsg(u->nick, s_opsb, "Syntax Error. /msg %s help ports", s_opsb);
+			return 0;
+		}
 	} else if (!strcasecmp(argv[1], "SET")) {
 		if (argc < 3) {
 			prefmsg(u->nick, s_opsb, "Syntax Error. /msg %s help set", s_opsb);
@@ -541,16 +650,15 @@ int Online(char **av, int ac) {
 
 	SET_SEGV_LOCATION();
 
-	init_libopm();
 	if (init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", __module_info.module_name) == -1 ) {
 		/* Nick was in use!!!! */
 		s_opsb = strcat(s_opsb, "_");
 		init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", __module_info.module_name);
 	}
 	loadcache();
-	if (opsb.confed == 0) add_mod_timer("unconf", "Un_configured_warn", "opsb", 60);
-	unconf();
 	if (opsb.confed == 0) {
+		add_mod_timer("unconf", "Un_configured_warn", "opsb", 60);
+		unconf();
 		getpeername(servsock, (struct sockaddr *)&sa, (socklen_t*)&ulen);
 		snprintf(opsb.targethost, MAXHOST, "%s", inet_ntoa(sa.sin_addr));
 	}
@@ -729,7 +837,6 @@ void loadcache() {
 
 	if (!fp) {
 		nlog(LOG_WARNING, LOG_MOD, "OPSB: Warning, Can not open Cache file for Reading");
-		chanalert(s_opsb, "Warning, Can not open Cache file for Reading");
 		return;
 	}
 	fgets(buf, 512, fp);
@@ -1124,6 +1231,8 @@ int __ModInit(int modnum, int apiver)
 
 	exempt = list_create(MAX_EXEMPTS);
 
+	opsb.ports = list_create(MAX_PORTS);
+
 	online = 0;				
 	sprintf(opsb.opmdomain, "%s", "opm.blitzed.org");
 	sprintf(opsb.targethost, "%s", me.uplink);
@@ -1141,6 +1250,16 @@ int __ModInit(int modnum, int apiver)
 	opsb.opmhits = 1;
 	snprintf(opsb.lookforstring, 512, "*** Looking up your hostname...");
 	snprintf(opsb.scanmsg, 512, "Your Host is being Scanned for Open Proxies");
+
+	loadcache();
+
+	if (load_ports() != 1) {
+		nlog(LOG_WARNING, LOG_MOD, "Can't Load opsb. No Ports Defined for Scanned. Did you install Correctly?");
+		return -1;
+	}
+	init_libopm();
+
+
 	return 1;
 }
 

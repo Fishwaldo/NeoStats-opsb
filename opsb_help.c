@@ -177,6 +177,32 @@ const char *opsb_help_exclude[] = {
 	NULL
 };
 
+const char *opsb_help_ports[] = {
+	"Syntax: \2EXCLUDE <LIST>\2",
+	"        \2EXCLUDE <ADD> <hostname> <type> <reason>\2",
+	"        \2EXCLUDE <DEL> <index>\2",
+	"",
+	"This command lets you view or manipulate the exception",
+	"list. Exception lists are used to exclude users, or",
+	"servers from scanning. You should at least add a server",
+	"entry for your services IRC name, to stop OPSB from",
+	"scanning Nickserv, Chanserv etc",
+	"",
+	"\2LIST\2 will list the current exceptions together with an",
+	"ID number for use in removing entries.",
+	"",
+	"\2ADD\2 will add an entry of <hostname> to the exception" 
+	"list. Flag should be 1 to indicate a server name",
+	"(eg, services.irc-chat.net) or 0 to indicate a hostname",
+	"(eg, *.adsl.home.com). Reason allows you to set a"
+	"reason for the exclusion for future reference",
+	"Wildcards such as * and ? may be used in the hostname.",
+	"",
+	"\2DEL\2 will delete entry <index> from the list of",
+	"exclusions. Use the LIST command to find the index.",
+	NULL
+};
+
 const char *opsb_help_remove[] = {
 	"Syntax: \2REMOVE <ip|hostname>\2",
 	"",

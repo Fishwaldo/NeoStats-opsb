@@ -35,6 +35,7 @@
 #include "stats.h"
 #include "opsb.h"
 #include "log.h"
+#include "conf.h"
 #include "opm.h"
 #include "opm_types.h"
 #include "opm_error.h"
@@ -46,9 +47,6 @@ void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
 void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
 void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused);
 
-
-
-
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
@@ -56,9 +54,71 @@ void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused);
    
 OPM_T *scanner;
    
+proxy_type proxy_list[] = {
+	{ OPM_TYPE_HTTP, "HTTP" },
+	{ OPM_TYPE_SOCKS4, "SOCKS4" },
+	{ OPM_TYPE_SOCKS5, "SOCKS5" },
+	{ OPM_TYPE_WINGATE, "WINGATE" },
+	{ OPM_TYPE_ROUTER, "ROUTER"},
+	{ OPM_TYPE_HTTPPOST, "HTTPPOST" },
+	{ 0, "" }
+};
 
+char *type_of_proxy(int type) {
+	return proxy_list[type-1].name;
+}
+int get_proxy_by_name(const char *name) {
+	int i;
+	for (i=0; proxy_list[i].type != 0; i++) {
+		if (!strcasecmp(proxy_list[i].name, name)) {
+			return proxy_list[i].type;
+		}
+	}
+	return 0;
+}
+void add_port(int type, int port) {
+	opm_addtype(scanner, type, port);
+}
+
+int load_ports() {
+	char *portname, **av;
+	int i, j, ac, ok;
+	port_list *prtlst;
+	lnode_t *pn;
+	
+	ok = 0;
+	for (i = 0; proxy_list[i].type != 0; i++) {
+		if (GetConf((void *)&portname, CFGSTR, proxy_list[i].name) <= 0) {
+			nlog(LOG_WARNING, LOG_MOD, "Warning, No Ports defined for Protocol %s", proxy_list[i].name);
+		} else {
+			ac = split_buf(portname, &av, 0);
+			for (j = 0; j < ac; j++) {
+				if (atoi(av[j]) == 0) {
+					nlog(LOG_WARNING, LOG_MOD, "Invalid Port %s for Proxy Type %s", av[j], proxy_list[i].name);
+					continue;
+				}
+				if (list_isfull(opsb.ports)) {
+					nlog(LOG_MOD, LOG_WARNING, "Ports List is Full.");
+					break;
+				}
+				prtlst = malloc(sizeof(port_list));
+				prtlst->type = proxy_list[i].type;
+				prtlst->port = atoi(av[j]);
+				prtlst->noopen = 0;
+				pn = lnode_create(prtlst);
+				list_append(opsb.ports, pn);
+				nlog(LOG_DEBUG1, LOG_MOD, "Added Port %d for Protocol %s", prtlst->port, proxy_list[i].name);
+				ok = 1;
+			}
+		}
+	}
+	return ok;				
+}
 
 int init_libopm() {
+	int i, portcount;
+	lnode_t *pn;
+	port_list *pl;
 
 	scanner = opm_create();
 	/* setup the callbacks to our code */
@@ -83,21 +143,15 @@ int init_libopm() {
 	/* max bytes read */
 	opm_config(scanner, OPM_CONFIG_MAX_READ, &opsb.maxbytes);
 	
-	opm_addtype(scanner, OPM_TYPE_HTTP, 8080);        
-	opm_addtype(scanner, OPM_TYPE_HTTP, 80);        
-	opm_addtype(scanner, OPM_TYPE_HTTP, 3128);        
-	opm_addtype(scanner, OPM_TYPE_HTTP, 31); 
-	opm_addtype(scanner, OPM_TYPE_HTTP, 8000); 
-	opm_addtype(scanner, OPM_TYPE_HTTPPOST, 8080);        
-	opm_addtype(scanner, OPM_TYPE_HTTPPOST, 80);        
-	opm_addtype(scanner, OPM_TYPE_HTTPPOST, 3128);        
-	opm_addtype(scanner, OPM_TYPE_HTTPPOST, 31); 
-	opm_addtype(scanner, OPM_TYPE_HTTPPOST, 8000); 
-	opm_addtype(scanner, OPM_TYPE_WINGATE, 23);        
-	opm_addtype(scanner, OPM_TYPE_ROUTER, 23); 
-	opm_addtype(scanner, OPM_TYPE_SOCKS4, 1080);        
-	opm_addtype(scanner, OPM_TYPE_SOCKS5, 1080); 
-	
+
+
+	/* read the proxy types directly from keeper :) */
+	pn = list_first(opsb.ports);
+	while (pn) {
+		pl = lnode_get(pn);
+		opm_addtype(scanner, pl->type, pl->port);
+		pn = list_next(opsb.ports, pn);
+	}
 	       
 
 	/* add the sock poll interface into neo */
@@ -120,12 +174,12 @@ void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused)
 
 	++opsb.open;
 
-	nlog(LOG_CRITICAL, LOG_MOD, "OPSB: Banning %s (%s) for Open Proxy - %d(%d)", scandata->who, remote->ip, remote->protocol, remote->port);
-	chanalert(s_opsb, "Banning %s (%s) for Open Proxy - %d(%d)", scandata->who, remote->ip, remote->protocol, remote->port);
-	globops(s_opsb, "Banning %s (%s) for Open Proxy - %d(%d)", scandata->who, remote->ip, remote->protocol, remote->port);
-	if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) for Open Proxy - %d(%d)", scandata->who, remote->ip, remote->protocol, remote->port);
+	nlog(LOG_CRITICAL, LOG_MOD, "OPSB: Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
+	chanalert(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
+	globops(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
+	if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
 #if 0
-	sakill_cmd(remote->ip, "*", s_opsb, opsb.bantime, "Open Proxy found on your host. %d(%d)", remote->protocol, remote->port);
+	sakill_cmd(remote->ip, "*", s_opsb, opsb.bantime, "Open Proxy found on your host. %s(%d)", type_of_proxy(remote->protocol), remote->port);
 
 	/* write out to a logfile */
 	if ((fp = fopen("logs/openproxies.log", "a")) == NULL) return;
@@ -157,7 +211,7 @@ void negfailed(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) 
 	scandata = remote->data;
 	
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, s_opsb, "Negitiation failed for protocol %d (%d)", remote->protocol, remote->port);
+		prefmsg(scandata->u->nick, s_opsb, "Negitiation failed for protocol %s(%d)", type_of_proxy(remote->protocol), remote->port);
 	}
 }	
 
@@ -168,7 +222,7 @@ void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
 
 	scandata = remote->data;
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, s_opsb, "Timeout on Protocol %d (%d)", remote->protocol, remote->port);
+		prefmsg(scandata->u->nick, s_opsb, "Timeout on Protocol %s(%d)", type_of_proxy(remote->protocol), remote->port);
 	}
 }
 
@@ -179,7 +233,7 @@ void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
 
 	scandata = remote->data;
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, s_opsb, "scan finished %d %d", remote->protocol, remote->port);
+		prefmsg(scandata->u->nick, s_opsb, "scan finished on %s", scandata->who);
 	}
 	if (scandata->state != GOTOPENPROXY) scandata->state = FIN_SCAN;
 	check_scan_free(scandata);
@@ -203,7 +257,7 @@ void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused) 
 #endif
 	scandata = remote->data;
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, s_opsb, "scan error on Protocol %d (%d) - %d", remote->protocol, remote->port, opmerr);
+		prefmsg(scandata->u->nick, s_opsb, "scan error on Protocol %s (%d) - %d", type_of_proxy(remote->protocol), remote->port, opmerr);
 	}
 	/*XXX cleanup */
 

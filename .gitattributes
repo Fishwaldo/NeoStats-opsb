@@ -33,6 +33,7 @@ libopm/snprintf.c -text
 libopm/snprintf.h -text
 libopm/test.c -text
 /modconfig.h.in -text
+/opsb.Settings -text
 /opsb.c -text
 /opsb.h -text
 /opsb_help.c -text
