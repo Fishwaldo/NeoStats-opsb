@@ -82,6 +82,7 @@ struct opsb {
 	int opmhits;
 	int doakill;
 	int verbose;
+	int exclusions;
 	list_t *ports;
 } opsb;
 
@@ -159,5 +160,6 @@ extern const char *opsb_help_set_scanmsg [];
 extern const char *opsb_help_set_akilltime [];
 extern const char *opsb_help_set_cachetime [];
 extern const char *opsb_help_set_verbose [];
+extern const char *opsb_help_set_exclusions[];
 
 #endif /* OPSB_H */

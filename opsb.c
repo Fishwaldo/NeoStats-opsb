@@ -312,6 +312,15 @@ int do_set_cb (CmdParams* cmdparams, SET_REASON reason)
 	return NS_SUCCESS;
 }
 
+static int opsb_set_exclusions_cb( CmdParams *cmdparams, SET_REASON reason )
+{
+	if( reason == SET_LOAD || reason == SET_CHANGE )
+	{
+		SetAllEventFlags( EVENT_FLAG_USE_EXCLUDE, opsb.exclusions );
+	}
+	return NS_SUCCESS;
+}
+
 static bot_cmd opsb_commands[]=
 {
 	{"STATUS",	opsb_cmd_status,	0,	NS_ULEVEL_OPER,	opsb_help_status,	opsb_help_status_oneline},
@@ -336,6 +345,7 @@ static bot_setting opsb_settings[]=
 	{"SCANMSG",		&opsb.scanmsg,		SET_TYPE_MSG,		0,	BUFSIZE,	NS_ULEVEL_ADMIN, NULL,	opsb_help_set_scanmsg,		do_set_cb, (void*)"Your Host is being Scanned for Open Proxies" },
 	{"CACHETIME",	&opsb.cachetime,	SET_TYPE_INT,		0,	86400,		NS_ULEVEL_ADMIN, NULL,	opsb_help_set_cachetime,	do_set_cb, (void*)3600 },
 	{"VERBOSE",		&opsb.verbose,		SET_TYPE_BOOLEAN,	0,	0,			NS_ULEVEL_ADMIN, NULL,	opsb_help_set_verbose,		do_set_cb, (void*)1 },
+	{"EXCLUSIONS",	&opsb.exclusions,	SET_TYPE_BOOLEAN,	0,	0,			NS_ULEVEL_ADMIN,NULL,	opsb_help_set_exclusions,	opsb_set_exclusions_cb, (void *)0 },
 	{NULL,			NULL,				0,					0,	0, 			0,				 NULL,	NULL,						NULL	},
 };
 

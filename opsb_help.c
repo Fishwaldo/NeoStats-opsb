@@ -159,6 +159,12 @@ const char *opsb_help_set_verbose [] = {
 	NULL
 };
 
+const char *opsb_help_set_exclusions[] = {
+	"\2EXCLUSIONS <ON|OFF>\2",
+	"Use global exclusion list in addition to local exclusion list",
+	NULL
+};
+
 const char *opsb_help_ports[] = {
 	"Syntax: \2PORTS <LIST>\2",
 	"        \2PORTS <ADD> <type> <port>\2",
