@@ -287,7 +287,7 @@ int opsb_cmd_ports_del (CmdParams* cmdparams)
 			lnode = list_next(opsb.ports, lnode);
 		}		
 		/* if we get here, then we can't find the entry */
-		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Can't find entry %d. /msg %s ports list", atoi(cmdparams->av[1]), opsb_bot);
+		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Can't find entry %d. /msg %s ports list", atoi(cmdparams->av[1]), opsb_bot->name);
 	} else {
 		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Out of Range");
 	}
