@@ -178,7 +178,7 @@ int opsb_cmd_check (CmdParams* cmdparams)
 	} else {
 		strlcpy(scandata->who, cmdparams->av[0], MAXHOST);
 		strlcpy(scandata->lookup, cmdparams->av[0], MAXHOST);
-		bzero(scandata->server, MAXHOST);
+		memset (scandata->server, 0, MAXHOST);
 		/* is it a ip address or host */
 		if (inet_aton(cmdparams->av[0], &scandata->ip) > 0) {
 			scandata->dnsstate = DO_OPM_LOOKUP;
@@ -213,14 +213,13 @@ int opsb_cmd_ports_list (CmdParams* cmdparams)
 	return NS_SUCCESS;
 }
 
-int opsb_cmd_ports_list (CmdParams* cmdparams) 
+int opsb_cmd_ports_add (CmdParams* cmdparams) 
 {
 	port_list *pl;
-	int i;
 	lnode_t *lnode;
 
 	if (cmdparams->ac < 3) {
-		return NS_SYNTAX_ERROR;
+		return NS_ERR_SYNTAX_ERROR;
 	}
 	if (list_isfull(opsb.ports)) {
 		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Ports list is full");
@@ -265,7 +264,7 @@ int opsb_cmd_ports_del (CmdParams* cmdparams)
 	lnode_t *lnode;
 
 	if (cmdparams->ac < 1) {
-		return NS_SYNTAX_ERROR;
+		return NS_ERR_SYNTAX_ERROR;
 	}
 	if (atoi(cmdparams->av[1]) != 0) {
 		lnode = list_first(opsb.ports);
@@ -300,11 +299,11 @@ int opsb_cmd_ports (CmdParams* cmdparams)
 	if (!ircstrcasecmp (cmdparams->av[0], "LIST")) {
 		return opsb_cmd_ports_list (cmdparams);
 	} else if (!ircstrcasecmp (cmdparams->av[0], "ADD")) {
-		return opsb_cmd_ports_list (cmdparams);
+		return opsb_cmd_ports_add (cmdparams);
 	} else if (!ircstrcasecmp (cmdparams->av[0], "DEL")) {
 		return opsb_cmd_ports_del (cmdparams);
 	}
-	return NS_SYNTAX_ERROR;
+	return NS_ERR_SYNTAX_ERROR;
 }
 
 int do_set_cb (CmdParams* cmdparams, SET_REASON reason)
@@ -547,7 +546,7 @@ static int ScanNick (CmdParams* cmdparams)
 	strlcpy(scandata->who, cmdparams->source->name, MAXHOST);
 	strlcpy(scandata->lookup, cmdparams->source->user->hostname, MAXHOST);
 	strlcpy(scandata->server, cmdparams->source->uplink->name, MAXHOST);
-	strlcpy(scandata->connectstring, recbuf, BUFSIZE);
+	/*strlcpy(scandata->connectstring, recbuf, BUFSIZE);*/
 	scandata->ip.s_addr = cmdparams->source->ip.s_addr;
 	if (scandata->ip.s_addr > 0) {
 		scandata->dnsstate = DO_OPM_LOOKUP;

@@ -272,7 +272,7 @@ PACKAGE_STRING=
 PACKAGE_BUGREPORT=
 
 ac_unique_file="opsb.c"
-ac_default_prefix=~/NeoStats/
+ac_default_prefix=~/NeoStats3.0/
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -1316,7 +1316,7 @@ cat >>confdefs.h <<_ACEOF
 #define MODULE_MINOR "$MODULE_MINOR"
 _ACEOF
 
-DIRINST=~/NeoStats/
+DIRINST=~/NeoStats3.0/
 
 CFLAGS="$CFLAGS -O2 -Wall"
 
