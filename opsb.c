@@ -152,7 +152,7 @@ int opsb_cmd_check (CmdParams* cmdparams)
 	scandata = malloc(sizeof(scaninfo));
 	scandata->doneban = 0;
 	scandata->reqclient = cmdparams->source;
-	if ((u2 = find_user(cmdparams->av[0])) != NULL) {
+	if ((u2 = FindUser(cmdparams->av[0])) != NULL) {
 		/* don't scan users from my server */
 		if (IsMe(u2)) {
 			irc_prefmsg (opsb_bot, cmdparams->source, "Error, Can not scan NeoStats Bots");
@@ -205,7 +205,7 @@ int opsb_cmd_ports_list (CmdParams* cmdparams)
 		lnode = list_next(opsb.ports, lnode);
 	}
 	irc_prefmsg (opsb_bot, cmdparams->source, "End of list.");
-	command_report(opsb_bot, "%s requested Port List", cmdparams->source->name);
+	CommandReport(opsb_bot, "%s requested Port List", cmdparams->source->name);
 	return NS_SUCCESS;
 }
 
@@ -248,7 +248,7 @@ int opsb_cmd_ports_add (CmdParams* cmdparams)
 	save_ports();
 	add_port(pl->type, pl->port);
 	irc_prefmsg (opsb_bot, cmdparams->source, "Added Port %d for Protocol %s to Ports list", pl->port, cmdparams->av[1]);
-	command_report(opsb_bot, "%s added port %d for protocol %s to Ports list", cmdparams->source->name, pl->port, cmdparams->av[1]);
+	CommandReport(opsb_bot, "%s added port %d for protocol %s to Ports list", cmdparams->source->name, pl->port, cmdparams->av[1]);
 	return NS_SUCCESS;
 }
 
@@ -272,7 +272,7 @@ int opsb_cmd_ports_del (CmdParams* cmdparams)
 				lnode_destroy(lnode);
 				irc_prefmsg (opsb_bot, cmdparams->source, "Deleted Port %d of Protocol %s out of Ports list", pl->port, type_of_proxy(pl->type));
 				irc_prefmsg (opsb_bot, cmdparams->source, "You need to Restart OPSB for the changes to take effect");
-				command_report(opsb_bot, "%s deleted port %d of Protocol %s out of Ports list", cmdparams->source->name, pl->port, type_of_proxy(pl->type));
+				CommandReport(opsb_bot, "%s deleted port %d of Protocol %s out of Ports list", cmdparams->source->name, pl->port, type_of_proxy(pl->type));
 				ns_free(pl);
 				/* just to be sure, lets sort the list */
 				list_sort(opsb.ports, ports_sort);
@@ -309,7 +309,7 @@ int do_set_cb (CmdParams* cmdparams, SET_REASON reason)
 	}
 	opsb.confed = 1;
 	DBAStoreConfigInt ("Confed", &opsb.confed);
-	del_timer("unconf");
+	DelTimer("unconf");
 	return NS_SUCCESS;
 }
 
@@ -367,7 +367,7 @@ int ModSynch (void)
 	SET_SEGV_LOCATION();
 	opsb_bot = AddBot (&opsb_botinfo);
 	if (opsb.confed == 0) {
-		add_timer (TIMER_TYPE_INTERVAL, unconf, "unconf", 60);
+		AddTimer (TIMER_TYPE_INTERVAL, unconf, "unconf", 60);
 		unconf();
 		strlcpy(opsb.targethost, me.uplink, MAXHOST);
 	}
@@ -447,9 +447,9 @@ int checkcache(scaninfo *scandata)
 	cache_entry *ce;
 
 	SET_SEGV_LOCATION();
-	if (scandata->server && ModIsServerExcluded (find_server(scandata->server)))
+	if (scandata->server && ModIsServerExcluded (FindServer(scandata->server)))
 		return 1;
-	if (ModIsUserExcluded (find_user(scandata->who)))
+	if (ModIsUserExcluded (FindUser(scandata->who)))
 		return 2;
 	node = list_first(cache);
 	while (node) {
@@ -728,17 +728,17 @@ void reportdns(char *data, adns_answer *a) {
 		for(i = 0; i < a->nrrs;  i++) {
 			ri = adns_rr_info(a->type, 0, 0, 0, a->rrs.bytes +i*len, &show);
 			if (!ri) {
-				irc_prefmsg (opsb_bot, find_user (data), "%s resolves to %s", dnsinfo->lookup, show);
+				irc_prefmsg (opsb_bot, FindUser (data), "%s resolves to %s", dnsinfo->lookup, show);
 			} else {
-				irc_prefmsg (opsb_bot, find_user (data), "DNS error %s", adns_strerror(ri));
+				irc_prefmsg (opsb_bot, FindUser (data), "DNS error %s", adns_strerror(ri));
 			}
 			ns_free(show);
 		}
 		if (a->nrrs < 1) {
-			irc_prefmsg (opsb_bot, find_user (data), "%s Does not resolve", dnsinfo->lookup);
+			irc_prefmsg (opsb_bot, FindUser (data), "%s Does not resolve", dnsinfo->lookup);
 		}
 	} else {
-		irc_prefmsg (opsb_bot, find_user (data), "An unknown error occured");
+		irc_prefmsg (opsb_bot, FindUser (data), "An unknown error occured");
 	}	
 	
 	list_delete(opsbl, dnslookup);
