@@ -368,7 +368,7 @@ int do_ports(User *u, char **argv, int argc)
 
 int do_set_cb (User * u, char **av, int ac)
 {
-	SetConf((void *)opsb.confed, CFGINT, "Confed");
+	SetConf((void *)1, CFGINT, "Confed");
 	del_mod_timer("Un_configured_warn");
 	return 0;
 }
@@ -943,10 +943,10 @@ void LoadConfig(void)
 	if (GetConf((void *)&opsb.bantime, CFGINT, "BanTime") <= 0) {
 		opsb.bantime = 86400;
 	}
-	if (GetConf((void *)&opsb.doscan, CFGINT, "DoScan") <= 0) {
+	if (GetConf((void *)&opsb.doscan, CFGBOOL, "DoScan") <= 0) {
 		opsb.doscan = 1;
 	}
-	if (GetConf((void *)&opsb.doban, CFGINT, "DoBan") <= 0) {
+	if (GetConf((void *)&opsb.doban, CFGBOOL, "DoBan") <= 0) {
 		opsb.doban = 1;
 	}
 	if (GetConf((void *)&opsb.confed, CFGINT, "Confed") <= 0) {
