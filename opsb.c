@@ -28,11 +28,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <arpa/nameser.h>
-#include "dl.h"
-#include "stats.h"
-#include "conf.h"
+#include "neostats.h"
 #include "opsb.h"
-#include "log.h"
 
 void reportdns(char *data, adns_answer *a);
 void dnsblscan(char *data, adns_answer *a);

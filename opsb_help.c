@@ -21,7 +21,7 @@
 ** $Id$
 */
 
-#include "stats.h"
+#include "neostats.h"
 
 const char opsb_help_info_oneline[] = "Information about opsb";
 const char opsb_help_status_oneline[] = "View opsb state information";

@@ -30,12 +30,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <arpa/nameser.h>
-#include <fcntl.h>
-#include "dl.h"
-#include "stats.h"
+#include "neostats.h"
 #include "opsb.h"
-#include "log.h"
-#include "conf.h"
 #include "opm.h"
 #include "opm_types.h"
 #include "opm_error.h"
