@@ -76,7 +76,7 @@ int new_m_version(char *origin, char **av, int ac) {
 
 Functions __module_functions[] = {
 	{ MSG_VERSION,	new_m_version,	1 },
-#ifdef HAVE_TOKEN_SUP
+#ifdef GOTTOKENSUPPORT
 	{ TOK_VERSION,	new_m_version,	1 },
 #endif
 	{ NULL,		NULL,		0 }
