@@ -50,6 +50,7 @@ void loadcache();
 void unconf();
 
 extern const char *opsb_help[];
+extern const char *opsb_help_on_help[];
 extern const char *opsb_help_oper[];
 extern const char *opsb_help_lookup[];
 extern const char *opsb_help_info[];
@@ -58,6 +59,7 @@ extern const char *opsb_help_status[];
 extern const char *opsb_help_set[];
 extern const char *opsb_help_exclude[];
 extern const char *opsb_help_remove[];
+
 int online;
 
 Module_Info my_info[] = { {
@@ -110,6 +112,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 			privmsg_list(u->nick, s_opsb, opsb_help);
 			if (UserLevel(u) >= 40)
 				privmsg_list(u->nick, s_opsb, opsb_help_oper);
+			privmsg_list(u->nick, s_opsb, opsb_help_on_help);			
 		} else if (!strcasecmp(argv[2], "lookup")) {
 				privmsg_list(u->nick, s_opsb, opsb_help_lookup);
 		} else if (!strcasecmp(argv[2], "info")) {
