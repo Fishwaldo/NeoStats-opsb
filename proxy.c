@@ -244,23 +244,14 @@ void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused) 
 	scaninfo *scandata;
 
 	SET_SEGV_LOCATION();
-#if 0
-		/* don't delete if the opm lookup hasn't completed yet */
-		if ((scandata->dnsstate == DO_OPM_LOOKUP) || (scandata->dnsstate == GET_NICK_IP))
-			break;
-		
-		if (scandata->dnsstate == OPMLIST) savescan = 0;
-		/* if this is not valid, exit  (ie, the scan hasn't started yet) */
-		if (scandata->socks == NULL) {
-			nlog(LOG_CRITICAL, LOG_MOD, "Ehhh, socks for %s is NULL? WTF?", scandata->who);
-			break;
-		}
-#endif
 	scandata = remote->data;
 	if (scandata->u) {
-		prefmsg(scandata->u->nick, s_opsb, "scan error on Protocol %s (%d) - %d", type_of_proxy(remote->protocol), remote->port, opmerr);
+		if (opmerr == 5) {
+			prefmsg(scandata->u->nick, s_opsb, "Closed Proxy on Protocol %s (%d)", type_of_proxy(remote->protocol), remote->port);
+		} else {
+			prefmsg(scandata->u->nick, s_opsb, "scan error on Protocol %s (%d) - %d", type_of_proxy(remote->protocol), remote->port, opmerr);
+		}
 	}
-	/*XXX cleanup */
 
 }
 
