@@ -35,7 +35,7 @@
 # include <string.h>
 #endif
 
-RCSID("$Id: config.c,v 1.27 2003/06/20 04:18:44 andy Exp $");
+RCSID("$Id$");
 
 static OPM_CONFIG_HASH_T HASH[] = {
    {OPM_CONFIG_FD_LIMIT,       OPM_TYPE_INT},

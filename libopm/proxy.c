@@ -40,7 +40,7 @@
 #include "opm_error.h"
 #include "libopm.h"
 
-RCSID("$Id: proxy.c,v 1.16 2003/06/21 04:27:32 andy Exp $");
+RCSID("$Id$");
 
 static char SENDBUF[SENDBUFLEN + 1];
 
