@@ -3,7 +3,6 @@
 /LICENSE -text
 /Makefile.in -text
 /README.opsb -text
-/config.status -text
 /configure -text
 /configure.in -text
 /install-sh -text
