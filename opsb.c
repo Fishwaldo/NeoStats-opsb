@@ -481,7 +481,7 @@ int do_set(User *u, char **av, int ac) {
 	
 	if (UserLevel(u) < 100) {
 		prefmsg(u->nick, s_opsb, "Access Denied");
-		chanalert(s_opsb, "%s tried to set, but doesn't have access");
+		chanalert(s_opsb, "%s tried to set, but doesn't have access", u->nick);
 		return 0;
 	}
 
