@@ -45,12 +45,8 @@ extern Bot *opsb_bot;
 #define MAX_SCANS 100
 /* max queue is the max amount of scans that may be concurrent and queued. */
 #define MAX_QUEUE MAX_SCANS * 100
-/* max no of exempt entries */
-#define MAX_EXEMPTS 20
 /* max no of ports to scan */
 #define MAX_PORTS 50
-
-#define MAXREASON		128
 
 typedef struct scaninfo{
 	char who[MAXHOST];
@@ -101,13 +97,6 @@ typedef struct cache_entry {
 
 /* this is a list of cached scans */
 list_t *cache;
-
-typedef struct exemptinfo {
-	char host[MAXHOST];
-	int server;
-	char who[MAXNICK];
-	char reason[MAXREASON];
-}exemptinfo;
 
 typedef struct proxy_type {
 	int type;
