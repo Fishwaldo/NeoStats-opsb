@@ -21,15 +21,13 @@
 ** $Id$
 */
 
-#include <stdio.h>
-#include <sys/types.h>
-#ifndef WIN32
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include "neostats.h"
+#ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif
+#ifdef HAVE_ARPA_NAMESER_H
 #include <arpa/nameser.h>
 #endif
-#include "neostats.h"
 #include "opsb.h"
 
 void reportdns(char *data, adns_answer *a);
