@@ -158,7 +158,7 @@ int opsb_cmd_check (CmdParams* cmdparams)
 	scandata->reqclient = cmdparams->source;
 	if ((u2 = find_user(cmdparams->av[0])) != NULL) {
 		/* don't scan users from my server */
-		if (!ircstrcasecmp (u2->uplink->name, me.name)) {
+		if (IsMe(u2)) {
 			irc_prefmsg (opsb_bot, cmdparams->source, "Error, Can not scan NeoStats Bots");
 			free(scandata);
 			return -1;
@@ -315,13 +315,13 @@ int do_set_cb (CmdParams* cmdparams, SET_REASON reason)
 
 static bot_cmd opsb_commands[]=
 {
-	{"STATUS",	opsb_cmd_status,		0,	NS_ULEVEL_OPER,	opsb_help_status,	opsb_help_status_oneline},
-	{"LOOKUP",	opsb_cmd_lookup,		1,	NS_ULEVEL_OPER,	opsb_help_lookup,	opsb_help_lookup_oneline},
-	{"REMOVE",	opsb_cmd_remove,		1,	NS_ULEVEL_OPER,	opsb_help_remove,	opsb_help_remove_oneline},
+	{"STATUS",	opsb_cmd_status,	0,	NS_ULEVEL_OPER,	opsb_help_status,	opsb_help_status_oneline},
+	{"LOOKUP",	opsb_cmd_lookup,	1,	NS_ULEVEL_OPER,	opsb_help_lookup,	opsb_help_lookup_oneline},
+	{"REMOVE",	opsb_cmd_remove,	1,	NS_ULEVEL_OPER,	opsb_help_remove,	opsb_help_remove_oneline},
 	{"CHECK",	opsb_cmd_check,		1,	NS_ULEVEL_OPER,	opsb_help_check,	opsb_help_check_oneline},
-	{"EXCLUDE",	opsb_cmd_exclude,		1,	NS_ULEVEL_ADMIN,opsb_help_exclude,	opsb_help_exclude_oneline},
+	{"EXCLUDE",	opsb_cmd_exclude,	1,	NS_ULEVEL_ADMIN,opsb_help_exclude,	opsb_help_exclude_oneline},
 	{"PORTS",	opsb_cmd_ports,		1,	NS_ULEVEL_ADMIN,opsb_help_ports,	opsb_help_ports_oneline},
-	{NULL,		NULL,			0, 	0,				NULL, 				NULL}
+	{NULL,		NULL,				0, 	0,				NULL, 				NULL}
 };
 
 static bot_setting opsb_settings[]=
@@ -548,14 +548,7 @@ static int ScanNick (CmdParams* cmdparams)
 	strlcpy(scandata->server, cmdparams->source->uplink->name, MAXHOST);
 	/*strlcpy(scandata->connectstring, recbuf, BUFSIZE);*/
 	scandata->ip.s_addr = cmdparams->source->ip.s_addr;
-	if (scandata->ip.s_addr > 0) {
-		scandata->dnsstate = DO_OPM_LOOKUP;
-	} else {
-		/* if we get here, and don't have a IP address, something is fcked up */
-		nlog (LOG_WARNING, "Eh, Event_GOTNICKIP called without a IP for %s", cmdparams->source->name);
-		free(scandata);
-		return -1;		
-	}
+	scandata->dnsstate = DO_OPM_LOOKUP;
 	if (!startscan(scandata)) {
 		irc_chanalert (opsb_bot, "Warning Can't scan %s", cmdparams->source->name);
 		nlog (LOG_WARNING, "OBSB ScanNick(): Can't scan %s. Check logs for possible errors", cmdparams->source->name);
