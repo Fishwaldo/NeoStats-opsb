@@ -35,67 +35,75 @@
 #include "stats.h"
 #include "opsb.h"
 #include "log.h"
+#include "opm.h"
+#include "opm_types.h"
 
 int proxy_connect(unsigned long ipaddr, int port, char *who);
-int http_proxy(int sock);
-int sock4_proxy(int sock);
-int sock5_proxy(int sock);
-int cisco_proxy(int sock);
-int wingate_proxy(int sock);
+void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
+void negfailed(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
+void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
+void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
+void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused);
+
+
 
 
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
+   
+   
+OPM_T *scanner;
+   
 
 
-proxy_types proxy_list[] = {
-	{"http", 	80, 	http_proxy, 	0,	0},
-	{"http",	8080,	http_proxy,	0,	0},
-	{"http",	3128,	http_proxy, 	0,	0},
-	{"socks4",	1080,	sock4_proxy,	0,	0},
-	{"socks5",	1080,	sock5_proxy,	0,	0},
-	{"Cisco",	23,	cisco_proxy, 	0,	0},
-	{"Wingate",	23,	wingate_proxy,	0,	0},
-	{NULL,		0,	NULL,		0,	0}
-};
+int init_libopm() {
 
-#define NUM_PROXIES 7
+	scanner = opm_create();
+	/* setup the callbacks to our code */
+	opm_callback(scanner, OPM_CALLBACK_OPENPROXY, &open_proxy, NULL);
+	opm_callback(scanner, OPM_CALLBACK_NEGFAIL, &negfailed, NULL);
+	opm_callback(scanner, OPM_CALLBACK_TIMEOUT, &timeout, NULL);
+      	opm_callback(scanner, OPM_CALLBACK_END, &scan_end, NULL);
+        opm_callback(scanner, OPM_CALLBACK_ERROR, &scan_error, NULL);
+        
+        
+        
+        return 1;
+}         
 
-
-void do_ban(scaninfo *scandata) {
-	lnode_t *socknode;
-	socklist *sockdata;
+void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused)
+      {
 	FILE *fp;
+	scaninfo *scandata;
 
 	SET_SEGV_LOCATION();
 
+	scandata = remote->data;
+
 	if (scandata->doneban == 1)
 		return;
-	
 
 	++opsb.open;
 
-	
-	/* ban based on proxy detection first */
-	socknode = list_first(scandata->socks);
-	while (socknode) {
-		sockdata = lnode_get(socknode);
-		if (sockdata->flags !=	OPENPROXY) {
-			socknode = list_next(scandata->socks, socknode);
-			continue;
-		}
-		scandata->doneban = 1;
-		nlog(LOG_CRITICAL, LOG_MOD, "OPSB: Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
-		chanalert(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
-		globops(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
-		if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
-		sakill_cmd(inet_ntoa(scandata->ipaddr), "*", s_opsb, opsb.bantime, "Open Proxy found on your host. %s(%d) Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port, inet_ntoa(scandata->ipaddr));
-		if ((fp = fopen("logs/opsb.log", "a")) == NULL) return;
-       		fprintf(fp, "%s:%s:%s\n", proxy_list[sockdata->type].type, inet_ntoa(scandata->ipaddr), scandata->connectstring);
-                fclose(fp);
-		socknode = list_next(scandata->socks, socknode);
-	}
+	nlog(LOG_CRITICAL, LOG_MOD, "OPSB: Banning %s (%s) for Open Proxy - %d(%d)", scandata->who, remote->ip, remote->protocol, remote->port);
+	chanalert(s_opsb, "Banning %s (%s) for Open Proxy - %d(%d)", scandata->who, remote->ip, remote->protocol, remote->port);
+	globops(s_opsb, "Banning %s (%s) for Open Proxy - %d(%d)", scandata->who, remote->ip, remote->protocol, remote->port);
+	if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) for Open Proxy - %d(%d)", scandata->who, remote->ip, remote->protocol, remote->port);
+#if 0
+	sakill_cmd(remote->ip, "*", s_opsb, opsb.bantime, "Open Proxy found on your host. %d(%d)", remote->protocol, remote->port);
+#endif
+	/* write out to a logfile */
+	if ((fp = fopen("logs/openproxies.log", "a")) == NULL) return;
+	fprintf(fp, "%d:%s:%s\n", remote->protocol, remote->ip, "empty");
+        fclose(fp);
+
+	/* no point continuing the scan if they are found open */
+	opm_end(scanner, remote);
+
+
+
+#if 0
 	if (scandata->dnsstate == OPMLIST) {
 		scandata->doneban = 1;
 		nlog(LOG_CRITICAL, LOG_MOD, "OPSB: Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
@@ -104,49 +112,51 @@ void do_ban(scaninfo *scandata) {
 		if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
 		sakill_cmd(inet_ntoa(scandata->ipaddr), "*", s_opsb, opsb.bantime, "Your host is listed as an Open Proxy. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ipaddr));
 	}	
-
+#endif
 }
 
-
-
-
-
-
-scaninfo *find_scandata(char *sockname) {
-	char *buf, *cmd;
-	lnode_t *scannode;
-	
-	buf = sstrdup(sockname);
-	cmd = strtok(buf, " ");
-
-	scannode = list_find(opsbl, cmd, findscan);
-	free(buf);
-	if (scannode)
-		return lnode_get(scannode);
-	else 
-		return NULL;
-}
-void cleanlist() {
-	lnode_t *scannode;
+void negfailed(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
 	scaninfo *scandata;
-	lnode_t *socknode, *scannode2;
-	socklist *sockdata;
-	char sockname[64];
-	int savescan, timedout = 0, finished;
 
 	SET_SEGV_LOCATION();
 
-	scannode = list_first(opsbl);
-	while (scannode) {
-		timedout = 0;
-		scandata = lnode_get(scannode);
-		/* check if this scan has timed out */
-		if (time(NULL) - scandata->started > opsb.timeout) timedout = 1;
+	scandata = remote->data;
+	
+	if (scandata->u) {
+		prefmsg(scandata->u->nick, "Negitiation failed for protocol %d (%d)", remote->protocol, remote->port);
+	}
+	/*XXX Do anything.. I dont think so */
+}	
 
-		/* savescan is a flag if we should save this entry into the cache file */
-		savescan = 1;	
-		
+void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
+	scaninfo *scandata;
 
+	SET_SEGV_LOCATION();
+
+	scandata = remote->data;
+	if (scandata->u) {
+		prefmsg(scandata->u->nick, "Timeout on Protocol %d (%d)", remote->protocol, remote->port);
+	}
+	/*XXX Do anything? I don't think so */
+}
+
+void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused) {
+	scaninfo *scandata;
+
+	SET_SEGV_LOCATION();
+
+	scandata = remote->data;
+	if (scandata->u) {
+		prefmsg(scandata->u->nick, "scan finished %d %d", remote->protocol, remote->port);
+	}
+	/*XXX we have to cleanup here */
+}
+
+void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused) {
+	scaninfo *scandata;
+
+	SET_SEGV_LOCATION();
+#if 0
 		/* don't delete if the opm lookup hasn't completed yet */
 		if ((scandata->dnsstate == DO_OPM_LOOKUP) || (scandata->dnsstate == GET_NICK_IP))
 			break;
@@ -157,69 +167,20 @@ void cleanlist() {
 			nlog(LOG_CRITICAL, LOG_MOD, "Ehhh, socks for %s is NULL? WTF?", scandata->who);
 			break;
 		}
-		/* check for open sockets */
-		socknode = list_first(scandata->socks);	
-		finished = 1;
-		while (socknode) {
-			
-			sockdata = lnode_get(socknode);
-			/* if it was an open proxy, don't save the cache */
-			if (sockdata->flags == OPENPROXY) savescan = 0;
-
-			/* if this still has sockets connected, set finished flaged to 0 to not delete scans */
-			if ((sockdata->flags == SOCKCONNECTED) || (sockdata->flags == CONNECTING)) finished = 0;
-			if (timedout == 1) {
-				if ((sockdata->flags == SOCKCONNECTED) || (sockdata->flags == CONNECTING))  {
-					/* it still has open socks */
-					snprintf(sockname, 64, "%s %d", scandata->who, sockdata->type);
-					sockdata->flags = UNCONNECTED;
-					nlog(LOG_DEBUG1, LOG_MOD, "Closing Socket %s in cleanlist function for timeout()", sockname);
-					if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Timeout Connecting to Proxy %s on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
-		
-					sock_disconnect(sockname);
-				}
-				/* free the socket struct as its timed out and un-connected by now */
-		
-			}  
-			socknode = list_next(scandata->socks, socknode);
-		}
-
-		if (timedout == 1 || finished == 1) {
-			if (timedout == 1) nlog(LOG_DEBUG1, LOG_MOD, "Deleting Old Scannode %s out of active list (Timeout)", scandata->who );
-			if (finished == 1) nlog(LOG_DEBUG1, LOG_MOD, "Deleting Old Scannode %s out of active list (Finished)", scandata->who );
-			if (savescan == 1) 
-				addtocache(scandata->ipaddr.s_addr);
-
-			/* destory all the nodes in the sock list */
-			if (scandata->socks != NULL) {
-				socknode = list_first(scandata->socks);
-				while (socknode) {
-					sockdata = lnode_get(socknode);
-					nlog(LOG_DEBUG1, LOG_MOD, "freeing sockdata %s %d", scandata->who, sockdata->type);
-					free(sockdata);
-					socknode = list_next(scandata->socks, socknode);
-				}
-				list_destroy_nodes(scandata->socks);
-			}	
-			scannode2 = list_next(opsbl, scannode);
-			list_delete(opsbl, scannode);
-			lnode_destroy(scannode);
-			scandata->u = NULL;
-			free(scandata);
-			scannode = scannode2;							
-		} else {
-			scannode = list_next(opsbl, scannode);					
-		}
+	scandata = remote->data;
+	if (scandata->u) {
+		prefmsg(scandata->u->nick, "scan error on Protocol %d (%d)", remote->protocol, remote->port);
 	}
-	checkqueue();
+
+	/*XXX cleanup */
+
 }
 
 
+
 void send_status(User *u) {
-	int i;
-	lnode_t *node, *socknode;
+	lnode_t *node;
 	scaninfo *scandata;
-	socklist *sockinfo;
 
 	SET_SEGV_LOCATION();
 	
@@ -228,9 +189,11 @@ void send_status(User *u) {
 	prefmsg(u->nick, s_opsb, "Cache Entries: %d", list_count(cache));
 	prefmsg(u->nick, s_opsb, "Cache Hits: %d", opsb.cachehits);
 	prefmsg(u->nick, s_opsb, "Blacklist Hits: %d", opsb.opmhits);
+#if 0
 	for (i = 0; i < NUM_PROXIES; i++) {
 		prefmsg(u->nick, s_opsb, "Proxy %s (%d) Found %d Open %d", proxy_list[i].type, proxy_list[i].port, proxy_list[i].nofound, proxy_list[i].noopen);
 	}
+#endif
 	prefmsg(u->nick, s_opsb, "Currently Scanning %d Proxies (%d in queue):", list_count(opsbl), list_count(opsbq));
 	node = list_first(opsbl);
 	while (node) {
@@ -269,27 +232,6 @@ void send_status(User *u) {
 			default:
 					prefmsg(u->nick, s_opsb, "Unknown State (Scan)");
 		}
-		socknode = list_first(scandata->socks);
-		while (socknode) {
-			sockinfo = lnode_get(socknode);
-			switch (sockinfo->flags) {
-				case CONNECTING:
-						prefmsg(u->nick, s_opsb, "    %s(%d) - Connecting", proxy_list[sockinfo->type].type, proxy_list[sockinfo->type].port);
-						break;
-				case SOCKCONNECTED:
-						prefmsg(u->nick, s_opsb, "    %s(%d) - Connected", proxy_list[sockinfo->type].type, proxy_list[sockinfo->type].port);
-						break;
-				case UNCONNECTED:
-						prefmsg(u->nick, s_opsb, "    %s(%d) - Disconnected", proxy_list[sockinfo->type].type, proxy_list[sockinfo->type].port);
-						break;
-				case OPENPROXY:
-						prefmsg(u->nick, s_opsb, "    %s(%d) - Open Proxy", proxy_list[sockinfo->type].type, proxy_list[sockinfo->type].port);
-						break;
-				default:
-						prefmsg(u->nick, s_opsb, "    %s(%d) - Unknown", proxy_list[sockinfo->type].type, proxy_list[sockinfo->type].port);
-			}
-			socknode = list_next(scandata->socks, socknode);
-		}
 	node = list_next(opsbl, node);
 	}
 }
@@ -297,301 +239,23 @@ void send_status(User *u) {
 
 void start_proxy_scan(lnode_t *scannode) {
 	scaninfo *scandata;
-	socklist *sockdata;
-	lnode_t *socknode;
-	char *sockname;
-	int i, j;
+	OPM_REMOTE_T *remote;
 
 	SET_SEGV_LOCATION();
 
 
 	scandata = lnode_get(scannode);
 	if (scandata->u) chanalert(s_opsb, "Starting proxy scan on %s (%s) by Request of %s", scandata->who, scandata->lookup, scandata->u->nick);
-	scandata->socks = list_create(NUM_PROXIES);
 	scandata->state = DOING_SCAN;
 	/* this is so we can timeout scans */
 	scandata->started = time(NULL);
 
 	if ((opsb.doscan == 1) || (scandata->u)) {
-		for (i = 0; i <  NUM_PROXIES; i++) {
-			nlog(LOG_DEBUG1, LOG_MOD, "OPSB proxy_connect(): host %ul (%s), port %d", scandata->ipaddr,inet_ntoa(scandata->ipaddr), proxy_list[i].port);
-			sockname = malloc(64);
-			sprintf(sockname, "%s %d", scandata->who, i);
-			j = proxy_connect(scandata->ipaddr.s_addr, proxy_list[i].port, sockname);
-			free(sockname);
-			if (j > 0) {
-				/* its ok */
-				sockdata = malloc(sizeof(socklist));
-				sockdata->sock = j;
-				sockdata->function = proxy_list[i].scan;
-				sockdata->flags = CONNECTING;
-				sockdata->type = i;
-				sockdata->bytes = 0;
-				socknode = lnode_create(sockdata);
-				list_append(scandata->socks, socknode);
-			}
-		}
+		nlog(LOG_DEBUG2, LOG_MOD, "Starting Scan on %s", inet_ntoa(scandata->ipaddr));
+		remote  = opm_remote_create(inet_ntoa(scandata->ipaddr));
+		remote->data = scandata;
 	}
-}
-
-/* the following functions (http_proxy, sock4_proxy, sock5_proxy, cisco_proxy and wingate_proxy
-** were borrowed from the BOPM proxy scanning bot. 
-** This code is Copyrighted by Erik Fears (strtok@blitzed.org) and is used with thanks
-** this code is used under the GPL license, as the original BOPM is licensed under
-*/
-
-
-int http_proxy(int sock) {
-	char *buf;
-	int i;
-	buf = malloc(512);
-	i = snprintf(buf, 512, "CONNECT %s:%d HTTP/1.0\r\n\r\n", opsb.targethost, opsb.targetport);
-	i= send(sock, buf, i, MSG_NOSIGNAL);
-	free(buf);
-	return i;
-}
-
-
-int sock4_proxy(int sock) {
-	struct in_addr addr;
-	unsigned long laddr;
-	char *buf;
-	int len;
- 
-	if (inet_aton(opsb.targethost, &addr) == 0) {
-		nlog(LOG_WARNING, LOG_MOD, "OPSB socks4_proxy() : %s is not a valid IP",
-		    opsb.targethost);
-	    	return 0;
-	}
-    
-	laddr = htonl(addr.s_addr);
- 	buf = malloc(512);
-	len = snprintf(buf, 512, "%c%c%c%c%c%c%c%c%c",  4, 1,
-	    (((unsigned short) opsb.targetport) >> 8) & 0xFF,
-	    (((unsigned short) opsb.targetport) & 0xff),
-	    (char) (laddr >> 24) & 0xFF, (char) (laddr >> 16) & 0xFF,
-	    (char) (laddr >> 8) & 0xFF, (char) laddr & 0xFF, 0);
 	
-	len = send(sock, buf, len, MSG_NOSIGNAL);
-	free(buf);
-	return(len);
-}
-
-int sock5_proxy(int sock) {
-        struct in_addr addr;
-        unsigned long laddr;
-        int len;
-        char *buf;
-
-        if (inet_aton(opsb.targethost, &addr) == 0) {
-                nlog(LOG_DEBUG1, LOG_MOD, "OPSB socks5_proxy() : %s is not a valid IP",
-                    opsb.targethost);
-        }
-
-        laddr = htonl(addr.s_addr);
-	buf = malloc(512);
-        /* Form authentication string */
-        /* Version 5, 1 number of methods, 0 method (no auth). */
-        len = snprintf(buf, 512, "%c%c%c", 5, 1, 0);
-        len = send(sock, buf, len, MSG_NOSIGNAL);
-	if (len < 0) {
-		free(buf);
-		return len;
-	}
-        /* Form request string */
-
-        len = snprintf(buf, 512, "%c%c%c%c%c%c%c%c%c%c", 5, 1, 0, 1,
-            (char) (laddr >> 24) & 0xFF, (char) (laddr >> 16) & 0xFF,
-            (char) (laddr >> 8) & 0xFF, (char) laddr & 0xFF,
-            (((unsigned short) opsb.targetport) >> 8) & 0xFF,
-            (((unsigned short) opsb.targetport) & 0xFF)
-                      );
-
-        len = send(sock, buf, len, MSG_NOSIGNAL);
-        free(buf);
-        return(len);
 
 
-
-}
-
-
-int cisco_proxy(int sock) {
-	char *buf;
-	int i;
-	buf = malloc(512);
-	i = snprintf(buf, 512, "cisco\r\n");
-	i = send(sock, buf, i, MSG_NOSIGNAL);
-	if (i < 0)
-		return i;
-	i = snprintf(buf, 512, "telnet %s %d\r\n", opsb.targethost, opsb.targetport);
-	i = send(sock, buf, i, MSG_NOSIGNAL);
-	free(buf);
-	return i;
-}
-
-int wingate_proxy(int sock) {
-	char *buf;
-	int i;
-	buf = malloc(512);
-	i = snprintf(buf, 512, "%s:%d\r\n", opsb.targethost, opsb.targetport);
-	i = send(sock, buf, i, MSG_NOSIGNAL);
-	free(buf);
-	return i;
-}
-
-
-
-/* proxy read function */
-
-int proxy_read(int socknum, char *sockname) {
-	char *buf;
-	int i = 0;
-	scaninfo *scandata;
-	lnode_t	*socknode;
-	socklist *sockdata = NULL;
-
-	SET_SEGV_LOCATION();
-
-	scandata = find_scandata(sockname);
-	if (!scandata) {
-		nlog(LOG_CRITICAL, LOG_MOD, "ehh, wtf, can find scan data for read (Sock %d Name %s)", socknum, sockname);
-		return 1;
-	}
-	socknode = list_first(scandata->socks);
-	while (socknode) {
-		sockdata = lnode_get(socknode);
-		if (sockdata->sock == socknum) {
-			i = 1;
-			break;
-		}
-		socknode = list_next(scandata->socks, socknode);
-	}		
-	if (i == 0) {
-		nlog(LOG_CRITICAL, LOG_MOD, "ehh can't find socket info %s (%d) for proxy_read()", sockname, socknum);
-		return 1;
-	}
-	buf = malloc(512);
-	bzero(buf, 512);
-	i = recv(socknum, buf, 512, 0);
-	if (i < 0) {
-		nlog(LOG_DEBUG1, LOG_MOD, "OPSB proxy_read(): %d has the following error: %s", socknum, strerror(errno));
-		if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "No %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
-		sock_disconnect(sockname);
-		sockdata->flags = UNCONNECTED;
-		free(buf);
-		return -1;
-	} else {
-		if (i > 0) {
-			nlog(LOG_DEBUG1, LOG_MOD, "OPSB proxy_read(): Got this: %s (%d)",buf, i);
-			/* copy the received data onto the buf, but don't overwrite the buffer */
-			strncat(sockdata->buf, buf, 2047 - strlen(sockdata->buf));
-
-			/* this is an ok HTTP server */
-			if (strstr(sockdata->buf, "Method Not Allowed")) {
-				nlog(LOG_DEBUG1, LOG_MOD, "closing socket %d due to ok HTTP server", socknum);
-				if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "No Open %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
-				sockdata->flags = UNCONNECTED;
-				sock_disconnect(sockname);
-				free(buf);
-				return -1;
-			}
-	
-			/* this looks for the ban string or a throttle string */
-			if (strstr(sockdata->buf, opsb.lookforstring) || strstr(sockdata->buf, "ERROR :Your host is trying to (re)connect too fast -- throttled.") || strstr(sockdata->buf, "ERROR :Trying to reconnect too fast.")) {
-				if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Open %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
-				++proxy_list[sockdata->type].noopen;
-				scandata->state = GOTOPENPROXY;
-				sockdata->flags = OPENPROXY;
-				do_ban(scandata);
-				sock_disconnect(sockname);
-				free(buf);
-				return -1;
-			}
-			sockdata->bytes += i;
-			/* avoid reading too much data */
-			if (sockdata->bytes > opsb.maxbytes) {
-				nlog(LOG_DEBUG1, LOG_MOD, "OPSB proxy_read(): Closing %d due to too much data", socknum);
-				if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "No Open %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
-				sock_disconnect(sockname);
-				sockdata->flags = UNCONNECTED;
-				free(buf);
-				return -1;
-			}
-		}
-	}
-	free(buf);
-	return 1;
-
-}
-
-/* proxy write function */
-
-int proxy_write(int socknum, char *sockname) {
-	int i = 0;
-	scaninfo *scandata;
-	lnode_t	*socknode;
-	socklist *sockdata = NULL;
-
-	SET_SEGV_LOCATION();
-
-
-	scandata = find_scandata(sockname);
-	if (!scandata) {
-		nlog(LOG_CRITICAL, LOG_MOD, "ehh, wtf, can find scan data (write) (Sock %d sockname %s)", socknum, sockname);
-		return 1;
-	}
-	socknode = list_first(scandata->socks);
-	while (socknode) {
-		sockdata = lnode_get(socknode);
-		if (sockdata->sock == socknum) {
-			i = 1;
-			break;
-		}
-		socknode = list_next(scandata->socks, socknode);
-	}		
-	if (i == 0) {
-		nlog(LOG_CRITICAL, LOG_MOD, "ehhh, can't find socket %s %d for proxy_write()", sockname, socknum);
-		return 1;
-	}			
-	if (sockdata->flags == CONNECTING || sockdata->flags == SOCKCONNECTED) {
-	
-		if (sockdata->flags == CONNECTING) 
-			i = (int)sockdata->function(socknum);
-		else 
-			i = send(socknum, "", 1, MSG_NOSIGNAL);
-		if (i < 0) {
-			nlog(LOG_DEBUG1, LOG_MOD, "OPSB proxy_write(): %d has the following error: %s", socknum, strerror(errno));
-			if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "No %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
-			sock_disconnect(sockname);
-			sockdata->flags = UNCONNECTED;
-			return -1;
-		} else {
-			if (sockdata->flags != SOCKCONNECTED) ++proxy_list[sockdata->type].nofound;
-			sockdata->flags = SOCKCONNECTED;
-		}
-	}
-	return 1;
-}
-
-/* proxy error function */
-
-int proxy_err(int socknum, char *sockname) {
-	nlog(LOG_NORMAL, LOG_MOD, "Hrm, Got SockErr on %d for %s", socknum, sockname);
-return 1;
-}
-
-
-/* proxy connect function trys to connect a socket to a remote proxy 
-*  its set non blocking, so both the send and recieve functions must be used
-*  to tell if the connection is successful or not
-*  it also registers the socket with the core neostats socket functions
-*/
-
-int proxy_connect(unsigned long ipaddr, int port, char *who)
-{
-	int s;
-	s = sock_connect(SOCK_STREAM, ipaddr, port, who, "opsb", "proxy_read", "proxy_write", "proxy_err");
-	return s;
-	
 }

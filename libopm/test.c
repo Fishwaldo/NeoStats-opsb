@@ -155,13 +155,8 @@ int main(int argc, char **argv)
    while (!complete) {
 	   ufds = malloc((sizeof *ufds) * (*(unsigned int *) libopm_config(scanner->config, OPM_CONFIG_FD_LIMIT)));
 	   size = libopm_before_poll(scanner, ufds);
-printf("test %d\n", size);
-printf("ha %d\n", ufds[0].fd);
 
 	   err = poll(ufds, size, 0);
-// printf("poll said %d\n", err);
-   libopm_after_poll(scanner, ufds, size);
-	printf("after\n");	
 	   switch (err)
 	      {
 	      case -1:
@@ -172,6 +167,7 @@ printf("ha %d\n", ufds[0].fd);
         	      /* Nothing to do */
 	              continue;
 	      default:
+		      libopm_after_poll(scanner, ufds, size);
 	      	      continue;
 		      	      
 	      /* Pass pointer to connection to handler. */

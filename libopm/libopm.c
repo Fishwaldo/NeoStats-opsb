@@ -1198,7 +1198,6 @@ int libopm_before_poll(OPM_T *scanner, pollfd *ufds)
    libopm_check_queue(scanner);      /* Move scans from the queue to the live scan list */
    libopm_check_establish(scanner);  /* Make new connections if possible                */
 
-   printf("prepoll %d\n", (int)size);
 
 //   ufds = MyMalloc((sizeof *ufds) * (*(unsigned int *) libopm_config(scanner->config, OPM_CONFIG_FD_LIMIT)));
    maxsize = (*(unsigned int *) libopm_config(scanner->config, OPM_CONFIG_FD_LIMIT));
@@ -1223,7 +1222,6 @@ int libopm_before_poll(OPM_T *scanner, pollfd *ufds)
          ufds[size].events = 0;
          ufds[size].revents = 0;
          ufds[size].fd = conn->fd;
-         printf("%d %d\n", ufds[size].fd, size);
 
          /* Check for HUNG UP. */
          ufds[size].events |= POLLHUP;
@@ -1243,7 +1241,6 @@ int libopm_before_poll(OPM_T *scanner, pollfd *ufds)
       }
 
    }
-   printf("mysize %d\n", size);
    return size;
 }
 /* after_poll
@@ -1263,11 +1260,9 @@ void libopm_after_poll(OPM_T *scanner, pollfd *ufds, unsigned int ufdssize)
    OPM_CONNECTION_T *conn;
 
    int i;
-printf("after\n");
    if (opm_active(scanner) < 1) {
    	return;
    }
-printf("list\n");
    LIST_FOREACH(node1, scanner->scans->head)
    {
       scan = (OPM_SCAN_T *) node1->data;
@@ -1280,7 +1275,6 @@ printf("list\n");
          {
             if((ufds[i].fd == conn->fd) && (conn->state != OPM_STATE_CLOSED))
             {
-printf("doing something\n");
                if(ufds[i].revents & POLLIN)
                   libopm_do_readready(scanner, scan, conn);
                if(ufds[i].revents & POLLOUT)

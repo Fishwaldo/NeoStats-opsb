@@ -6,7 +6,7 @@ INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@                                                                                                 
 INSTALL_DATA = @INSTALL_DATA@
 DIRECTORY=@DIRINST@/dl/
-INCLUDES=-I@DIRINST@/include/ -I.
+INCLUDES=-I@DIRINST@/include/ -I. -Ilibopm
 
 SOURCES= opsb.c proxy.c opsb_help.c
 OBJECTS= opsb.o proxy.o opsb_help.o
