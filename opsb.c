@@ -938,7 +938,7 @@ void LoadConfig(void)
 		opsb.cachetime = 3600;
 	}
 	if (GetConf((void *)&opsb.verbose, CFGINT, "Verbose") <= 0) {
-		opsb.cachetime = 1;
+		opsb.verbose = 1;
 	}	
 	if (GetConf((void *)&opsb.bantime, CFGINT, "BanTime") <= 0) {
 		opsb.bantime = 86400;
