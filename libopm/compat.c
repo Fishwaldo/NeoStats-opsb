@@ -21,7 +21,7 @@
  *	Boston, MA  02111-1307, USA
  */
 
-#include "setup.h"
+#include "modconfig.h"
 
 #include <stdio.h>
 

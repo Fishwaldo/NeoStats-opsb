@@ -21,7 +21,7 @@
  *                  
  */
 
-#include "setup.h"
+#include "modconfig.h"
 
 #include "config.h"
 #include "libopm.h"

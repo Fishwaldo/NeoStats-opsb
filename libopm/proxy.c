@@ -22,7 +22,7 @@
  *
  */
 
-#include "setup.h"
+#include "modconfig.h"
 
 #include <stdio.h>
 

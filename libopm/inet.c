@@ -25,7 +25,7 @@ along with this program; if not, write to
  * -TimeMr14C
  */
 
-#include "setup.h"
+#include "modconfig.h"
 
 #include <errno.h>
 #include <stdio.h>

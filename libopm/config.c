@@ -21,7 +21,7 @@
  *
  */
 
-#include "setup.h"
+#include "modconfig.h"
 
 #include "malloc.h"
 #include "config.h"

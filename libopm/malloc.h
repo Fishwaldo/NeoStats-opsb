@@ -1,7 +1,7 @@
 #ifndef MALLOC_H
 #define MALLOC_H
 
-#include "setup.h"
+#include "modconfig.h"
 
 #ifdef STDC_HEADERS
 # include <stdlib.h>

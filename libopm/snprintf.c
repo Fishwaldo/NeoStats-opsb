@@ -189,7 +189,7 @@
  *		  not used;
  */
 
-#include "setup.h"
+#include "modconfig.h"
 
 /* Define HAVE_SNPRINTF if your system already has snprintf and vsnprintf.
  *

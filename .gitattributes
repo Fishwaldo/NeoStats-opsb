@@ -3,12 +3,12 @@
 /LICENSE -text
 /Makefile.in -text
 /README.opsb -text
+/aclocal.m4 -text
 /configure -text
 /configure.in -text
 /install-sh -text
 libopm/.cvsignore -text
 libopm/LICENSE -text
-libopm/Makefile.am -text
 libopm/Makefile.in -text
 libopm/README -text
 libopm/compat.c -text
@@ -30,7 +30,6 @@ libopm/opm_error.h -text
 libopm/opm_types.h -text
 libopm/proxy.c -text
 libopm/proxy.h -text
-libopm/setup.h.in -text
 libopm/snprintf.c -text
 libopm/snprintf.h -text
 libopm/test.c -text

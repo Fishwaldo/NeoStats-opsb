@@ -22,7 +22,7 @@
  */
 
 #include <assert.h>
-#include "setup.h"
+#include "modconfig.h"
 
 #include "malloc.h"
 #include "opm.h"

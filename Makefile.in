@@ -23,7 +23,10 @@ all:	 module
 .c.o:	
 	 $(CC) -c $(CFLAGS) $(INCLUDES) $<
 
-module:	 $(OBJECTS)
+libopm.a:
+	 (cd libopm; $(MAKE) $@)
+	 
+module:	 libopm.a $(OBJECTS)
 	 $(LD) -shared -o $(TARGET) $(LDFLAGS) $(OBJECTS)
 
 clean:

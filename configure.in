@@ -10,6 +10,48 @@ CFLAGS="$CFLAGS -O2 -Wall"
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_INSTALL 
+ETR_SOCKET_NSL
+
+dnl Checks for header files.
+AC_HEADER_STDC
+
+AC_CHECK_HEADERS(sys/poll.h, have_poll_sys_h=yes, have_sys_poll_h=no)
+
+AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h strings.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+AC_FUNC_SNPRINTF
+
+dnl if they want select() or they don't have poll() then we need to check
+dnl that we actually have select()
+if test "$have_sys_poll_h" = "no"; then
+ AC_CHECK_FUNCS(select, have_select=yes, have_select=no)
+ if test "$have_select" = "no"; then
+   AC_MSG_ERROR([No select() implementation found])
+ fi
+fi
+
+AC_CHECK_FUNCS(inet_aton inet_pton)
+
+dnl Check if we can use gethostbyname2 for ipv6
+AC_CHECK_FUNCS(gethostbyname gethostbyname2)
+
+dnl AIX fun
+AC_C_BIGENDIAN
+
+dnl Solaris has to be weird doesn't it...
+AC_CHECK_LIB(socket, socket, AC_SUBST(LSOCKET, [-lsocket]))
+AC_CHECK_LIB(nsl, gethostbyname, AC_SUBST(LNSL, [-lnsl]))
+
+
+
+
+
+
 
 AC_MSG_CHECKING(Location of NeoStats...)
 AC_ARG_WITH(neostats, 
@@ -73,7 +115,7 @@ AC_SUBST(DIRINST)
 AC_SUBST(CFLAGS)
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
-AC_OUTPUT(Makefile)
+AC_OUTPUT(Makefile libopm/Makefile)
 echo "(*----------------------------------------------------------*)"
 echo "(| Important Instructions                                   |)"
 echo "(*----------------------------------------------------------*)"
