@@ -130,3 +130,17 @@ ac_cv_socket_libs, [
 
         AC_SUBST(ETR_SOCKET_LIBS)
 ]) dnl ETR_SOCKET_NSL
+AC_DEFUN([TYPE_SOCKLEN_T],
+[AC_CACHE_CHECK([for socklen_t], ac_cv_type_socklen_t,
+[
+  AC_TRY_COMPILE(
+  [#include <sys/types.h>
+   #include <sys/socket.h>],
+  [socklen_t len = 42; return 0;],
+  ac_cv_type_socklen_t=yes,
+  ac_cv_type_socklen_t=no)
+])
+  if test $ac_cv_type_socklen_t != yes; then
+    AC_DEFINE(socklen_t, int, "have socklet_t defined?")
+  fi
+])
