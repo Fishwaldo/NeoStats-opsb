@@ -4,7 +4,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: opsb.h,v 1.2 2002/09/04 08:52:34 fishwaldo Exp $
+** $Id: opsb.h,v 1.3 2002/09/06 04:33:28 fishwaldo Exp $
 */
 
 
@@ -112,6 +112,7 @@ list_t *exempt;
 #define DOING_SCAN	0x0008
 #define GOTOPENPROXY	0x0010
 #define OPMLIST		0x0020
+#define	NOOPMLIST	0x0040
 
 /* this is some socklist flags */
 #define CONNECTING	0x0001

@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.3 2002/09/04 08:52:34 fishwaldo Exp $
+** $Id: opsb.c,v 1.4 2002/09/06 04:33:28 fishwaldo Exp $
 */
 
 
@@ -195,6 +195,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		scandata = malloc(sizeof(scaninfo));
 		scandata->doneban = 0;
 		scandata->u = u;
+		scandata->socks = NULL;
 		if ((u2 = finduser(argv[2])) != NULL) {
 			/* don't scan users from my server */
 			if (!strcasecmp(u2->server->name, me.name)) {
@@ -738,13 +739,16 @@ static int ScanNick(char **av, int ac) {
 	scannode = list_find(opsbl, av[0], findscan);
 	if (!scannode) scannode = list_find(opsbq, av[0], findscan);
 	if (scannode) {
+#ifdef DEBUG
 		log("ScanNick(): Not scanning %s as we are already scanning them", av[0]);
+#endif
 		return -1;
 	}
 	prefmsg(u->nick, s_opsb, "%s", opsb.scanmsg);
 	scandata = malloc(sizeof(scaninfo));
 	scandata->u = NULL;
 	scandata->doneban = 0;
+	scandata->socks = NULL;
 	strncpy(scandata->who, u->nick, MAXHOST);
 	strncpy(scandata->lookup, u->hostname, MAXHOST);
 	strncpy(scandata->server, u->server->name, MAXHOST);
@@ -759,9 +763,10 @@ static int ScanNick(char **av, int ac) {
 			scandata->ipaddr.s_addr = 0;
 		}
 	}
-	if (!startscan(scandata)) 
+	if (!startscan(scandata)) {
 		chanalert(s_opsb, "Warning Can't scan %s", u->nick);
-
+		log("OBSB ScanNick(): Can't scan %s. Check logs for possible errors", u->nick);
+	}
 	return 1;
 
 
@@ -781,17 +786,22 @@ int startscan(scaninfo *scandata) {
 
 	strcpy(segv_location, "OPSB:Startscan");
 	
-	i = checkcache(scandata);
-	if ((i > 0) && (!scandata->u)) {
-		free(scandata);
-		return 1;
+	/* only check the cache when we have IP addy */
+	if (scandata->dnsstate == DO_OPM_LOOKUP && scandata->u == NULL) {
+		i = checkcache(scandata);
+		if (i > 0) {
+			free(scandata);
+			return 1;
+		}
 	}
-
 	switch(scandata->dnsstate) {
 		case GET_NICK_IP:
 				if (list_isfull(opsbl)) {
 					if (list_isfull(opsbq)) {
 						chanalert(s_opsb, "Warning, Both Current and queue lists are full. Not Adding additional scans");
+#ifdef DEBUG
+						log("OPSB: dropped scaning of %s, as queue is full", scandata->who);
+#endif
 						if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "To Busy. Try again later");
 						free(scandata);
 						return 0;
@@ -846,6 +856,7 @@ int startscan(scaninfo *scandata) {
 				if (dns_lookup(buf, adns_r_a, dnsblscan, scandata->who) != 1) {
 					log("DNS: startscan() DO_OPM_LOOKUP dns_lookup() failed");
 					free(scandata);
+					free(buf);
 					checkqueue();
 					return 0;
 				}
@@ -911,6 +922,7 @@ void dnsblscan(char *data, adns_answer *a) {
 							startscan(scandata);
 						} else {
 							log("DNS: dnsblscan() GETNICKIP failed-> %s", show);
+							chanalert(s_opsb, "Warning, Couldn't get the address for %s", scandata->who);
 					        	list_delete(opsbl, scannode);
 			        			lnode_destroy(scannode);
 			        			free(scandata);
@@ -919,6 +931,7 @@ void dnsblscan(char *data, adns_answer *a) {
 
 					} else {
 						log("DNS: dnsblscan GETNICKIP rr_info failed");
+						chanalert(s_opsb, "Warning, Couldnt get the address for %s. rr_info failed", scandata->who); 
 						list_delete(opsbl, scannode);
 						lnode_destroy(scannode);
 						free(scandata);
@@ -930,11 +943,18 @@ void dnsblscan(char *data, adns_answer *a) {
 					if (a->nrrs > 0) {
 						/* TODO: print out what type of open proxy it is based on IP address returned */
 						if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "%s apears in DNS blacklist", scandata->lookup);
+#ifdef DEBUG
+						log("Got Positive OPM lookup for %s (%s)", scandata->who, scandata->lookup);
+#endif
 						scandata->dnsstate = OPMLIST;
 						do_ban(scandata);
 						checkqueue();
 					} else 
 						if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "%s does not appear in DNS black list", scandata->lookup);
+#ifdef DEBUG
+						log("Got Negative OPM lookup for %s (%s)", scandata->who, scandata->lookup);
+#endif
+						scandata->dnsstate = NOOPMLIST;
 					break;
 			default:
 					log("Warning, Unknown Status in dnsblscan()");

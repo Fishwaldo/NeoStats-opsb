@@ -20,7 +20,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: proxy.c,v 1.3 2002/09/04 08:52:34 fishwaldo Exp $
+** $Id: proxy.c,v 1.4 2002/09/06 04:33:28 fishwaldo Exp $
 */
 
 
@@ -65,7 +65,6 @@ proxy_types proxy_list[] = {
 void do_ban(scaninfo *scandata) {
 	lnode_t *socknode;
 	socklist *sockdata;
-	int doneban = 0;
 	FILE *fp;
 
 	strcpy(segv_location, "OPSB:dns_lookup");
@@ -120,6 +119,7 @@ scaninfo *find_scandata(char *sockname) {
 	cmd = strtok(buf, " ");
 
 	scannode = list_find(opsbl, cmd, findscan);
+	free(buf);
 	if (scannode)
 		return lnode_get(scannode);
 	else 
@@ -146,12 +146,13 @@ void cleanlist() {
 		savescan = 1;	
 		
 		if (scandata->dnsstate == OPMLIST) savescan = 0;
-		/* if this is not valid, exit */
-		if (!scandata->socks) break;
+		/* if this is not valid, exit  (ie, the scan hasn't started yet) */
+		if (scandata->socks == NULL) break;
 		/* check for open sockets */
 		socknode = list_first(scandata->socks);	
 		finished = 1;
 		while (socknode) {
+			
 			sockdata = lnode_get(socknode);
 			/* if it was a open proxy, don't save the cache */
 			if (sockdata->flags == OPENPROXY) savescan = 0;
@@ -169,10 +170,10 @@ void cleanlist() {
 					if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Timeout Connecting to Proxy %s on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		
 					sock_disconnect(sockname);
-					free(sockdata);
 				}
+				/* free the socket struct as its timed out and un-connected by now */
+		
 			}  
-	
 			socknode = list_next(scandata->socks, socknode);
 		}
 
@@ -183,8 +184,20 @@ void cleanlist() {
 #endif
 			if (savescan == 1) 
 				addtocache(scandata->ipaddr.s_addr);
+
 			/* destory all the nodes in the sock list */
-			list_destroy_nodes(scandata->socks);
+			if (scandata->socks != NULL) {
+				socknode = list_first(scandata->socks);
+				while (socknode) {
+					sockdata = lnode_get(socknode);
+#ifdef DEBUG	
+					log("freeing sockdata %s %d", scandata->who, sockdata->type);
+#endif
+					free(sockdata);
+					socknode = list_next(scandata->socks, socknode);
+				}
+				list_destroy_nodes(scandata->socks);
+			}	
 			scannode2 = list_next(opsbl, scannode);
 			list_delete(opsbl, scannode);
 			lnode_destroy(scannode);
@@ -231,6 +244,12 @@ void send_status(User *u) {
 					break;
 			case DO_OPM_LOOKUP:
 					prefmsg(u->nick, s_opsb, "Looking up DNS blacklist");
+					break;
+			case OPMLIST:
+					prefmsg(u->nick, s_opsb, "Host is listed in %s", opsb.opmdomain);
+					break;
+			case NOOPMLIST:
+					prefmsg(u->nick, s_opsb, "Host is Not listed in %s", opsb.opmdomain);
 					break;
 			default:
 					prefmsg(u->nick, s_opsb, "Unknown State (DNS)");
@@ -386,6 +405,7 @@ int sock5_proxy(int sock) {
                       );
 
         len = send(sock, buf, len, MSG_NOSIGNAL);
+        free(buf);
         return(len);
 
 
@@ -445,7 +465,7 @@ int proxy_read(int socknum, char *sockname) {
 		socknode = list_next(scandata->socks, socknode);
 	}		
 	if (i == 0) {
-		log("ehh can't find socket info for proxy_read()");
+		log("ehh can't find socket info %s (%d) for proxy_read()", sockname, socknum);
 		return 1;
 	}
 	buf = malloc(512);
@@ -534,7 +554,7 @@ int proxy_write(int socknum, char *sockname) {
 		socknode = list_next(scandata->socks, socknode);
 	}		
 	if (i == 0) {
-		log("ehhh, can't find socket for proxy_write()");
+		log("ehhh, can't find socket %s %d for proxy_write()", sockname, socknum);
 		return 1;
 	}			
 	if (sockdata->flags == CONNECTING || sockdata->flags == SOCKCONNECTED) {
