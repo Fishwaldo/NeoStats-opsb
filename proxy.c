@@ -20,7 +20,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: proxy.c,v 1.6 2002/10/24 09:27:58 fishwaldo Exp $
+** $Id: proxy.c,v 1.7 2002/10/27 10:28:47 fishwaldo Exp $
 */
 
 
@@ -304,6 +304,9 @@ void start_proxy_scan(lnode_t *scannode) {
 	if (scandata->u) chanalert(s_opsb, "Starting proxy scan on %s (%s) by Request of %s", scandata->who, scandata->lookup, scandata->u->nick);
 	scandata->socks = list_create(NUM_PROXIES);
 	scandata->state = DOING_SCAN;
+	/* this is so we can timeout scans */
+	scandata->started = time(NULL);
+
 	if ((opsb.doscan == 1) || (scandata->u)) {
 		for (i = 0; i <  NUM_PROXIES; i++) {
 #ifdef DEBUG	
@@ -326,8 +329,6 @@ void start_proxy_scan(lnode_t *scannode) {
 			}
 		}
 	}
-	/* this is so we can timeout scans */
-	scandata->started = time(NULL);
 }
 
 /* the following functions (http_proxy, sock4_proxy, sock5_proxy, cisco_proxy and wingate_proxy
