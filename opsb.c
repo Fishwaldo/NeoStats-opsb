@@ -22,7 +22,6 @@
 */
 
 #include <stdio.h>
-#include <fnmatch.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -530,13 +529,13 @@ int checkcache(scaninfo *scandata) {
 		exempts = lnode_get(node);
 		if ((exempts->server == 1) && (scandata->server)) {
 			/* match a server */
-			if (fnmatch(exempts->host, scandata->server, 0) == 0) {
+			if (match(exempts->host, scandata->server)) {
 				nlog(LOG_DEBUG1, LOG_MOD, "OPSB: User %s exempt. Matched server entry %s in Exemptions", scandata->who, exempts->host);
 				if (scandata->u) prefmsg(scandata->u->nick, s_opsb,"%s Matches a Server Exception %s", scandata->who, exempts->host);
 				return 1;
 			}
 		} else {
-			if (fnmatch(exempts->host, scandata->lookup, 0) == 0) {
+			if (match(exempts->host, scandata->lookup)) {
 				nlog(LOG_DEBUG1, LOG_MOD, "OPSB: User %s exempt. Matched host entry %s in exemptions", scandata->who, exempts->host);
 				if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "%s Matches a Host Exception %s", scandata->who, exempts->host);
 				return 2;
@@ -608,7 +607,7 @@ static int ScanNick(char **av, int ac) {
 		exempts = lnode_get(node);
 		if (exempts->server == 1) {
 			/* match a server */
-			if (fnmatch(exempts->host, u->server->name, 0) == 0) {
+			if (match(exempts->host, u->server->name)) {
 				nlog(LOG_DEBUG1, LOG_MOD, "OPSB: User %s exempt. Matched server entry %s in Exemptions", u->nick, exempts->host);
 				return -1;
 			}
