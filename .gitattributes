@@ -8,8 +8,6 @@
 /aclocal.m4 -text
 /configure -text
 /configure.in -text
-/exempts.c -text
-/exempts.h -text
 /html.css -text
 /install-sh -text
 libopm/.cvsignore -text

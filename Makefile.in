@@ -8,14 +8,12 @@ INSTALL_DATA = @INSTALL_DATA@
 DIRECTORY = @DIRINST@/modules/
 INCLUDES = -I@DIRINST@/include/ -I. -Ilibopm
 
-SRCS= opsb.c proxy.c opsb_help.c exempts.c
+SRCS= opsb.c proxy.c opsb_help.c
 OBJS= ${SRCS:.c=.o}
 TARGET= opsb.so                 
-DOCS=README.opsb README.opsb.html opsb.Settings
+DOCS=README.opsb README.opsb.html
 DISTFILES = $(SRCS) $(DOCS) modconfig.h.in configure install-sh ChangeLog Makefile.in opsb.h libopm/*.c libopm/*.h libopm/README libopm/LICENSE LICENSE libopm/*.in
 DISTDIR = @PACKAGE@-@VERSION@
-
-
 
 all:	 module
 
@@ -35,8 +33,7 @@ clean:
 install: module
 	 $(INSTALL) -m 644 $(TARGET) $(DIRECTORY)
 	 $(INSTALL) -m 644 $(DOCS) $(DIRECTORY)../doc/
-	 @cd $(DIRECTORY)..; \
-         if ! test -f $(DIRECTORY)../kpconf/OPSB ; then ./kptool -i doc/opsb.Settings; fi
+
 dist:	
 	@echo -n "Creating Directories"
 	@-rm -rf $(DISTDIR)
@@ -57,5 +54,4 @@ $(OBJS): Makefile
 opsb.o:		opsb.h opsb.c modconfig.h
 proxy.o: 	opsb.h proxy.c modconfig.h
 opsb_help.o: 	opsb.h
-exempts.o: 	opsb.h exempts.c exempts.h 
 

@@ -31,7 +31,6 @@
 #endif
 #include "neostats.h"
 #include "opsb.h"
-#include "exempts.h"
 
 void reportdns(char *data, adns_answer *a);
 void dnsblscan(char *data, adns_answer *a);
@@ -62,7 +61,7 @@ ModuleInfo module_info = {
 	MODULE_VERSION,
 	__DATE__,
 	__TIME__,
-	0,
+	MODULE_FLAG_LOCAL_EXCLUDES,
 	0,
 };
 
@@ -320,7 +319,6 @@ static bot_cmd opsb_commands[]=
 	{"LOOKUP",	opsb_cmd_lookup,	1,	NS_ULEVEL_OPER,	opsb_help_lookup,	opsb_help_lookup_oneline},
 	{"REMOVE",	opsb_cmd_remove,	1,	NS_ULEVEL_OPER,	opsb_help_remove,	opsb_help_remove_oneline},
 	{"CHECK",	opsb_cmd_check,		1,	NS_ULEVEL_OPER,	opsb_help_check,	opsb_help_check_oneline},
-	{"EXCLUDE",	opsb_cmd_exclude,	1,	NS_ULEVEL_ADMIN,opsb_help_exclude,	opsb_help_exclude_oneline},
 	{"PORTS",	opsb_cmd_ports,		1,	NS_ULEVEL_ADMIN,opsb_help_ports,	opsb_help_ports_oneline},
 	{NULL,		NULL,				0, 	0,				NULL, 				NULL}
 };
@@ -449,9 +447,9 @@ int checkcache(scaninfo *scandata)
 	cache_entry *ce;
 
 	SET_SEGV_LOCATION();
-	if (scandata->server && IsServerExempt (scandata->who, scandata->server))
+	if (scandata->server && ModIsServerExcluded (scandata->who, scandata->server))
 		return 1;
-	if (IsUserExempt (scandata->who, scandata->lookup))
+	if (ModIsUserExcluded (scandata->who, scandata->lookup))
 		return 2;
 	node = list_first(cache);
 	while (node) {
@@ -494,7 +492,7 @@ static int ss_event_signon (CmdParams* cmdparams)
 	SET_SEGV_LOCATION();
 
 	/* don't scan users from a server that is excluded */
-	if (IsServerExempt (cmdparams->source->name, cmdparams->source->uplink->name))
+	if (ModIsServerExcluded (cmdparams->source->uplink))
 	{
 		return -1;
 	}
@@ -772,7 +770,6 @@ int ModInit (Module *mod_ptr)
 	/* scan cache is MAX_QUEUE size (why not?) */
 	cache = list_create(MAX_QUEUE);
 	opsb.ports = list_create(MAX_PORTS);
-	LoadExempts();
 	opsb.open = 0;
 	opsb.scanned = 0;
 	opsb.cachehits = 1;

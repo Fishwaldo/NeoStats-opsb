@@ -34,7 +34,6 @@
 #endif
 #include "neostats.h"
 #include "opsb.h"
-#include "exempts.h"
 #include "opm.h"
 #include "opm_types.h"
 #include "opm_error.h"
@@ -312,7 +311,7 @@ int opsb_cmd_status (CmdParams* cmdparams)
 	SET_SEGV_LOCATION();
 	
 	irc_prefmsg (opsb_bot, cmdparams->source, "Proxy Results:");
-	irc_prefmsg (opsb_bot, cmdparams->source, "Hosts Scanned: %d Hosts found Open: %d Exceptions %d", opsb.scanned, opsb.open, GetExemptCount ());
+	irc_prefmsg (opsb_bot, cmdparams->source, "Hosts Scanned: %d Hosts found Open: %d", opsb.scanned, opsb.open);
 	irc_prefmsg (opsb_bot, cmdparams->source, "Cache Entries: %d", (int)list_count(cache));
 	irc_prefmsg (opsb_bot, cmdparams->source, "Cache Hits: %d", opsb.cachehits);
 	irc_prefmsg (opsb_bot, cmdparams->source, "Blacklist Hits: %d", opsb.opmhits);

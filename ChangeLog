@@ -1,6 +1,7 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
 3.0prealpha1 - Mark (M)
+ - Update module to use new core module exclusion support. (M)
  - Removed splittime setting which is now handled by core. (M)
  - Changes for Win32 compatibility. (M)
  - Split exempt code into seperate files. (M)
