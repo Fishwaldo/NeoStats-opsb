@@ -22,7 +22,7 @@ typedef struct port_list {
 } port_list;
 
 
-char *s_opsb;
+extern char s_opsb[MAXNICK];
 
 
 /* max scans in the max concurrent scans at any one time */

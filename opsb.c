@@ -57,6 +57,8 @@ extern const char *opsb_help_exclude[];
 extern const char *opsb_help_remove[];
 extern const char *opsb_help_ports[];
 
+char s_opsb[MAXNICK];
+
 int online;
 
 ModuleInfo __module_info = {
@@ -311,14 +313,14 @@ int __Bot_Message(char *origin, char **argv, int argc)
 				return 0;
 			}
 			exempts = malloc(sizeof(exemptinfo));
-			snprintf(exempts->host, MAXHOST, "%s", argv[3]);
+			strlcpy(exempts->host, argv[3], MAXHOST);
 			if (atoi(argv[4]) > 0)
 				exempts->server = 1;
 			else 
 				exempts->server = 0;
-			snprintf(exempts->who, MAXNICK, "%s", u->nick);
+			strlcpy(exempts->who, u->nick, MAXNICK);
 			buf = joinbuf(argv, argc, 5);
-			snprintf(exempts->reason, MAXHOST, "%s", buf);
+			strlcpy(exempts->reason, buf, MAXHOST);
 			free(buf);
 			lnode = lnode_create(exempts);
 			list_append(exempt, lnode);
@@ -505,7 +507,7 @@ int do_set(User *u, char **av, int ac) {
 			prefmsg(u->nick, s_opsb, "Invalid IP address (Can not be hostname) in TARGETIP");
 			return 0;
 		}
-		snprintf(opsb.targethost, MAXHOST, "%s", av[3]);
+		strlcpy(opsb.targethost, av[3], MAXHOST);
 		prefmsg(u->nick, s_opsb, "Target IP set to %s", av[3]);
 		chanalert(s_opsb, "%s changed the target ip to %s", u->nick, av[3]);
 		opsb.confed = 1;
@@ -533,7 +535,7 @@ int do_set(User *u, char **av, int ac) {
 			prefmsg(u->nick, s_opsb, "Invalid Domain name in OPMDOMAIN");
 			return 0;
 		}
-		snprintf(opsb.opmdomain, MAXHOST, "%s", av[3]);
+		strlcpy(opsb.opmdomain, av[3], MAXHOST);
 		prefmsg(u->nick, s_opsb, "OPM Domain changed to %s", opsb.opmdomain);
 		chanalert(s_opsb, "%s changed the opm domain to %s", u->nick, opsb.opmdomain);
 		opsb.confed = 1;
@@ -572,7 +574,7 @@ int do_set(User *u, char **av, int ac) {
 			return 0;
 		}
 		buf = joinbuf(av, ac, 3);
-		snprintf(opsb.lookforstring, 512, "%s", buf);
+		strlcpy(opsb.lookforstring, buf, 512);
 		free(buf);
 		prefmsg(u->nick, s_opsb, "OPENSTRING changed to %s", opsb.lookforstring);
 		chanalert(s_opsb, "%s changed OPENSTRING to %s", u->nick, opsb.lookforstring);
@@ -598,7 +600,7 @@ int do_set(User *u, char **av, int ac) {
 			return 0;
 		}
 		buf = joinbuf(av, ac, 3);
-		snprintf(opsb.scanmsg, 512, "%s", buf);
+		strlcpy(opsb.scanmsg, buf, 512);
 		free(buf);
 		prefmsg(u->nick, s_opsb, "ScanMessage changed to %s", opsb.scanmsg);
 		chanalert(s_opsb, "%s changed the scan message to %s", u->nick, opsb.scanmsg);
@@ -661,7 +663,7 @@ int Online(char **av, int ac) {
 
 	if (init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", __module_info.module_name) == -1 ) {
 		/* Nick was in use!!!! */
-		s_opsb = strcat(s_opsb, "_");
+		strlcat(s_opsb, "_", MAXNICK);
 		init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", __module_info.module_name);
 	}
 	loadcache();
@@ -669,7 +671,7 @@ int Online(char **av, int ac) {
 		add_mod_timer("unconf", "Un_configured_warn", "opsb", 60);
 		unconf();
 		getpeername(servsock, (struct sockaddr *)&sa, (socklen_t*)&ulen);
-		snprintf(opsb.targethost, MAXHOST, "%s", inet_ntoa(sa.sin_addr));
+		strlcpy(opsb.targethost, inet_ntoa(sa.sin_addr), MAXHOST);
 	}
 	add_mod_timer("cleanlist", "CleanProxyList", "opsb", 1);
 	add_mod_timer("savecache", "SaveProxyCache", "opsb", 600);
@@ -701,7 +703,7 @@ void save_ports() {
 		pl = lnode_get(pn);
 		/* if the port is different from the last round, and its not the first round, save it */
 		if ((pl->type != lasttype) && (lasttype != -1)) {
-			ircsnprintf(confpath, MAXHOST, "%s", type_of_proxy(lasttype));
+			strlcpy(confpath, type_of_proxy(lasttype), MAXHOST);
 			SetConf((void *)ports, CFGSTR, confpath);
 		} 
 		if (pl->type != lasttype) {
@@ -713,7 +715,7 @@ void save_ports() {
 		lasttype = pl->type;
 		pn = list_next(opsb.ports, pn);
 	}
-	ircsnprintf(confpath, MAXHOST, "%s", type_of_proxy(lasttype));
+	strlcpy(confpath, type_of_proxy(lasttype), MAXHOST);
 	SetConf((void *)ports, CFGSTR, confpath);
 	flush_keeper();
 } 
@@ -880,11 +882,11 @@ void loadcache() {
 		return;
 	}
 	fgets(buf, 512, fp);
-	snprintf(opsb.opmdomain, MAXHOST, "%s", strtok(buf, "\n"));
+	strlcpy(opsb.opmdomain, strtok(buf, "\n"), MAXHOST);
 	fgets(buf, 512, fp);
-	snprintf(opsb.targethost, MAXHOST, "%s", strtok(buf, "\n"));
+	strlcpy(opsb.targethost, strtok(buf, "\n"), MAXHOST);
 	fgets(buf, 512, fp);
-	snprintf(opsb.lookforstring, 512, "%s", strtok(buf, "\n"));
+	strlcpy(opsb.lookforstring, strtok(buf, "\n"), 512);
 	fgets(buf, 512, fp);
 	opsb.targetport = atoi(buf);
 	fgets(buf, 512, fp);
@@ -894,7 +896,7 @@ void loadcache() {
 	fgets(buf, 512, fp);
 	opsb.timedif = atoi(buf);
 	fgets(buf, 512, fp);
-	snprintf(opsb.scanmsg, 512, "%s", strtok(buf, "\n"));
+	strlcpy(opsb.scanmsg, strtok(buf, "\n"), 512);
 	fgets(buf, 512, fp);
 	opsb.bantime = atoi(buf);
 	fgets(buf, 512, fp);
@@ -911,10 +913,10 @@ void loadcache() {
 			if (list_isfull(exempt))
 				break;
 			exempts = malloc(sizeof(exemptinfo));
-			snprintf(exempts->host, MAXHOST, "%s", strtok(buf, " "));
+			strlcpy(exempts->host, strtok(buf, " "), MAXHOST);
 			exempts->server = atoi(strtok(NULL, " "));
-			snprintf(exempts->who, MAXNICK, "%s", strtok(NULL, " "));
-			snprintf(exempts->reason, MAXHOST, "%s", strtok(NULL, "\n"));
+			strlcpy(exempts->who, strtok(NULL, " "), MAXNICK);
+			strlcpy(exempts->reason, strtok(NULL, "\n"), MAXHOST);
 			node = lnode_create(exempts);
 			list_prepend(exempt, node);			
 		} else {
@@ -1085,7 +1087,7 @@ int startscan(scaninfo *scandata) {
                                 buflen = 18 + strlen(opsb.opmdomain);
                                 buf = malloc(buflen * sizeof(*buf));
                                                      
-                                snprintf(buf, buflen, "%d.%d.%d.%d.%s", d, c, b, a, opsb.opmdomain);
+                                ircsnprintf(buf, buflen, "%d.%d.%d.%d.%s", d, c, b, a, opsb.opmdomain);
 				if (dns_lookup(buf, adns_r_a, dnsblscan, scandata->who) != 1) {
 					nlog(LOG_WARNING, LOG_MOD, "DNS: startscan() DO_OPM_LOOKUP dns_lookup() failed");
 					free(scandata);
@@ -1248,7 +1250,7 @@ void reportdns(char *data, adns_answer *a) {
 
 int __ModInit(int modnum, int apiver)
 {
-	s_opsb = "opsb";
+	strlcpy(s_opsb, "opsb", MAXNICK);
 	
 
 	/* we have to be carefull here. Currently, we have 7 sockets that get opened per connection. Soooo.
@@ -1274,8 +1276,8 @@ int __ModInit(int modnum, int apiver)
 	opsb.ports = list_create(MAX_PORTS);
 
 	online = 0;				
-	sprintf(opsb.opmdomain, "%s", "opm.blitzed.org");
-	sprintf(opsb.targethost, "%s", me.uplink);
+	strlcpy(opsb.opmdomain, "opm.blitzed.org", MAXHOST);
+	strlcpy(opsb.targethost, me.uplink, MAXHOST);
 	opsb.targetport = me.port;
 	opsb.maxbytes = 500;
 	opsb.timeout = 30;
@@ -1288,8 +1290,8 @@ int __ModInit(int modnum, int apiver)
 	opsb.doscan = 1;
 	opsb.cachehits = 1;
 	opsb.opmhits = 1;
-	snprintf(opsb.lookforstring, 512, "*** Looking up your hostname...");
-	snprintf(opsb.scanmsg, 512, "Your Host is being Scanned for Open Proxies");
+	strlcpy(opsb.lookforstring, "*** Looking up your hostname...", 512);
+	strlcpy(opsb.scanmsg, "Your Host is being Scanned for Open Proxies", 512);
 
 	loadcache();
 
