@@ -4,6 +4,7 @@ Open Proxy Scanning Bot Module for NeoStats Changelog.
 - Some segv updates from M (mark@ctcp.net) (M/F)
 - Initial import of libopm, to replace our engine. (F)
 - Cleaned up help text and reformatted help to match the rest of NeoStats (M)
+- Changed to use new module export API (M)
 
 * Version 1.0 * 12/12/2002 * Fish
 - Fix a coredump when not enough paramaters supplied to the set command

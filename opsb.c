@@ -34,12 +34,6 @@
 #include "opsb.h"
 #include "log.h"
 
-const char opsbversion_date[] = __DATE__;
-const char opsbversion_time[] = __TIME__;
-
-
-
-
 void reportdns(char *data, adns_answer *a);
 void dnsblscan(char *data, adns_answer *a);
 static int ScanNick(char **av, int ac);
@@ -62,19 +56,20 @@ extern const char *opsb_help_remove[];
 
 int online;
 
-Module_Info my_info[] = { {
+ModuleInfo __module_info = {
 	"OPSB",
 	"An Open Proxy Scanning Bot",
-	"1.0"
-} };
-
+	"1.0",
+	__DATE__,
+	__TIME__
+};
 
 int new_m_version(char *origin, char **av, int ac) {
-	snumeric_cmd(351,origin, "Module OPSB Loaded, Version: %s %s %s",my_info[0].module_version,opsbversion_date,opsbversion_time);
+	snumeric_cmd(351,origin, "Module OPSB Loaded, Version: %s %s %s",__module_info.module_version,__module_info.module_build_date,__module_info.module_build_time);
 	return 0;
 }
 
-Functions my_fn_list[] = {
+Functions __module_functions[] = {
 	{ MSG_VERSION,	new_m_version,	1 },
 #ifdef HAVE_TOKEN_SUP
 	{ TOK_VERSION,	new_m_version,	1 },
@@ -547,10 +542,10 @@ int Online(char **av, int ac) {
 
 	SET_SEGV_LOCATION();
 
-	if (init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", my_info[0].module_name) == -1 ) {
+	if (init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", __module_info.module_name) == -1 ) {
 		/* Nick was in use!!!! */
 		s_opsb = strcat(s_opsb, "_");
-		init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", my_info[0].module_name);
+		init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", __module_info.module_name);
 	}
 	loadcache();
 	if (opsb.confed == 0) add_mod_timer("unconf", "Un_configured_warn", "opsb", 60);
@@ -787,26 +782,11 @@ void loadcache() {
 }
 
 
-EventFnList my_event_list[] = {
+EventFnList __module_events[] = {
 	{ "ONLINE", 	Online},
 	{ "SIGNON", 	ScanNick},
 	{ NULL, 	NULL}
 };
-
-
-
-Module_Info *__module_get_info() {
-	return my_info;
-};
-
-Functions *__module_get_functions() {
-	return my_fn_list;
-};
-
-EventFnList *__module_get_events() {
-	return my_event_list;
-};
-
 
 /* this function kicks of a scan of a user that just signed on the network */
 static int ScanNick(char **av, int ac) {
