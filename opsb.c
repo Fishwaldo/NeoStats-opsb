@@ -447,9 +447,9 @@ int checkcache(scaninfo *scandata)
 	cache_entry *ce;
 
 	SET_SEGV_LOCATION();
-	if (scandata->server && ModIsServerExcluded (scandata->who, scandata->server))
+	if (scandata->server && ModIsServerExcluded (find_server(scandata->server)))
 		return 1;
-	if (ModIsUserExcluded (scandata->who, scandata->lookup))
+	if (ModIsUserExcluded (find_user(scandata->who)))
 		return 2;
 	node = list_first(cache);
 	while (node) {
