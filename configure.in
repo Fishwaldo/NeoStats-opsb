@@ -1,16 +1,78 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(opsb.c)
 AC_CONFIG_HEADER(modconfig.h)
+
 PACKAGE=OPSB
 MODULE_MAJOR=3
-MODULE_MINOR=0prealpha2
-VERSION=$MODULE_MAJOR.$MODULE_MINOR
-AC_DEFINE_UNQUOTED(MODULE_VERSION, "$VERSION", "Module Version")
-AC_DEFINE_UNQUOTED(MODULE_MAJOR, "$MODULE_MAJOR", "Major Version")
-AC_DEFINE_UNQUOTED(MODULE_MINOR, "$MODULE_MINOR", "Minor Version" )
+MODULE_MINOR=0
+MODULE_REV=a1-dev
+VERSION=$MODULE_MAJOR.$MODULE_MINOR.$MODULE_REV
+AC_DEFINE_UNQUOTED(MODULE_VERSION, "$VERSION")
+AC_DEFINE_UNQUOTED(MODULE_MAJOR, "$MODULE_MAJOR")
+AC_DEFINE_UNQUOTED(MODULE_MINOR, "$MODULE_MINOR")
 DIRINST=~/NeoStats3.0/
 AC_PREFIX_DEFAULT(~/NeoStats3.0/)
 CFLAGS="$CFLAGS -O2 -Wall"
+
+case "$host_os" in
+*openbsd*)
+	MAKEDEPENDENCIES="";;
+*freebsd*)
+	MAKEDEPENDENCIES="";;
+*)
+	MAKEDEPENDENCIES="-include \$(OBJS:.o=.d)";;
+esac
+
+AC_MSG_CHECKING(Location of NeoStats...)
+AC_ARG_WITH(neostats, 
+[  --with-neostats=DIR	  Location of NeoStats installation],
+[DIRINST=$withval])
+AC_MSG_RESULT($DIRINST)
+
+AC_CHECK_FILE($DIRINST/include/neostats.h, 
+[INCLUDEDIR="$DIRINST/include/"], 
+[AC_MSG_ERROR(Can't find existing NeoStats Installation please supply with --with-neostats option)])
+
+CPPFLAGS="$CPPFLAGS -I$INCLUDEDIR"
+dnl Check we are running the latest supported version of NeoStats
+AC_MSG_CHECKING(Version of NeoStats...)
+AC_TRY_RUN(
+[
+#include <config.h>
+#include <stdlib.h>
+int main(void) {
+	if (MAJOR >= 3) {
+		if (MINOR >= 0) {
+			exit(0);
+		}
+	}
+	exit(1);
+}
+],	ns_version_ok='yes',
+	ns_version_ok='no',
+	ns_version_ok='no')
+if test "$ns_version_ok" = "yes"; then
+	AC_MSG_RESULT(Compatible version);
+else
+	AC_MSG_ERROR(This module requires NeoStats 3.0.a1 or higher)
+fi
+
+dnl check if we are running with debug....
+AC_MSG_CHECKING(Whether to enable debug...)
+AC_ARG_ENABLE(debug,
+[ --enable-debug - enable debug],
+[ case "$enableval" in
+  yes)
+        CFLAGS="$CFLAGS -Wall -ggdb"
+	AC_DEFINE(DEBUG,1)
+        AC_MSG_RESULT(yes)
+        ;;
+  *)
+        AC_MSG_RESULT(no)
+        ;;
+  esac],
+AC_MSG_RESULT(no)
+)
 
 dnl Checks for programs.
 AC_PROG_CC
@@ -18,15 +80,11 @@ AC_PROG_INSTALL
 ETR_SOCKET_NSL
 
 dnl Checks for header files.
-AC_HEADER_STDC
-
 AC_CHECK_HEADERS(sys/poll.h, have_poll_sys_h=yes, have_sys_poll_h=no)
 
 AC_CHECK_HEADERS(fcntl.h sys/time.h unistd.h strings.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
-AC_C_CONST
-AC_TYPE_SIZE_T
 TYPE_SOCKLEN_T
 AC_HEADER_TIME
 
@@ -53,86 +111,12 @@ dnl Solaris has to be weird doesn't it...
 AC_CHECK_LIB(socket, socket, AC_SUBST(LSOCKET, [-lsocket]))
 AC_CHECK_LIB(nsl, gethostbyname, AC_SUBST(LNSL, [-lnsl]))
 
-
-
-
-
-
-
-AC_MSG_CHECKING(Location of NeoStats...)
-AC_ARG_WITH(neostats, 
-[  --with-neostats=DIR	  Location of NeoStats installation],
-[DIRINST=$withval])
-AC_MSG_RESULT($DIRINST)
-
-
-AC_CHECK_FILE($DIRINST/include/neostats.h, 
-[INCLUDEDIR="$DIRINST/include/"], 
-[AC_MSG_ERROR(Can't find existing NeoStats Installation please supply with --with-neostats option)])
-
-
-CPPFLAGS="$CPPFLAGS -I$INCLUDEDIR"
-dnl Check we are running the latest supported version of NeoStats
-AC_MSG_CHECKING(Version of NeoStats...)
-AC_TRY_RUN(
-[
-#include <config.h>
-#include <stdlib.h>
-int main(void) {
-	if (MAJOR >= 3) {
-		if (MINOR >= 0) {
-			exit(0);
-		}
-	}
-	exit(1);
-}
-],	ns_version_ok='yes',
-	ns_version_ok='no',
-	ns_version_ok='no')
-if test "$ns_version_ok" = "yes"; then
-	AC_MSG_RESULT(Compatible Version);
-else
-	AC_MSG_ERROR(This Module requires NeoStats 3.0 or Higher)
-fi
-
-
-
-
-dnl check if we are running with Debug....
-AC_MSG_CHECKING(Whether to Enable Debuging...)
-AC_ARG_ENABLE(debug,
-[ --enable-debug - Enable Debuging],
-[ case "$enableval" in
-  yes)
-        CFLAGS="$CFLAGS -ggdb"
-	AC_DEFINE(DEBUG,1, Enable Debugging)
-        AC_MSG_RESULT(yes - Watch your Log Files)
-        ;;
-  *)
-        AC_MSG_RESULT(no)
-        ;;
-  esac],
-AC_MSG_RESULT(no)
-)
-
 AC_SUBST(DIRINST)
+AC_SUBST(MAKEDEPENDENCIES)
 AC_SUBST(CFLAGS)
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
 AC_OUTPUT(Makefile libopm/Makefile)
-echo "(*----------------------------------------------------------*)"
-echo "(| Important Instructions                                   |)"
-echo "(*----------------------------------------------------------*)"
-echo "(| Now that configure is complete, type 'make' to compile   |)"
-echo "(| the module. When the compile has completed, type         |)"
-echo "(| 'make install' to install the module.                    |)"
-echo "(| For BSD you might need to use 'gmake' and 'gmake install'|)"
-echo "(*----------------------------------------------------------*)"
-echo "(| For Support please visit:                                |)"
-echo "(|    IRC:                   /server irc.irc-chat.org       |)"
-echo "(|                                   #neostats channel      |)"
-echo "(|    WWW:   http://www.neostats.net/boards/                |)"
-echo "(*----------------------------------------------------------*)"
-echo "(|This Module was written by:                               |)"
-echo "(|	fish (fish@dynam.ac)                                |)"
-echo "(*----------------------------------------------------------*)"
+echo "Configuration complete."
+echo "Run 'make' (or 'gmake' on some systems) to compile NeoStats."
+echo "If you require support, see the README file."

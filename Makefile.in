@@ -1,4 +1,3 @@
-#Neostats Module Makefile!
 CC = @CC@
 CFLAGS = @CFLAGS@
 LDFLAGS = @LIBS@
@@ -8,17 +7,26 @@ INSTALL_DATA = @INSTALL_DATA@
 DIRECTORY = @DIRINST@/modules/
 INCLUDES = -I@DIRINST@/include/ -I. -Ilibopm
 
-SRCS= opsb.c proxy.c opsb_help.c
-OBJS= ${SRCS:.c=.o}
-TARGET= opsb.so                 
-DOCS=README.opsb README.opsb.html
+SRCS = opsb.c proxy.c opsb_help.c
+OBJS = ${SRCS:.c=.o}
+TARGET = opsb.so                 
+DOCS = README.opsb README.opsb.html
+DATA =
+SCRIPTS = 
 DISTFILES = $(SRCS) $(DOCS) modconfig.h.in configure install-sh ChangeLog Makefile.in opsb.h libopm/*.c libopm/*.h libopm/README libopm/LICENSE LICENSE libopm/*.in
 DISTDIR = @PACKAGE@-@VERSION@
 
-all:	 module
+all:	module
+		@echo "Compilation complete."
+		@echo "Run 'make install' (or 'gmake install' on some systems) to install."
+		@echo "If you require support, see the README file."
+
+# include dependency info
+@MAKEDEPENDENCIES@
 
 .c.o:	
-	 $(CC) -c $(CFLAGS) $(INCLUDES) $<
+	$(CC) -c $(CFLAGS) $(INCLUDES) $<
+	$(CC) -MM $(INCLUDES) -c $< > $*.d
 
 libopm.a:
 	 (cd libopm; $(MAKE) $@)
@@ -33,14 +41,16 @@ clean:
 install: module
 	 $(INSTALL) -m 644 $(TARGET) $(DIRECTORY)
 	 $(INSTALL) -m 644 $(DOCS) $(DIRECTORY)../doc/
+	@echo "Installation complete."
+	@echo "See the README file for instructions on loading this module."
 
 dist:	
-	@echo -n "Creating Directories"
+	@echo -n "Creating directories"
 	@-rm -rf $(DISTDIR)
 	@mkdir $(DISTDIR)
 	@mkdir $(DISTDIR)/libopm
 	@echo "Done"
-	@echo -n "Copying Core Distribution Files"
+	@echo -n "Copying distribution files"
 	@for file in $(DISTFILES); do \
 		echo -n "."; \
 		cp -pr $$file $(DISTDIR)/$$file; \
@@ -50,8 +60,3 @@ dist:
 	@echo "Tar file $(DISTDIR).tar.gz created, Freshmeat Time"
 
 $(OBJS): Makefile
-
-opsb.o:		opsb.h opsb.c modconfig.h
-proxy.o: 	opsb.h proxy.c modconfig.h
-opsb_help.o: 	opsb.h
-
