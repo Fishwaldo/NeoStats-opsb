@@ -107,7 +107,7 @@ int ports_sort(const void *key1, const void *key2) {
 }
 
 
-int __Bot_Message(char *origin, char **argv, int argc)
+int __BotMessage(char *origin, char **argv, int argc)
 {
 	User *u, *u2;
 	lnode_t *lnode;
