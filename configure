@@ -1299,7 +1299,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 PACKAGE=OPSB
 MODULE_MAJOR=2
-MODULE_MINOR=3
+MODULE_MINOR=4
 VERSION=$MODULE_MAJOR.$MODULE_MINOR
 
 cat >>confdefs.h <<_ACEOF
