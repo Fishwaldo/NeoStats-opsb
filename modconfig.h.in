@@ -1,6 +1,15 @@
 /* define this to enable debug code for this module */
 #undef DEBUG
 
+/* Version number of package */
+#undef MODULE_VERSION
+
+/* Major Version */
+#undef MODULE_MAJOR
+
+/* Minor Version */
+#undef MODULE_MINOR
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
