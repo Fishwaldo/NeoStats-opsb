@@ -75,9 +75,10 @@ OPM_ERR_T opm_remote_addtype(OPM_REMOTE_T *, int, unsigned short int);
 OPM_ERR_T opm_callback(OPM_T *, int, OPM_CALLBACK_FUNC *, void *);
 
 void opm_cycle(OPM_T *);
+typedef struct pollfd pollfd;
 
-void libopm_after_poll(OPM_T *, struct pollfd *, unsigned int );
-int libopm_before_poll(OPM_T *, struct pollfd *);
+void libopm_after_poll(OPM_T *, pollfd *, unsigned int );
+int libopm_before_poll(OPM_T *, pollfd *);
 
 
 size_t opm_active(OPM_T *);

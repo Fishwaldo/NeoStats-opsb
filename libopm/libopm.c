@@ -1185,7 +1185,7 @@ static void libopm_check_poll(OPM_T *scanner)
  *    pollfds struct. 
  */
 
-int libopm_before_poll(OPM_T *scanner, struct pollfd *ufds)
+int libopm_before_poll(OPM_T *scanner, pollfd *ufds)
 {
    OPM_NODE_T *node1, *node2;
    OPM_SCAN_T *scan;
@@ -1256,7 +1256,7 @@ int libopm_before_poll(OPM_T *scanner, struct pollfd *ufds)
  *    pollfds struct. 
  */
 
-void libopm_after_poll(OPM_T *scanner, struct pollfd *ufds, unsigned int ufdssize)
+void libopm_after_poll(OPM_T *scanner, pollfd *ufds, unsigned int ufdssize)
 {
    OPM_NODE_T *node1, *node2;
    OPM_SCAN_T *scan;
