@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.11 2003/01/08 14:53:28 fishwaldo Exp $
+** $Id: opsb.c,v 1.12 2003/01/18 04:19:12 fishwaldo Exp $
 */
 
 
@@ -322,7 +322,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 			return 0;
 		}
 	} else if (!strcasecmp(argv[1], "SET")) {
-		if (argc <= 3) {
+		if (argc <= 4) {
 			prefmsg(u->nick, s_opsb, "Syntax Error. /msg %s help set", s_opsb);
 			return 0;
 		}
@@ -457,7 +457,7 @@ int do_set(User *u, char **av, int ac) {
 		chanalert(s_opsb, "%s changed cachetime to %d", u->nick, opsb.cachetime);
 		opsb.confed = 1;
 		return 0;
-	} else {
+	} else if (!strcasecmp(av[2], "LIST")) {
 		prefmsg(u->nick, s_opsb, "Proxy Scanning: %s", opsb.doscan == 1 ? "Yes" : "No");
 		prefmsg(u->nick, s_opsb, "TargetIP: %s", opsb.targethost);
 		prefmsg(u->nick, s_opsb, "TargetPort: %d", opsb.targetport);
