@@ -23,6 +23,7 @@
 
 #ifdef WIN32
 #include "win32modconfig.h"
+#include <winsock2.h>
 #else
 #include "modconfig.h"
 #endif
@@ -34,7 +35,9 @@
 #endif
 
 #ifndef HAVE_INET_ATON
+#ifndef WIN32
 # include <netinet/in.h>
+#endif
 #endif
 
 #include "compat.h"

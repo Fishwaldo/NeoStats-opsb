@@ -1,5 +1,10 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
+* Version 3.0 * * Mark (M)
+ - Changes for Win32 compatibility. (M)
+ - Split exempt code into seperate files. (M)
+ - Port to 3.0 API (M)
+
 * Version 2.3 * 25/7/2004 * Fish (F)
  - Fix a problem with "OPSB is not configured" messages
  - Make sure we are using the correct config type for serval set variables

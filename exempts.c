@@ -25,6 +25,9 @@
 #include "opsb.h"
 #include "exempts.h"
 
+/* this is the list of exempted hosts/servers */
+list_t *exempt;
+
 int opsb_cmd_exclude (CmdParams* cmdparams) 
 {
 	char *buf;
@@ -134,6 +137,7 @@ void LoadExempts (void)
 	char datapath[BUFSIZE];
 	exemptinfo *exempts;
 
+	exempt = list_create(MAX_EXEMPTS);
 	if (GetDir ("Exempt", &data) > 0) {
 		/* try */
 		for (i = 0; data[i] != NULL; i++) {
@@ -167,4 +171,49 @@ void LoadExempts (void)
 		}
 	}
 	free(data);	
+}
+
+int IsServerExempt (char *nick, char *host)
+{
+	lnode_t *node;
+	exemptinfo *exempts;
+
+	node = list_first(exempt);
+	while (node) {
+		exempts = lnode_get(node);
+		if (exempts->server == 1) {
+			/* match a server */
+			if (match(exempts->host, host)) {
+				dlog (DEBUG1, "OPSB: User %s exempt. Matched host entry %s in Exemptions", nick, exempts->host);
+				return 1;
+			}
+		}
+		node = list_next(exempt, node);
+	}
+	return 0;
+}
+
+int IsUserExempt (char *nick, char *host)
+{
+	lnode_t *node;
+	exemptinfo *exempts;
+
+	node = list_first(exempt);
+	while (node) {
+		exempts = lnode_get(node);
+		if (exempts->server == 1) {
+			/* match a server */
+			if (match(exempts->host, host)) {
+				dlog (DEBUG1, "OPSB: User %s exempt. Matched server entry %s in Exemptions", nick, exempts->host);
+				return 1;
+			}
+		}
+		node = list_next(exempt, node);
+	}
+	return 0;
+}
+
+int GetExemptCount (void)
+{
+	return list_count(exempt);
 }

@@ -2,10 +2,14 @@
 #define INET_H
 
 #include <sys/types.h>
+#ifdef WIN32
+#include <winsock2.h>
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif

@@ -42,9 +42,13 @@ along with this program; if not, write to
 # include <strings.h>
 #endif
 #include <sys/types.h>
+#ifdef WIN32
+#include <winsock2.h>
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#endif
 
 #include "inet.h"
 #include "opm.h"

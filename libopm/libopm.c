@@ -49,7 +49,9 @@
 # endif
 #endif
 
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #ifdef HAVE_STRING_H
 # include <string.h>
@@ -1066,8 +1068,14 @@ static void libopm_do_connect(OPM_T * scanner, OPM_SCAN_T *scan, OPM_CONNECTION_
    }
  
    /* Set socket non blocking */
+#ifdef WIN32
+   {
+		int flags = 1;
+		ioctlsocket(conn->fd, FIONBIO, &flags);
+   }
+#else
    fcntl(conn->fd, F_SETFL, O_NONBLOCK);
-
+#endif
    connect(conn->fd, (struct sockaddr *) addr, sizeof(*addr));
 
    conn->state = OPM_STATE_ESTABLISHED;

@@ -13,5 +13,8 @@
 void LoadExempts (void);
 void SaveExempts (exemptinfo *exempts);
 int opsb_cmd_exclude (CmdParams* cmdparams);
+int IsServerExempt (char *nick, char *host);
+int IsUserExempt (char *nick, char *host);
+int GetExemptCount (void);
 
 #endif /* EXEMPTS_H */

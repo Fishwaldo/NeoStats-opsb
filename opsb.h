@@ -45,7 +45,7 @@ typedef struct scaninfo{
 	char lookup[MAXHOST];
 	char server[MAXHOST];
 	struct in_addr ip;
-	Client *u;
+	Client *reqclient;
 	int doreport;
 	time_t started;
 	int doneban;
@@ -101,10 +101,6 @@ typedef struct proxy_type {
 	char name[MAXNICK];
 } proxy_type;
 
-/* this is the list of exempted hosts/servers */
-
-list_t *exempt;
-
 /* these are some state flags */
 #define REPORT_DNS 	0x0001
 #define DO_DNS_HOST_LOOKUP	0x0002
@@ -124,7 +120,7 @@ void addtocache(unsigned long ip);
 
 
 /* proxy.c */
-void start_proxy_scan(lnode_t *scannode);
+void start_proxy_scan(scaninfo *scandata);
 int opsb_cmd_status (CmdParams* cmdparams) ;
 void check_scan_free(scaninfo *scandata);
 int init_libopm();
