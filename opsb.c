@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.5 2002/09/06 06:07:34 fishwaldo Exp $
+** $Id: opsb.c,v 1.6 2002/10/24 09:27:58 fishwaldo Exp $
 */
 
 
@@ -57,10 +57,12 @@ extern const char *opsb_help_status[];
 extern const char *opsb_help_set[];
 extern const char *opsb_help_exclude[];
 
+int online;
+
 Module_Info my_info[] = { {
 	"OPSB",
 	"A Open Proxy Scanning Bot",
-	"1.0Beta2"
+	"1.0RC1"
 } };
 
 
@@ -344,7 +346,22 @@ int do_set(User *u, char **av, int ac) {
 		return 0;
 	}
 
-	if (!strcasecmp(av[2], "TARGETIP")) {
+	if (!strcasecmp(av[2], "DISABLESCAN")) {
+	 	if (!strcasecmp(av[3], "0")) {
+			opsb.doscan = 1;
+			prefmsg(u->nick, s_opsb, "Scanning is now Enabled");
+			chanalert(s_opsb, "%s has Enabled Proxy Scanning", u->nick, av[3]);
+		} else if (!strcasecmp(av[3], "1")) {
+			opsb.doscan = 0;
+			prefmsg(u->nick, s_opsb, "Scanning is now Disabled");
+			chanalert(s_opsb, "%s has Disabled Proxy Scanning", u->nick, av[3]);
+		} else {
+			prefmsg(u->nick, s_opsb, "Invalid Setting (must be 1 or 0) in DISABLESCAN");
+			return 0;
+		}
+		opsb.confed = 1;
+		return 1;
+	} else if (!strcasecmp(av[2], "TARGETIP")) {
 		if (!inet_addr(av[3])) {
 			prefmsg(u->nick, s_opsb, "Invalid IP address (Can not be hostname) in TARGETIP");
 			return 0;
@@ -441,6 +458,7 @@ int do_set(User *u, char **av, int ac) {
 		opsb.confed = 1;
 		return 0;
 	} else {
+		prefmsg(u->nick, s_opsb, "Proxy Scanning: %s", opsb.doscan == 1 ? "Yes" : "No");
 		prefmsg(u->nick, s_opsb, "TargetIP: %s", opsb.targethost);
 		prefmsg(u->nick, s_opsb, "TargetPort: %d", opsb.targetport);
 		prefmsg(u->nick, s_opsb, "OPM Domain: %s", opsb.opmdomain);
@@ -477,7 +495,12 @@ int Online(char **av, int ac) {
 	}
 	add_mod_timer("cleanlist", "CleanProxyList", "opsb", 1);
 	add_mod_timer("savecache", "SaveProxyCache", "opsb", 600);
-	chanalert(s_opsb, "Open Proxy Scanning bot has started (Concurrent Scans: %d Sockets %d)", opsb.socks, opsb.socks *7);
+	if (opsb.doscan) {
+		chanalert(s_opsb, "Open Proxy Scanning bot has started (Concurrent Scans: %d Sockets %d)", opsb.socks, opsb.socks *7);
+	} else {
+		chanalert(s_opsb, "DNS Blacklist Lookup is only Enabled!! (No Open Proxy Scans)");
+	}
+	online = 1;
 	return 1;
 };
 
@@ -624,6 +647,7 @@ void savecache() {
 	fprintf(fp, "%d\n", opsb.bantime);
 	fprintf(fp, "%d\n", opsb.confed);
 	fprintf(fp, "%d\n", opsb.cachetime);
+	fprintf(fp, "%d\n", opsb.doscan);
 	/* exempts next */
 	node = list_first(exempt);
 	while (node) {
@@ -680,6 +704,8 @@ void loadcache() {
 	opsb.confed = atoi(buf);
 	fgets(buf, 512, fp);
 	opsb.cachetime = atoi(buf);
+	fgets(buf, 512, fp);
+	opsb.doscan = atoi(buf);
 	while (fgets(buf, 512, fp)) {
 		if (!strcasecmp("#CACHE\n", buf)) {
 			gotcache = 1;	
@@ -734,7 +760,11 @@ static int ScanNick(char **av, int ac) {
 	lnode_t *scannode;
 
 	strcpy(segv_location, "OPSB:ScanNick");
-	
+
+	/* don't do anything if NeoStats hasn't told us we are online yet */
+	if (!online)
+		return 0;
+							
 	u = finduser(av[0]);
 	if (!u) {
 		log("OPSB: Ehhh, Can't find user %s", av[0]);
@@ -769,6 +799,7 @@ static int ScanNick(char **av, int ac) {
 	strncpy(scandata->who, u->nick, MAXHOST);
 	strncpy(scandata->lookup, u->hostname, MAXHOST);
 	strncpy(scandata->server, u->server->name, MAXHOST);
+	strncpy(scandata->connectstring, recbuf, BUFSIZE);
 	scandata->ipaddr.s_addr = u->ipaddr.s_addr;
 	if (scandata->ipaddr.s_addr > 0) {
 		scandata->dnsstate = DO_OPM_LOOKUP;
@@ -1060,7 +1091,7 @@ void _init() {
 
 	exempt = list_create(MAX_EXEMPTS);
 
-					
+	online = 0;				
 	sprintf(opsb.opmdomain, "%s", "opm.blitzed.org");
 	sprintf(opsb.targethost, "%s", me.uplink);
 	opsb.targetport = me.port;
@@ -1072,6 +1103,7 @@ void _init() {
 	opsb.confed = 0;
 	opsb.cachetime = 3600;
 	opsb.bantime = 86400;
+	opsb.doscan = 1;
 	snprintf(opsb.lookforstring, 512, "*** Looking up your hostname...");
 	snprintf(opsb.scanmsg, 512, "Your Host is being Scanned for Open Proxies");
 }

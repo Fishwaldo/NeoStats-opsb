@@ -4,7 +4,7 @@
 ** Based from GeoStats 1.1.0 by Johnathan George net@lite.net
 *
 ** NetStats CVS Identification
-** $Id: opsb.h,v 1.4 2002/09/06 06:07:34 fishwaldo Exp $
+** $Id: opsb.h,v 1.5 2002/10/24 09:27:58 fishwaldo Exp $
 */
 
 
@@ -44,6 +44,7 @@ struct scanq {
 	list_t *socks;
 	time_t started;
 	int doneban;
+	char connectstring[BUFSIZE];
 };
 
 typedef struct scanq scaninfo;
@@ -64,6 +65,7 @@ struct opsb {
 	int bantime;
 	int confed;
 	int cachetime;
+	int doscan;
 } opsb;
 
 struct sockinfo {
@@ -72,7 +74,7 @@ struct sockinfo {
 	int flags;
 	int type;
 	int bytes;
-	char buf[1024];
+	char buf[1025];
 };
 
 typedef struct sockinfo socklist;

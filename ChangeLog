@@ -1,5 +1,13 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
+* Version 1.0RC1 *  24/10/2002 * Fish
+- Strings recieved from proxies are now buffered
+- new set option DISABLESCAN to only do opm lookup, and not a proxy check
+- OLD Conf files are *INVALID* rm data/opsb.db file
+- fixed up /msg opsb help interface
+- added real connect string to opsb.log for detection and OPM reporting
+- Added a few default IRCd throttle strings for added detection of open proxies when a Proxy Connect gets throttled.
+
 * Version 1.0Beta2 * 2/8/2002 * Fish
 - Added GPL headers and credit to BOPM authors
 - A few fixes in a attempt to find this socket/checklist bug

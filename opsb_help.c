@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb_help.c,v 1.3 2002/09/06 06:07:34 fishwaldo Exp $
+** $Id: opsb_help.c,v 1.4 2002/10/24 09:27:58 fishwaldo Exp $
 */
 
 #include "stats.h"
@@ -37,7 +37,7 @@ NULL
 
 const char *opsb_help_oper[] = {
 "OPERTATOR COMMANDS:",
-"     CHECK    STATUS    SET    EXCLUDE    CACHETIME",
+"     CHECK    STATUS    SET    EXCLUDE",
 "",
 NULL
 };
@@ -103,6 +103,8 @@ const char *opsb_help_set[] = {
 "    \2TARGETPORT\2    - Change the Port number we try to make proxies connect to",
 "                        This should be a port that runs on your IRCD",
 "    \2CACHETIME\2     - This sets the amount of time (in Seconds) that a entry will be cached",
+"    \2DISABLESCAN\2   - This disables the actual proxy scan, and only does a lookup in the DNS",
+"                        Blacklist to see if this host has been listed as a open proxy",
 "\2Advanced Settings\2 - These settings should not be changed unless you know the effects in full",
 "    \2OPMDOMAIN\2     - Change the Domain we use to Lookup for Blacklists.",
 "    \2MAXBYTES\2      - This is the maximum number of bytes we recieve from a proxy before disconnecting it",

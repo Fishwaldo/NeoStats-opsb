@@ -20,7 +20,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: proxy.c,v 1.5 2002/09/06 06:07:34 fishwaldo Exp $
+** $Id: proxy.c,v 1.6 2002/10/24 09:27:58 fishwaldo Exp $
 */
 
 
@@ -91,7 +91,7 @@ void do_ban(scaninfo *scandata) {
 		if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		sakill_cmd(inet_ntoa(scandata->ipaddr), "*", s_opsb, opsb.bantime, "Open Proxy found on your host. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ipaddr));
 		if ((fp = fopen("logs/opsb.log", "a")) == NULL) return;
-       		fprintf(fp, "%s:%s:%s\n", proxy_list[sockdata->type].type, inet_ntoa(scandata->ipaddr), sockdata->buf);
+       		fprintf(fp, "%s:%s:%s\n", proxy_list[sockdata->type].type, inet_ntoa(scandata->ipaddr), scandata->connectstring);
                 fclose(fp);
 		socknode = list_next(scandata->socks, socknode);
 	}
@@ -304,24 +304,26 @@ void start_proxy_scan(lnode_t *scannode) {
 	if (scandata->u) chanalert(s_opsb, "Starting proxy scan on %s (%s) by Request of %s", scandata->who, scandata->lookup, scandata->u->nick);
 	scandata->socks = list_create(NUM_PROXIES);
 	scandata->state = DOING_SCAN;
-	for (i = 0; i <  NUM_PROXIES; i++) {
+	if ((opsb.doscan == 1) || (scandata->u)) {
+		for (i = 0; i <  NUM_PROXIES; i++) {
 #ifdef DEBUG	
-		log("OPSB proxy_connect(): host %ul (%s), port %d", scandata->ipaddr,inet_ntoa(scandata->ipaddr), proxy_list[i].port);
+			log("OPSB proxy_connect(): host %ul (%s), port %d", scandata->ipaddr,inet_ntoa(scandata->ipaddr), proxy_list[i].port);
 #endif
-		sockname = malloc(64);
-		sprintf(sockname, "%s %d", scandata->who, i);
-		j = proxy_connect(scandata->ipaddr.s_addr, proxy_list[i].port, sockname);
-		free(sockname);
-		if (j > 0) {
-			/* its ok */
-			sockdata = malloc(sizeof(socklist));
-			sockdata->sock = j;
-			sockdata->function = proxy_list[i].scan;
-			sockdata->flags = CONNECTING;
-			sockdata->type = i;
-			sockdata->bytes = 0;
-			socknode = lnode_create(sockdata);
-			list_append(scandata->socks, socknode);
+			sockname = malloc(64);
+			sprintf(sockname, "%s %d", scandata->who, i);
+			j = proxy_connect(scandata->ipaddr.s_addr, proxy_list[i].port, sockname);
+			free(sockname);
+			if (j > 0) {
+				/* its ok */
+				sockdata = malloc(sizeof(socklist));
+				sockdata->sock = j;
+				sockdata->function = proxy_list[i].scan;
+				sockdata->flags = CONNECTING;
+				sockdata->type = i;
+				sockdata->bytes = 0;
+				socknode = lnode_create(sockdata);
+				list_append(scandata->socks, socknode);
+			}
 		}
 	}
 	/* this is so we can timeout scans */
@@ -486,8 +488,9 @@ int proxy_read(int socknum, char *sockname) {
 			log("OPSB proxy_read(): Got this: %s (%d)",buf, i);
 #endif
 			/* we check if this might be a normal http server */
+			strncat(sockdata->buf, buf, 1024);
 
-			if (strstr(buf, "Method Not Allowed")) {
+			if (strstr(sockdata->buf, "Method Not Allowed")) {
 #ifdef DEBUG
 				log("closing socket %d due to ok HTTP server", socknum);
 #endif
@@ -498,8 +501,8 @@ int proxy_read(int socknum, char *sockname) {
 				return -1;
 			}
 	
-			/* this looks for the ban string */
-			if (strstr(buf, opsb.lookforstring)) {
+			/* this looks for the ban string or a throttle string */
+			if (strstr(sockdata->buf, opsb.lookforstring) || strstr(sockdata->buf, "ERROR :Your host is trying to (re)connect too fast -- throttled.") || strstr(sockdata->buf, "ERROR :Trying to reconnect too fast.")) {
 				if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Open %s Proxy Server on port %d", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 				strncpy(sockdata->buf, strtok(buf,"\n"), 1023);
 				++proxy_list[sockdata->type].noopen;
