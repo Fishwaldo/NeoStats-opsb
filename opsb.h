@@ -75,7 +75,6 @@ struct opsb {
 	int maxbytes;
 	int timeout;
 	int socks;
-	int timedif;
 	int open;
 	int scanned;
 	char scanmsg[BUFSIZE];

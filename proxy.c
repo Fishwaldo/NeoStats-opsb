@@ -131,11 +131,11 @@ void load_port(char *type, char *portname)
 			break;
 		}
 		prtlst = malloc(sizeof(port_list));
-		prtlst->type = proxy_list[i].type;
+		prtlst->type = proxy_list[j].type;
 		prtlst->port = atoi(av[j]);
 		prtlst->noopen = 0;
 		lnode_create_append (opsb.ports, prtlst);
-		dlog (DEBUG1, "Added port %d for protocol %s", prtlst->port, proxy_list[i].name);
+		dlog (DEBUG1, "Added port %d for protocol %s", prtlst->port, proxy_list[j].name);
 	}
 	ns_free(av);
 }

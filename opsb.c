@@ -526,7 +526,6 @@ static int ss_event_signon (CmdParams* cmdparams)
 
 int startscan(scaninfo *scandata) 
 {
-	lnode_t *scannode;
 	unsigned char a, b, c, d;
 	char *buf;
 	int buflen;
