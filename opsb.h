@@ -142,6 +142,7 @@ char *type_of_proxy(int type);
 int get_proxy_by_name(const char *name);
 void add_port(int type, int port);
 int load_ports();
+void save_ports();
  
 /* help text */
 extern const char *opsb_help_lookup[];

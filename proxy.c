@@ -52,7 +52,16 @@ void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused);
    
    
 OPM_T *scanner;
-   
+
+char *defaultports[] = {
+	"80 8080 8000 3128",
+	"1080",
+	"1080",
+	"23",
+	"23",
+	"80 8080 8000 3128",
+};
+
 proxy_type proxy_list[] = {
 	{ OPM_TYPE_HTTP, "HTTP" },
 	{ OPM_TYPE_SOCKS4, "SOCKS4" },
@@ -79,39 +88,72 @@ void add_port(int type, int port) {
 	opm_addtype(scanner, type, port);
 }
 
+void save_ports() 
+{
+	lnode_t *pn;
+	port_list *pl;
+	static char ports[512];
+	static char tmpports[512];
+	int lasttype = -1;
+	pn = list_first(opsb.ports);
+	while (pn) {
+		pl = lnode_get(pn);
+		/* if the port is different from the last round, and its not the first round, save it */
+		if ((pl->type != lasttype) && (lasttype != -1)) {
+			DBAStoreConfigStr(type_of_proxy(lasttype), ports, 512);
+		} 
+		if (pl->type != lasttype) {
+			ircsnprintf(ports, 512, "%d", pl->port);
+		} else {
+			ircsnprintf(tmpports, 512, "%s %d", ports, pl->port);
+			strlcpy(ports, tmpports, 512);
+		}
+		lasttype = pl->type;
+		pn = list_next(opsb.ports, pn);
+	}
+	DBAStoreConfigStr(type_of_proxy(lasttype), ports, 512);
+} 
+
+void load_port(char *type, char *portname)
+{
+	char **av;
+	int j, ac;
+	port_list *prtlst;
+
+	ac = split_buf(portname, &av, 0);
+	for (j = 0; j < ac; j++) {
+		if (atoi(av[j]) == 0) {
+			nlog (LOG_WARNING, "Invalid port %s for proxy type %s", av[j], type);
+			continue;
+		}
+		if (list_isfull(opsb.ports)) {
+			nlog (LOG_WARNING, "Ports list is full.");
+			break;
+		}
+		prtlst = malloc(sizeof(port_list));
+		prtlst->type = proxy_list[i].type;
+		prtlst->port = atoi(av[j]);
+		prtlst->noopen = 0;
+		lnode_create_append (opsb.ports, prtlst);
+		dlog (DEBUG1, "Added port %d for protocol %s", prtlst->port, proxy_list[i].name);
+	}
+	ns_free(av);
+}
+
 int load_ports() {
 	static char portname[512];
-	char **av;
-	int i, j, ac, ok;
-	port_list *prtlst;
-	lnode_t *pn;
+	int i;
+	int ok = 0;
 	
-	ok = 0;
 	for (i = 0; proxy_list[i].type != 0; i++) {
 		if (DBAFetchConfigStr (proxy_list[i].name, portname, 512) != NS_SUCCESS) {
-			nlog (LOG_WARNING, "Warning, No Ports defined for Protocol %s", proxy_list[i].name);
+			nlog (LOG_WARNING, "Warning, no ports defined for protocol %s, using defaults", proxy_list[i].name);
+			load_port(proxy_list[i].name, defaultports[i]);
+			DBAStoreConfigStr(proxy_list[i].name, defaultports[i], 512);
+			ok = 1;
 		} else {
-			ac = split_buf(portname, &av, 0);
-			for (j = 0; j < ac; j++) {
-				if (atoi(av[j]) == 0) {
-					nlog (LOG_WARNING, "Invalid Port %s for Proxy Type %s", av[j], proxy_list[i].name);
-					continue;
-				}
-				if (list_isfull(opsb.ports)) {
-					nlog (LOG_WARNING, "Ports List is Full.");
-					break;
-				}
-				prtlst = malloc(sizeof(port_list));
-				prtlst->type = proxy_list[i].type;
-				prtlst->port = atoi(av[j]);
-				prtlst->noopen = 0;
-				pn = lnode_create(prtlst);
-				list_append(opsb.ports, pn);
-				dlog (DEBUG1, "Added Port %d for Protocol %s", prtlst->port, proxy_list[i].name);
-				ok = 1;
-			}
-			free(av);
-			free(portname);
+			load_port(proxy_list[i].name, portname);
+			ok = 1;
 		}
 	}
 	return ok;				
@@ -372,7 +414,7 @@ void check_scan_free(scaninfo *scandata) {
 		list_delete(opsbl, scannode);
 		lnode_destroy(scannode);
 		scandata->reqclient = NULL;
-		free(scandata);
+		ns_free(scandata);
 	} else {
 		nlog (LOG_WARNING, "Damn, Can't find ScanNode %s. Something is fubar", scandata->who);
 	}

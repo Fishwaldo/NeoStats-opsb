@@ -68,9 +68,8 @@ int opsb_cmd_exclude (CmdParams* cmdparams)
 		strlcpy(exempts->who, cmdparams->source->name, MAXNICK);
 		buf = joinbuf(cmdparams->av, cmdparams->ac, 3);
 		strlcpy(exempts->reason, buf, MAXHOST);
-		free(buf);
-		lnode = lnode_create(exempts);
-		list_append(exempt, lnode);
+		ns_free(buf);
+		lnode_create_append(exempt, exempts);
 		DBAStore ("Exempt", exempts->host, exempts, sizeof(exemptinfo));
 		irc_prefmsg (opsb_bot, cmdparams->source, "Added %s (%s) exception to list", exempts->host, (exempts->server ? "(Server)" : "(Client)"));
 		irc_chanalert (opsb_bot, "%s added %s (%s) exception to list", cmdparams->source->name, exempts->host, (exempts->server ? "(Server)" : "(Client)"));
@@ -87,6 +86,7 @@ int opsb_cmd_exclude (CmdParams* cmdparams)
 					exempts = lnode_get(lnode);
 					DBADelete ("Exempt", exempts->host);
 					list_delete(exempt, lnode);
+					lnode_destroy(lnode);
 					irc_prefmsg (opsb_bot, cmdparams->source, "Deleted %s %s out of exception list", exempts->host, (exempts->server ? "(Server)" : "(Client)"));
 					irc_chanalert (opsb_bot, "%s deleted %s %s out of exception list", cmdparams->source->name, exempts->host, (exempts->server ? "(Server)" : "(Client)"));
 					ns_free(exempts);
@@ -110,14 +110,12 @@ int opsb_cmd_exclude (CmdParams* cmdparams)
 
 void new_exempt (void *data)
 {
-	lnode_t *node;
 	exemptinfo *exempts;
 
 	exempts = malloc(sizeof(exemptinfo));
 	os_memcpy (exempts, data, sizeof(exemptinfo));
-	free (data);
-	node = lnode_create(exempts);
-	list_prepend(exempt, node);			
+	ns_free (data);
+	lnode_create_append(exempt, exempts);
 	dlog (DEBUG2, "Adding %s (%d) Set by %s for %s to Exempt List", exempts->host, exempts->server, exempts->who, exempts->reason);
 }
 
