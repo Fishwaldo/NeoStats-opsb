@@ -20,7 +20,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: proxy.c,v 1.8 2002/10/27 14:24:51 fishwaldo Exp $
+** $Id: proxy.c,v 1.9 2002/11/05 13:31:59 fishwaldo Exp $
 */
 
 
@@ -80,7 +80,6 @@ void do_ban(scaninfo *scandata) {
 	socknode = list_first(scandata->socks);
 	while (socknode) {
 		sockdata = lnode_get(socknode);
-chanalert(s_opsb, "check %d - %d ", sockdata->flags, OPENPROXY);
 		if (sockdata->flags !=	OPENPROXY) {
 			socknode = list_next(scandata->socks, socknode);
 			continue;
@@ -146,9 +145,17 @@ void cleanlist() {
 		/* savescan is a flag if we should save this entry into the cache file */
 		savescan = 1;	
 		
+
+		/* don't delete if the opm lookup hasn't completed yet */
+		if ((scandata->dnsstate == DO_OPM_LOOKUP) || (scandata->dnsstate == GET_NICK_IP))
+			break;
+		
 		if (scandata->dnsstate == OPMLIST) savescan = 0;
 		/* if this is not valid, exit  (ie, the scan hasn't started yet) */
-		if (scandata->socks == NULL) break;
+		if (scandata->socks == NULL) {
+			log("Ehhh, socks for %s is NULL? WTF?", scandata->who);
+			break;
+		}
 		/* check for open sockets */
 		socknode = list_first(scandata->socks);	
 		finished = 1;

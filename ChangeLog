@@ -1,5 +1,9 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
+* Version 1.0RC3 *  5/11/2002 * Fish
+- Fixed a problem when we delete a scanned user out of the active list when the tcp connect had finished, but not the dns bl lookup...
+- Attempting to find the cleanlist segv bug
+
 * Version 1.0RC2 *  27/10/2002 * Fish
 - Fixed a serious bug with not banning some proxies... ALL USERS SHOULD UPDATE
 

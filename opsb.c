@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.7 2002/10/27 14:38:45 fishwaldo Exp $
+** $Id: opsb.c,v 1.8 2002/11/05 13:31:59 fishwaldo Exp $
 */
 
 
@@ -62,7 +62,7 @@ int online;
 Module_Info my_info[] = { {
 	"OPSB",
 	"A Open Proxy Scanning Bot",
-	"1.0RC2"
+	"1.0RC3"
 } };
 
 
@@ -937,7 +937,7 @@ void dnsblscan(char *data, adns_answer *a) {
 
 	scannode = list_find(opsbl, data, findscan);
 	if (!scannode) {
-		log("dnsblscan(): Ehhh, Something is wrong here");
+		log("dnsblscan(): Ehhh, Something is wrong here - Can't find %s", data);
 		return;
 	}
 	scandata = lnode_get(scannode);
