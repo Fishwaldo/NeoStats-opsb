@@ -1292,7 +1292,6 @@ int __ModInit(int modnum, int apiver)
 	/* queue can be anything we want */
 	opsbq = list_create(MAX_QUEUE);
 
-	LoadConfig();
 
 	/* scan cache is MAX_QUEUE size (why not?) */
 	cache = list_create(MAX_QUEUE);
@@ -1300,6 +1299,9 @@ int __ModInit(int modnum, int apiver)
 	exempt = list_create(MAX_EXEMPTS);
 
 	opsb.ports = list_create(MAX_PORTS);
+
+	LoadConfig();
+
 
 	online = 0;				
 
