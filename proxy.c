@@ -116,6 +116,7 @@ int load_ports() {
 int init_libopm() {
 	lnode_t *pn;
 	port_list *pl;
+	struct hostent *hp;
 
 	scanner = opm_create();
 	/* setup the callbacks to our code */
@@ -125,6 +126,18 @@ int init_libopm() {
       	opm_callback(scanner, OPM_CALLBACK_END, &scan_end, NULL);
         opm_callback(scanner, OPM_CALLBACK_ERROR, &scan_error, NULL);
 	
+
+	/* configure opm to bind to a IP address */
+	if (me.local[0] != 0) {
+		if ((hp = gethostbyname(me.local)) == NULL) {
+			nlog(LOG_WARNING, LOG_MOD, "Warning, Couldn't bind OPSB ports to IP address: %s", me.local);
+		} else {
+			if (opm_config(scanner, OPM_CONFIG_BIND_IP, &me.local) != OPM_SUCCESS) {
+				nlog(LOG_WARNING, LOG_MOD, "LIBOPM couldn't bind to a IP address");
+			}
+		}
+	}	
+
 	/* max number of socks we allow */
 	opm_config(scanner, OPM_CONFIG_FD_LIMIT, &opsb.socks);
 	/* host to try to connect to */

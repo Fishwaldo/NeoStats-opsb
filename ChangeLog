@@ -1,5 +1,8 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
+* Version 2.4 * 19/10/2004 * Fish (F)
+ - Fix OPSB so it will bind to a Local IP address (F)
+
 * Version 2.3 * 25/7/2004 * Fish (F)
  - Fix a problem with "OPSB is not configured" messages
  - Make sure we are using the correct config type for serval set variables
