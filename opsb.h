@@ -53,6 +53,9 @@ struct scanq {
 typedef struct scanq scaninfo;
 
 struct opsb {
+	char user[MAXUSER]; 
+	char host[MAXHOST]; 
+	char rname[MAXREALNAME]; 
 	char opmdomain[MAXHOST];
 	int init;
 	char targethost[MAXHOST];

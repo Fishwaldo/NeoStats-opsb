@@ -685,7 +685,7 @@ static int Online(char **av, int ac) {
 
 	SET_SEGV_LOCATION();
 
-	if (init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", services_bot_modes, __module_info.module_name) == -1 ) {
+	if (init_bot(s_opsb, opsb.user, opsb.host, opsb.rname, services_bot_modes, __module_info.module_name) == -1 ) {
 		/* Nick was in use!!!! */
 		strlcat(s_opsb, "_", MAXNICK);
 		init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", services_bot_modes, __module_info.module_name);
@@ -1170,6 +1170,30 @@ void LoadConfig(void)
 	char datapath[512];
 	exemptinfo *exempts;
 
+	if (GetConf((void *) &tmp, CFGSTR, "Nick") < 0) {
+		strlcpy(s_opsb, "opsb", MAXNICK);
+	} else {
+		strlcpy(s_opsb, tmp, MAXNICK);
+		free(tmp);
+	}
+	if (GetConf((void *) &tmp, CFGSTR, "User") < 0) {
+		strlcpy(opsb.user, "opsb", MAXUSER);
+	} else {
+		strlcpy(opsb.user, tmp, MAXUSER);
+		free(tmp);
+	}
+	if (GetConf((void *) &tmp, CFGSTR, "Host") < 0) {
+		strlcpy(opsb.host, me.name, MAXHOST);
+	} else {
+		strlcpy(opsb.host, tmp, MAXHOST);
+		free(tmp);
+	}
+	if (GetConf((void *) &tmp, CFGSTR, "Rname") < 0) {
+		ircsnprintf(opsb.rname, MAXREALNAME, "Proxy Scanning Bot");
+	} else {
+		strlcpy(opsb.rname, tmp, MAXREALNAME);
+		free(tmp);
+	}
 	if (GetConf((void *)&tmp, CFGSTR, "OpmDomain") <= 0) {
 		strlcpy(opsb.opmdomain, "opm.blitzed.org", MAXHOST);
 	} else {
