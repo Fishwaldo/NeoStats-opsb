@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.10 2002/12/13 11:33:10 fishwaldo Exp $
+** $Id: opsb.c,v 1.11 2003/01/08 14:53:28 fishwaldo Exp $
 */
 
 
@@ -107,15 +107,15 @@ int __Bot_Message(char *origin, char **argv, int argc)
 	if (!strcasecmp(argv[1], "help")) {
 		if (argc == 2) {
 			privmsg_list(u->nick, s_opsb, opsb_help);
-			if (UserLevel(u) >= 50)
+			if (UserLevel(u) >= 40)
 				privmsg_list(u->nick, s_opsb, opsb_help_oper);
 		} else if (!strcasecmp(argv[2], "lookup")) {
 				privmsg_list(u->nick, s_opsb, opsb_help_lookup);
 		} else if (!strcasecmp(argv[2], "info")) {
 				privmsg_list(u->nick, s_opsb, opsb_help_info);
-		} else if ((!strcasecmp(argv[2], "check") && UserLevel(u) >= 50)) {
+		} else if ((!strcasecmp(argv[2], "check") && UserLevel(u) >= 40)) {
 				privmsg_list(u->nick, s_opsb, opsb_help_check);
-		} else if ((!strcasecmp(argv[2], "status") && UserLevel(u) >= 50)) {
+		} else if ((!strcasecmp(argv[2], "status") && UserLevel(u) >= 40)) {
 				privmsg_list(u->nick, s_opsb, opsb_help_status);
 		} else if ((!strcasecmp(argv[2], "set") && UserLevel(u) >= 100)) {
 				privmsg_list(u->nick, s_opsb, opsb_help_set);
@@ -129,7 +129,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		privmsg_list(u->nick, s_opsb, opsb_help_info);
 		return 1;
 	} else if (!strcasecmp(argv[1], "status")) {
-		if (UserLevel(u) < 50) {
+		if (UserLevel(u) < 40) {
 			prefmsg(u->nick, s_opsb, "Access Denied");
 			chanalert(s_opsb, "%s tried to view status, but is not a operator", u->nick);
 			return 1;
@@ -137,7 +137,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		send_status(u);
 		return 1;
 	} else if (!strcasecmp(argv[1], "lookup")) {
-		if (UserLevel(u) < 50) {
+		if (UserLevel(u) < 40) {
 			prefmsg(u->nick, s_opsb, "Access Denied");
 			chanalert(s_opsb, "%s tried to use lookup, but is not a operator", u->nick);
 			return 1;
@@ -187,7 +187,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 		lnode = lnode_create(scandata);
 		list_append(opsbl, lnode);
 	} else if (!strcasecmp(argv[1], "check")) {
-		if (UserLevel(u) < 50) {
+		if (UserLevel(u) < 40) {
 			prefmsg(u->nick, s_opsb, "Access Denied");
 			chanalert(s_opsb, "%s tried to use check, but does not have access", u->nick);
 			return 0;
@@ -758,6 +758,8 @@ static int ScanNick(char **av, int ac) {
 	User *u;
 	scaninfo *scandata;
 	lnode_t *scannode;
+	lnode_t *node;
+	exemptinfo *exempts;
 
 	strcpy(segv_location, "OPSB:ScanNick");
 
@@ -774,6 +776,22 @@ static int ScanNick(char **av, int ac) {
 	/* don't scan users from my own server */
 	if (!strcasecmp(u->server->name, me.name)) {
 		return -1;
+	}
+
+	/* don't scan users from a server that is excluded */
+	node = list_first(exempt);
+	while (node) {
+		exempts = lnode_get(node);
+		if (exempts->server == 1) {
+			/* match a server */
+			if (fnmatch(exempts->host, u->server->name, 0) == 0) {
+#ifdef DEBUG
+				log("OPSB: User %s exempt. Matched server entry %s in Exemptions", u->nick, exempts->host);
+#endif 
+				return -1;
+			}
+		}
+		node = list_next(exempt, node);
 	}
 
 	if (time(NULL) - u->TS > opsb.timedif) {
@@ -835,9 +853,9 @@ int startscan(scaninfo *scandata) {
 	strcpy(segv_location, "OPSB:Startscan");
 	
 	/* only check the cache when we have IP addy */
-	if (scandata->dnsstate == DO_OPM_LOOKUP && scandata->u == NULL) {
+	if (scandata->dnsstate == DO_OPM_LOOKUP) {
 		i = checkcache(scandata);
-		if (i > 0) {
+		if ((i > 0) && (scandata->u == NULL)) {
 			free(scandata);
 			return 1;
 		}
@@ -1068,7 +1086,6 @@ void reportdns(char *data, adns_answer *a) {
 void _init() {
 
 	s_opsb = "opsb";
-	globops(me.name, "OPSB Module Loaded");
 	
 
 	/* we have to be carefull here. Currently, we have 7 sockets that get opened per connection. Soooo.
