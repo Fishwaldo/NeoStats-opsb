@@ -18,7 +18,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: opsb.c,v 1.15 2003/04/17 15:55:46 fishwaldo Exp $
+** $Id: opsb.c,v 1.16 2003/05/14 14:21:44 fishwaldo Exp $
 */
 
 
@@ -63,7 +63,7 @@ int online;
 Module_Info my_info[] = { {
 	"OPSB",
 	"A Open Proxy Scanning Bot",
-	"1.0RC3"
+	"1.0"
 } };
 
 
@@ -363,6 +363,10 @@ int do_set(User *u, char **av, int ac) {
 	}
 
 	if (!strcasecmp(av[2], "DISABLESCAN")) {
+		if (ac < 4) {
+			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
+			return 0;
+		}
 	 	if (!strcasecmp(av[3], "0")) {
 			opsb.doscan = 1;
 			prefmsg(u->nick, s_opsb, "Scanning is now Enabled");
@@ -378,6 +382,10 @@ int do_set(User *u, char **av, int ac) {
 		opsb.confed = 1;
 		return 1;
 	} else if (!strcasecmp(av[2], "TARGETIP")) {
+		if (ac < 4) {
+			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
+			return 0;
+		}
 		if (!inet_addr(av[3])) {
 			prefmsg(u->nick, s_opsb, "Invalid IP address (Can not be hostname) in TARGETIP");
 			return 0;
@@ -388,6 +396,10 @@ int do_set(User *u, char **av, int ac) {
 		opsb.confed = 1;
 		return 1;
 	} else if (!strcasecmp(av[2], "TARGETPORT")) {
+		if (ac < 4) {
+			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
+			return 0;
+		}
 		if (!atoi(av[3])) {
 			prefmsg(u->nick, s_opsb, "Invalid Port (Must be numeric) in TARGETPORT");
 			return 0;
@@ -398,6 +410,10 @@ int do_set(User *u, char **av, int ac) {
 		opsb.confed = 1;
 		return 1;
 	} else if (!strcasecmp(av[2], "OPMDOMAIN")) {
+		if (ac < 4) {
+			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
+			return 0;
+		}
 		if (!index(av[3], '.')) {
 			prefmsg(u->nick, s_opsb, "Invalid Domain name in OPMDOMAIN");
 			return 0;
@@ -408,6 +424,10 @@ int do_set(User *u, char **av, int ac) {
 		opsb.confed = 1;
 		return 1;
 	} else if (!strcasecmp(av[2], "MAXBYTES")) {
+		if (ac < 4) {
+			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
+			return 0;
+		}
 		if (!atoi(av[3])) {
 			prefmsg(u->nick, s_opsb, "Invalid setting (Must be numeric)");
 			return 0;
@@ -418,6 +438,10 @@ int do_set(User *u, char **av, int ac) {
 		opsb.confed = 1;
 		return 1;
 	} else if (!strcasecmp(av[2], "TIMEOUT")) {
+		if (ac < 4) {
+			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
+			return 0;
+		}
 		if (!atoi(av[3]) || (atoi(av[3]) > 120)) {
 			prefmsg(u->nick, s_opsb, "Setting must be numeric, and below 120");
 			return 0;
@@ -428,6 +452,10 @@ int do_set(User *u, char **av, int ac) {
 		opsb.confed = 1;
 		return 1;
 	} else if (!strcasecmp(av[2], "OPENSTRING")) {
+		if (ac < 4) {
+			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
+			return 0;
+		}
 		buf = joinbuf(av, ac, 3);
 		snprintf(opsb.lookforstring, 512, "%s", buf);
 		free(buf);
@@ -436,6 +464,10 @@ int do_set(User *u, char **av, int ac) {
 		opsb.confed = 1;
 		return 0;
 	} else if (!strcasecmp(av[2], "SPLITTIME")) {
+		if (ac < 4) {
+			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
+			return 0;
+		}
 		if (!atoi(av[3])) {
 			prefmsg(u->nick, s_opsb, "Error, Setting must be numeric");
 			return 0;
@@ -446,6 +478,10 @@ int do_set(User *u, char **av, int ac) {
 		opsb.confed = 1;
 		return 0;
 	} else if (!strcasecmp(av[2], "SCANMSG")) {
+		if (ac < 4) {
+			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
+			return 0;
+		}
 		buf = joinbuf(av, ac, 3);
 		snprintf(opsb.scanmsg, 512, "%s", buf);
 		free(buf);
@@ -454,6 +490,10 @@ int do_set(User *u, char **av, int ac) {
 		opsb.confed = 1;
 		return 0;
 	} else if (!strcasecmp(av[2], "BANTIME")) {
+		if (ac < 4) {
+			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
+			return 0;
+		}
 		if (!atoi(av[3])) {
 			prefmsg(u->nick, s_opsb, "Error, Bantime must be numeric (in Seconds)");
 			return 0;
@@ -464,6 +504,10 @@ int do_set(User *u, char **av, int ac) {
 		opsb.confed = 1;
 		return 0;
 	} else if (!strcasecmp(av[2], "CACHETIME")) {
+		if (ac < 4) {
+			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
+			return 0;
+		}
 		if (!atoi(av[3])) {
 			prefmsg(u->nick, s_opsb, "Error, CacheTime must be numeric (in Seconds)");
 			return 0;
@@ -487,6 +531,9 @@ int do_set(User *u, char **av, int ac) {
 		prefmsg(u->nick, s_opsb, "Cache Time: %d", opsb.cachetime);
 		prefmsg(u->nick, s_opsb, "Configured: %s", (opsb.confed ? "Yes" : "No"));
 		return 0;
+	} else {
+		prefmsg(u->nick, s_opsb, "Unknown Command %s, try /msg %s help set", av[2], s_opsb);
+		return 0;
 	}
 	return 0;	
 }
@@ -497,10 +544,10 @@ int Online(char **av, int ac) {
 
 	strcpy(segv_location, "OPSB:Online");
 
-	if (init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+xd", my_info[0].module_name) == -1 ) {
+	if (init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", my_info[0].module_name) == -1 ) {
 		/* Nick was in use!!!! */
 		s_opsb = strcat(s_opsb, "_");
-		init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+xd", my_info[0].module_name);
+		init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", my_info[0].module_name);
 	}
 	loadcache();
 	if (opsb.confed == 0) add_mod_timer("unconf", "Un_configured_warn", "opsb", 60);
@@ -1098,7 +1145,7 @@ void _init() {
 	opsb.targetport = me.port;
 	opsb.maxbytes = 500;
 	opsb.timeout = 30;
-	opsb.timedif = 30;
+	opsb.timedif = 600;
 	opsb.open = 0;
 	opsb.scanned = 0;
 	opsb.confed = 0;
