@@ -305,7 +305,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 				return 0;
 			}
 			if (list_isfull(exempt)) {
-				prefmsg(u->nick, s_opsb, "Error, Exception list is full", s_opsb);
+				prefmsg(u->nick, s_opsb, "Error, Exception list is full");
 				return 0;
 			}
 			if (!index(argv[3], '.')) {
@@ -392,7 +392,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 				return 0;
 			}
 			if (list_isfull(opsb.ports)) {
-				prefmsg(u->nick, s_opsb, "Error, Ports list is full", s_opsb);
+				prefmsg(u->nick, s_opsb, "Error, Ports list is full");
 				return 0;
 			}
 			if (!atoi(argv[4])) {

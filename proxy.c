@@ -266,8 +266,8 @@ void send_status(User *u) {
 	SET_SEGV_LOCATION();
 	
 	prefmsg(u->nick, s_opsb, "Proxy Results:");
-	prefmsg(u->nick, s_opsb, "Hosts Scanned: %d Hosts found Open: %d Exceptions %d", opsb.scanned, opsb.open, list_count(exempt));
-	prefmsg(u->nick, s_opsb, "Cache Entries: %d", list_count(cache));
+	prefmsg(u->nick, s_opsb, "Hosts Scanned: %d Hosts found Open: %d Exceptions %d", opsb.scanned, opsb.open, (int)list_count(exempt));
+	prefmsg(u->nick, s_opsb, "Cache Entries: %d", (int)list_count(cache));
 	prefmsg(u->nick, s_opsb, "Cache Hits: %d", opsb.cachehits);
 	prefmsg(u->nick, s_opsb, "Blacklist Hits: %d", opsb.opmhits);
 #if 0
@@ -275,7 +275,7 @@ void send_status(User *u) {
 		prefmsg(u->nick, s_opsb, "Proxy %s (%d) Found %d Open %d", proxy_list[i].type, proxy_list[i].port, proxy_list[i].nofound, proxy_list[i].noopen);
 	}
 #endif
-	prefmsg(u->nick, s_opsb, "Currently Scanning %d Proxies (%d in queue):", list_count(opsbl), list_count(opsbq));
+	prefmsg(u->nick, s_opsb, "Currently Scanning %d Proxies (%d in queue):", (int)list_count(opsbl), (int)list_count(opsbq));
 	node = list_first(opsbl);
 	while (node) {
 		scandata = lnode_get(node);
