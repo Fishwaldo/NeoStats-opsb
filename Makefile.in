@@ -27,9 +27,10 @@ libopm.a:
 	 (cd libopm; $(MAKE) $@)
 	 
 module:	 libopm.a $(OBJECTS)
-	 $(LD) -shared -o $(TARGET) $(LDFLAGS) $(OBJECTS)
+	 $(LD) -shared -o $(TARGET) $(LDFLAGS) $(OBJECTS) libopm/libopm.a
 
-clean:
+clean:   
+	 (cd libopm; $(MAKE) $@)
 	 /bin/rm -rf $(TARGET) *.o Makefile *.log modconfig.h
 
 install: module
@@ -52,7 +53,7 @@ dist:
 
 $(OBJECTS): Makefile
 
-opsb.c:		opsb.h 
-proxy.c: 	opsb.h 
-opsb_help.c: 	opsb.h
+opsb.o:		opsb.h opsb.c modconfig.h
+proxy.o: 	opsb.h proxy.c modconfig.h
+opsb_help.o: 	opsb.h
 

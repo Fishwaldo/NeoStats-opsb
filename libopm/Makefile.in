@@ -1,12 +1,12 @@
 #Neostats Module Makefile!
 CC=@CC@
-CFLAGS=-I.. @CFLAGS@
+CFLAGS= @CFLAGS@
 LDFLAGS= @LDFLAGS@
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 DIRECTORY=@DIRINST@/dl/
-INCLUDES=-I@DIRINST@/include/ -I.
+INCLUDES= -I. -I..
 
 SOURCES= compat.c config.c inet.c libopm.c list.c malloc.c proxy.c
 OBJECTS= compat.o config.o inet.o libopm.o list.o malloc.o proxy.o 
@@ -32,4 +32,14 @@ install:
 dist:	
 
 $(OBJECTS): Makefile
+compat.o: compat.c ../modconfig.h compat.h opm.h opm_common.h
+config.o: config.c ../modconfig.h malloc.h config.h libopm.h inet.h \
+  opm_common.h opm.h opm_error.h opm_types.h list.h
+inet.o: inet.c ../modconfig.h inet.h opm.h opm_common.h
+libopm.o: libopm.c ../modconfig.h config.h libopm.h inet.h opm_common.h \
+  opm.h malloc.h opm_error.h opm_types.h list.h proxy.h
+list.o: list.c ../modconfig.h opm_common.h list.h malloc.h opm.h
+malloc.o: malloc.c ../modconfig.h malloc.h opm.h opm_common.h
+proxy.o: proxy.c ../modconfig.h inet.h compat.h config.h libopm.h \
+  opm_common.h opm.h proxy.h opm_types.h opm_error.h
 
