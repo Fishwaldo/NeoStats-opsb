@@ -49,8 +49,7 @@ int opsb_cmd_exclude (CmdParams* cmdparams)
 		irc_chanalert (opsb_bot, "%s requested Exception List", cmdparams->source->name);
 	} else if (!ircstrcasecmp (cmdparams->av[0], "ADD")) {
 		if (cmdparams->ac < 6) {
-			irc_prefmsg (opsb_bot, cmdparams->source, "Syntax Error. /msg %s help exclude", opsb_bot);
-			return 0;
+			return NS_ERR_SYNTAX_ERROR;
 		}
 		if (list_isfull(exempt)) {
 			irc_prefmsg (opsb_bot, cmdparams->source, "Error, Exception list is full");
@@ -78,8 +77,7 @@ int opsb_cmd_exclude (CmdParams* cmdparams)
 		irc_chanalert (opsb_bot, "%s added %s (%s) exception to list", cmdparams->source->name, exempts->host, (exempts->server ? "(Server)" : "(Client)"));
 	} else if (!ircstrcasecmp (cmdparams->av[0], "DEL")) {
 		if (cmdparams->ac < 1) {
-			irc_prefmsg (opsb_bot, cmdparams->source, "Syntax Error. /msg %s help exclude", opsb_bot);
-			return 0;
+			return NS_ERR_SYNTAX_ERROR;
 		}
 		if (atoi(cmdparams->av[1]) != 0) {
 			lnode = list_first(exempt);
@@ -102,15 +100,14 @@ int opsb_cmd_exclude (CmdParams* cmdparams)
 				lnode = list_next(exempt, lnode);
 			}		
 			/* if we get here, then we can't find the entry */
-			irc_prefmsg (opsb_bot, cmdparams->source, "Error, Can't find entry %d. /msg %s exclude list", atoi(cmdparams->av[1]), opsb_bot);
+			irc_prefmsg (opsb_bot, cmdparams->source, "Error, Can't find entry %d. /msg %s exclude list", atoi(cmdparams->av[1]), opsb_bot->name);
 			return 0;
 		} else {
 			irc_prefmsg (opsb_bot, cmdparams->source, "Error, Out of Range");
 			return 0;
 		}
 	} else {
-		irc_prefmsg (opsb_bot, cmdparams->source, "Syntax Error. /msg %s help exclude", opsb_bot);
-		return 0;
+		return NS_ERR_SYNTAX_ERROR;
 	}
 	return 0;
 }
