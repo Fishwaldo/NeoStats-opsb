@@ -172,11 +172,11 @@ int init_libopm() {
 	/* max number of socks we allow */
 	opm_config(scanner, OPM_CONFIG_FD_LIMIT, &opsb.socks);
 	/* host to try to connect to */
-	opm_config(scanner, OPM_CONFIG_SCAN_IP, opsb.targethost);
+	opm_config(scanner, OPM_CONFIG_SCAN_IP, opsb.targetip);
 	/* port to try to connect to */
 	opm_config(scanner, OPM_CONFIG_SCAN_PORT, &opsb.targetport);
 	/* string to look for */
-	opm_config(scanner, OPM_CONFIG_TARGET_STRING, opsb.lookforstring);
+	opm_config(scanner, OPM_CONFIG_TARGET_STRING, opsb.openstring);
 	/* also look for throttle messages */
 	opm_config(scanner, OPM_CONFIG_TARGET_STRING, "ERROR :Trying to reconnect too fast");
 	/* timeout */
@@ -221,8 +221,8 @@ void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused)
 	irc_chanalert (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
 	irc_globops  (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
 	if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
-	if (opsb.doban) 
-		irc_akill (opsb_bot, remote->ip, "*", opsb.bantime, "Open Proxy found on your host. %s(%d)", type_of_proxy(remote->protocol), remote->port);
+	if (opsb.doakill) 
+		irc_akill (opsb_bot, remote->ip, "*", opsb.akilltime, "Open Proxy found on your host. %s(%d)", type_of_proxy(remote->protocol), remote->port);
 #if 0
 	/* write out to a logfile */
 	if ((fp = fopen("logs/openproxies.log", "a")) == NULL) return;
@@ -241,7 +241,7 @@ void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused)
 		irc_chanalert (opsb_bot, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
 		irc_globops  (opsb_bot, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
 		if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
-		irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.bantime, "Your host is listed as an Open Proxy. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ip));
+		irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.akilltime, "Your host is listed as an Open Proxy. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ip));
 	}	
 #endif
 }

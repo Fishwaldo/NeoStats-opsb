@@ -15,8 +15,8 @@ OPSB Manual
    3. Detailed Configuration
 
         3.1. CACHETIME Setting
-        3.2. DISABLESCAN Setting
-        3.3. DOBAN Setting
+        3.2. SCAN Setting
+        3.3. AKILL Setting
         3.4. OPMDOMAIN Setting
         3.5. MAXBYTES Setting
         3.6. TIMEOUT
@@ -372,8 +372,8 @@ Caution
 
    Changing the Ban Time
 
-   To change the bantime, type:
- -> *opsb* set bantime 86400
+   To change the akilltime, type:
+ -> *opsb* set akilltime 86400
 =opsb= Ban time changed to 86400
 
 3. Detailed Configuration
@@ -389,8 +389,8 @@ Caution
 
    The following list summaries the available Options you can set in OPSB
      * CACHETIME
-     * DISABLESCAN
-     * DOBAN
+     * SCAN
+     * AKILL
      * OPMDOMAIN
      * MAXBYTES
      * TIMEOUT
@@ -424,25 +424,25 @@ Caution
    To Change the setting, issue the following Command:
 /msg OPSB set CACHETIME <seconds>
 
-3.2. DISABLESCAN Setting
+3.2. SCAN Setting
 
    Sometimes  a  IRC  administrator may wish to only make use of the Open
    Proxy  list  lookup,  and  not  actually  perform  a  scan  on  users.
-   DISABLESCAN  forces OPSB to only perform a lookup of the IP address in
+   SCAN  forces OPSB to only perform a lookup of the IP address in
    the configured OPMDOMAIN.
 
    If you wish to turn off Proxy checks, issue the following command
-/msg OPSB set DISABLESCAN <ON/OFF>
+/msg OPSB set SCAN <ON/OFF>
 
-3.3. DOBAN Setting
+3.3. AKILL Setting
 
    Often,  when  setting up OPSB for the first time, or making changes to
    the  ports  that are to be scanning, you may wish to test OPSB without
-   it  actually  performing  a  AKILL.  Turning  DOBAN  off  disables the
+   it  actually  performing  a  AKILL.  Turning  AKILL  off  disables the
    placement of a AKILL on open Proxy hosts.
 
    To Change the setting, issue the following Command:
-/msg OPSB set DOBAN <ON/OFF>
+/msg OPSB set AKILL <ON/OFF>
 
 3.4. OPMDOMAIN Setting
 

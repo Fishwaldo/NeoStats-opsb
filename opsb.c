@@ -324,19 +324,21 @@ static bot_cmd opsb_commands[]=
 
 static bot_setting opsb_settings[]=
 {
-	{"DISABLESCAN", &opsb.doscan,		SET_TYPE_BOOLEAN,	0,	0,			NS_ULEVEL_ADMIN, "DoScan",		NULL,	opsb_help_set_disablescan,	do_set_cb, (void*)1 },
-	{"DOBAN",		&opsb.doban,		SET_TYPE_BOOLEAN,	0,	0,			NS_ULEVEL_ADMIN, "DoBan",		NULL,	opsb_help_set_doban,		do_set_cb, (void*)1 },
-	{"TARGETIP",	&opsb.targethost,	SET_TYPE_IPV4,		0,	MAXHOST,	NS_ULEVEL_ADMIN, "TargetHost",	NULL,	opsb_help_set_targetip,		do_set_cb },
-	{"TARGETPORT",	&opsb.targetport,	SET_TYPE_INT,		0,	65430,			NS_ULEVEL_ADMIN, "TargetPort",	NULL,	opsb_help_set_targetport,	do_set_cb },
-	{"OPMDOMAIN",	&opsb.opmdomain,	SET_TYPE_HOST,		0,	MAXHOST,	NS_ULEVEL_ADMIN, "OpmDomain",	NULL,	opsb_help_set_opmdomain,	do_set_cb, (void*)"opm.blitzed.org" },
-	{"MAXBYTES",	&opsb.maxbytes,		SET_TYPE_INT,		0,	100000,			NS_ULEVEL_ADMIN, "MaxBytes",	NULL,	opsb_help_set_maxbytes,		do_set_cb, (void*)500 },
-	{"TIMEOUT",		&opsb.timeout,		SET_TYPE_INT,		0,	120,		NS_ULEVEL_ADMIN, "TimeOut",		NULL,	opsb_help_set_timeout,		do_set_cb, (void*)30 },
-	{"OPENSTRING",	&opsb.lookforstring,SET_TYPE_MSG,		0,	BUFSIZE,	NS_ULEVEL_ADMIN, "TriggerString",NULL,	opsb_help_set_openstring,	do_set_cb, (void*)"*** Looking up your hostname..." },
-	{"SCANMSG",		&opsb.scanmsg,		SET_TYPE_MSG,		0,	BUFSIZE,	NS_ULEVEL_ADMIN, "ScanMsg",		NULL,	opsb_help_set_scanmsg,		do_set_cb, (void*)"Your Host is being Scanned for Open Proxies" },
-	{"BANTIME",		&opsb.bantime,		SET_TYPE_INT,		0,	360000,			NS_ULEVEL_ADMIN, "BanTime",		NULL,	opsb_help_set_bantime,		do_set_cb, (void*)86400 },
-	{"CACHETIME",	&opsb.cachetime,	SET_TYPE_INT,		0,	86400,			NS_ULEVEL_ADMIN, "CacheTime",	NULL,	opsb_help_set_cachetime,	do_set_cb, (void*)3600 },
-	{"VERBOSE",		&opsb.verbose,		SET_TYPE_BOOLEAN,	0,	0,			NS_ULEVEL_ADMIN, "Verbose",		NULL,	opsb_help_set_verbose,		do_set_cb, (void*)1 },
-	{NULL,			NULL,				0,					0,	0, 			0,				 NULL,			NULL,	NULL,						NULL	},
+	{"SCAN",		&opsb.doscan,		SET_TYPE_BOOLEAN,	0,	0,			NS_ULEVEL_ADMIN, NULL,	opsb_help_set_doscan,		do_set_cb, (void*)1 },
+	{"TARGETIP",	&opsb.targetip,		SET_TYPE_IPV4,		0,	0,			NS_ULEVEL_ADMIN, NULL,	opsb_help_set_targetip,		do_set_cb },
+	{"TARGETPORT",	&opsb.targetport,	SET_TYPE_INT,		0,	65535,		NS_ULEVEL_ADMIN, NULL,	opsb_help_set_targetport,	do_set_cb },
+	{"OPMDOMAIN",	&opsb.opmdomain,	SET_TYPE_HOST,		0,	MAXHOST,	NS_ULEVEL_ADMIN, NULL,	opsb_help_set_opmdomain,	do_set_cb, (void*)"opm.blitzed.org" },
+	
+	{"AKILL",		&opsb.doakill,		SET_TYPE_BOOLEAN,	0,	0,			NS_ULEVEL_ADMIN, NULL,	opsb_help_set_akill,		do_set_cb, (void*)1 },
+	
+	{"AKILLTIME",	&opsb.akilltime,	SET_TYPE_INT,		0,	20736000,	NS_ULEVEL_ADMIN, NULL,	opsb_help_set_akilltime,	do_set_cb, (void*)86400 },
+	{"MAXBYTES",	&opsb.maxbytes,		SET_TYPE_INT,		0,	100000,		NS_ULEVEL_ADMIN, NULL,	opsb_help_set_maxbytes,		do_set_cb, (void*)500 },
+	{"TIMEOUT",		&opsb.timeout,		SET_TYPE_INT,		0,	120,		NS_ULEVEL_ADMIN, NULL,	opsb_help_set_timeout,		do_set_cb, (void*)30 },
+	{"OPENSTRING",	&opsb.openstring,	SET_TYPE_MSG,		0,	BUFSIZE,	NS_ULEVEL_ADMIN, NULL,	opsb_help_set_openstring,	do_set_cb, (void*)"*** Looking up your hostname..." },
+	{"SCANMSG",		&opsb.scanmsg,		SET_TYPE_MSG,		0,	BUFSIZE,	NS_ULEVEL_ADMIN, NULL,	opsb_help_set_scanmsg,		do_set_cb, (void*)"Your Host is being Scanned for Open Proxies" },
+	{"CACHETIME",	&opsb.cachetime,	SET_TYPE_INT,		0,	86400,		NS_ULEVEL_ADMIN, NULL,	opsb_help_set_cachetime,	do_set_cb, (void*)3600 },
+	{"VERBOSE",		&opsb.verbose,		SET_TYPE_BOOLEAN,	0,	0,			NS_ULEVEL_ADMIN, NULL,	opsb_help_set_verbose,		do_set_cb, (void*)1 },
+	{NULL,			NULL,				0,					0,	0, 			0,				 NULL,	NULL,						NULL	},
 };
 
 /** BotInfo */
@@ -368,7 +370,7 @@ int ModSynch (void)
 	if (opsb.confed == 0) {
 		AddTimer (TIMER_TYPE_INTERVAL, unconf, "unconf", 60);
 		unconf();
-		strlcpy(opsb.targethost, me.uplink, MAXHOST);
+		strlcpy(opsb.targetip, me.uplink, MAXHOST);
 	}
 	if(opsb.verbose) {
 		if (opsb.doscan) {
@@ -695,7 +697,7 @@ void dnsblscan(char *data, adns_answer *a)
 						irc_chanalert (opsb_bot, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
 						irc_globops  (opsb_bot, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
 						if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ip), opsb.opmdomain);
-						irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.bantime, "Your host is listed as an Open Proxy. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ip));
+						irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.akilltime, "Your host is listed as an Open Proxy. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ip));
 						checkqueue();
 					} else {
 						if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "%s does not appear in DNS black list", scandata->lookup);
@@ -762,7 +764,7 @@ void reportdns(char *data, adns_answer *a) {
 
 int ModInit( void )
 {
-	strlcpy(opsb.targethost, me.uplink, MAXHOST);
+	strlcpy(opsb.targetip, me.uplink, MAXHOST);
 	opsb.targetport = me.port;
 	opsb.confed = 0;
 	DBAFetchConfigInt ("Confed", &opsb.confed);

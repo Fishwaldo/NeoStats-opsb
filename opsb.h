@@ -65,8 +65,8 @@ typedef struct scaninfo{
 struct opsb {
 	char opmdomain[MAXHOST];
 	int init;
-	char targethost[MAXHOST];
-	char lookforstring[BUFSIZE];
+	char targetip[MAXHOST];
+	char openstring[BUFSIZE];
 	int targetport;
 	int maxbytes;
 	int timeout;
@@ -74,13 +74,13 @@ struct opsb {
 	int open;
 	int scanned;
 	char scanmsg[BUFSIZE];
-	int bantime;
+	int akilltime;
 	int confed;
 	int cachetime;
 	int doscan;
 	int cachehits;
 	int opmhits;
-	int doban;
+	int doakill;
 	int verbose;
 	list_t *ports;
 } opsb;
@@ -137,7 +137,6 @@ extern const char *opsb_help_lookup[];
 extern const char *opsb_about[];
 extern const char *opsb_help_check[];
 extern const char *opsb_help_status[];
-extern const char *opsb_help_exclude[];
 extern const char *opsb_help_remove[];
 extern const char *opsb_help_ports[];
 
@@ -145,12 +144,11 @@ extern const char opsb_help_status_oneline[];
 extern const char opsb_help_lookup_oneline[];
 extern const char opsb_help_remove_oneline[];
 extern const char opsb_help_check_oneline[];
-extern const char opsb_help_exclude_oneline[];
 extern const char opsb_help_ports_oneline[];
 extern const char opsb_help_set_oneline[];
 
-extern const char *opsb_help_set_disablescan [];
-extern const char *opsb_help_set_doban [];
+extern const char *opsb_help_set_doscan [];
+extern const char *opsb_help_set_akill [];
 extern const char *opsb_help_set_targetip [];
 extern const char *opsb_help_set_targetport [];
 extern const char *opsb_help_set_opmdomain [];
@@ -158,7 +156,7 @@ extern const char *opsb_help_set_maxbytes [];
 extern const char *opsb_help_set_timeout [];
 extern const char *opsb_help_set_openstring [];
 extern const char *opsb_help_set_scanmsg [];
-extern const char *opsb_help_set_bantime [];
+extern const char *opsb_help_set_akilltime [];
 extern const char *opsb_help_set_cachetime [];
 extern const char *opsb_help_set_verbose [];
 

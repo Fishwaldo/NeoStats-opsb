@@ -162,7 +162,13 @@
 			RelativePath=".\modconfig.h.in">
 		</File>
 		<File
+			RelativePath=".\OPSB.xml">
+		</File>
+		<File
 			RelativePath=".\README.opsb">
+		</File>
+		<File
+			RelativePath=".\README.opsb.html">
 		</File>
 		<File
 			RelativePath=".\Relnotes">

@@ -1,4 +1,4 @@
-* OPSB * M & Fish * Version 3.0.a1
+* OPSB * M & Fish * Version 3.0.a2-dev
 ==============================================================================
 Important information you should know: (READ THIS!)
 ==============================================================================
@@ -16,6 +16,9 @@ stable 2.5 series instead until NeoStats 3.0 is further along.
 Bugs, requests and suggestions should be reported using the bug tracking 
 system. You must provide all information required as listed in the README 
 section on support or your entry will be removed.
+
+Settings and data files from 2.5.x will not work with 3.0. Settings for a1 
+may not be compatible with this version.
 
 Known issues that we are aware of and should not be reported:
 

@@ -1,5 +1,10 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
+3.0.a2-dev - Mark (M)
+ - Update settings table to a2 compatible format. (M)
+ - Fix segfault on msg opsb1 check ip.address.com. (M)
+ - Change DISABLESCAN to SCAN. (M)
+
 3.0.a1 - Mark (M)
  - Update module to use new core module exclusion support. (M)
  - Removed splittime setting which is now handled by core. (M)

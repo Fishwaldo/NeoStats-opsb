@@ -1301,7 +1301,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 PACKAGE=OPSB
 MODULE_MAJOR=3
 MODULE_MINOR=0
-MODULE_REV=a1
+MODULE_REV=a2-dev
 VERSION=$MODULE_MAJOR.$MODULE_MINOR.$MODULE_REV
 cat >>confdefs.h <<_ACEOF
 #define MODULE_VERSION "$VERSION"
@@ -2352,8 +2352,8 @@ if test "$ns_version_ok" = "yes"; then
 	echo "$as_me:$LINENO: result: Compatible version" >&5
 echo "${ECHO_T}Compatible version" >&6;
 else
-	{ { echo "$as_me:$LINENO: error: This module requires NeoStats 3.0.a1 or higher" >&5
-echo "$as_me: error: This module requires NeoStats 3.0.a1 or higher" >&2;}
+	{ { echo "$as_me:$LINENO: error: This module requires NeoStats 3.0.a2-dev or higher" >&5
+echo "$as_me: error: This module requires NeoStats 3.0.a2-dev or higher" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
