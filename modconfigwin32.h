@@ -6,13 +6,16 @@
 /* #undef DEBUG */
 
 /* Version number of package */
-#define MODULE_VERSION "2.1"
+#define MODULE_VERSION "3.0.a1"
 
 /* Major Version */
-#define MODULE_MAJOR "2"
+#define MODULE_MAJOR "3"
 
 /* Minor Version */
-#define MODULE_MINOR "1"
+#define MODULE_MINOR "0"
+
+/* Revision */
+#define MODULE_REV "a1"
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 /* #undef HAVE_DLFCN_H */

@@ -138,10 +138,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
-				RelativePath=".\opsb.h">
+				RelativePath=".\modconfigwin32.h">
 			</File>
 			<File
-				RelativePath=".\win32modconfig.h">
+				RelativePath=".\opsb.h">
 			</File>
 		</Filter>
 		<Filter
@@ -157,6 +157,9 @@
 		</File>
 		<File
 			RelativePath=".\Makefile.in">
+		</File>
+		<File
+			RelativePath=".\modconfig.h.in">
 		</File>
 		<File
 			RelativePath=".\README.opsb">

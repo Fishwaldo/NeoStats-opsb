@@ -14,7 +14,7 @@ TARGET = opsb.so
 DOCS = README.opsb README.opsb.html
 DATA =
 SCRIPTS = 
-DISTFILES = $(SRCS) $(DOCS) modconfig.h.in configure install-sh ChangeLog Makefile.in opsb.h libopm/*.c libopm/*.h libopm/README libopm/LICENSE LICENSE libopm/*.in RELNOTES opsb.vcproj modconfigwin32.h
+DISTFILES = $(SRCS) $(DOCS) modconfig.h.in configure install-sh ChangeLog Makefile.in opsb.h libopm/*.c libopm/*.h libopm/README libopm/LICENSE LICENSE libopm/*.in libopm/*.vcproj RELNOTES opsb.vcproj modconfigwin32.h
 DISTDIR = @PACKAGE@-@VERSION@
 
 all:	module

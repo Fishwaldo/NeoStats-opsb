@@ -60,14 +60,17 @@
 /* Define to 1 if you have the `vsnprintf' function. */
 #undef HAVE_VSNPRINTF
 
-/* "Major Version" */
+/* Version number of package */
+#undef MODULE_VERSION
+
+/* Major Version */
 #undef MODULE_MAJOR
 
-/* "Minor Version" */
+/* Minor Version */
 #undef MODULE_MINOR
 
-/* "Module Version" */
-#undef MODULE_VERSION
+/* Revision */
+#undef MODULE_REV
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
