@@ -3,7 +3,7 @@ AC_INIT(opsb.c)
 AC_CONFIG_HEADER(modconfig.h)
 PACKAGE=OPSB
 MODULE_MAJOR=2
-MODULE_MINOR=1
+MODULE_MINOR=2
 VERSION=$MODULE_MAJOR.$MODULE_MINOR
 AC_DEFINE_UNQUOTED(MODULE_VERSION, "$VERSION", "Module Version")
 AC_DEFINE_UNQUOTED(MODULE_MAJOR, "$MODULE_MAJOR", "Major Version")
@@ -81,7 +81,7 @@ AC_TRY_RUN(
 int main(void) {
 	if (MAJOR >= 2) {
 		if (MINOR >= 5) {
-			if (REV >= 8) {
+			if (REV >= 17) {
 				exit(0);
 			}
 		}
