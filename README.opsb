@@ -29,7 +29,7 @@ individual servers running their own proxy scanner.
 ==============================================================================
 Requirements
 ==============================================================================
-1) NeoStats 2.5.0 Beta5 or Higher installed
+1) NeoStats 2.5.0 RC1 or Higher installed
 2) A shell to run from
 3) CN lines to a server on your network
 4) Knowledge of unices
@@ -68,6 +68,12 @@ Installation is faily straight forward.
 5) (optionally) Configure Neostats to load opsb on startup
 	This is done by adding the line "LOAD_MODULE opsb"
 	to the neostats.cfg file
+******************************************************************************
+NOTE:
+if you had used OPSB previously, then the previous database is incompatible
+with this version. You *MUST* delete data/opsb.db out of the NeoStats
+directory
+******************************************************************************
 
 6) Load and Configure opsb.
 	Start up NeoStats, or load the module via IRC.
