@@ -40,10 +40,10 @@ void dnsblscan(char *data, adns_answer *a);
 static int ScanNick(char **av, int ac);
 int startscan(scaninfo *scandata);
 int do_set(User *u, char **av, int ac);
-void savecache();
 void save_ports();
-void loadcache();
 void unconf();
+void save_exempts(exemptinfo *exempts);
+
 
 extern const char *opsb_help[];
 extern const char *opsb_help_on_help[];
@@ -324,6 +324,8 @@ int __Bot_Message(char *origin, char **argv, int argc)
 			free(buf);
 			lnode = lnode_create(exempts);
 			list_append(exempt, lnode);
+			save_exempts(exempts);			
+
 			prefmsg(u->nick, s_opsb, "Added %s (%s) exception to list", exempts->host, (exempts->server ? "(Server)" : "(Client)"));
 			chanalert(s_opsb, "%s added %s (%s) exception to list", u->nick, exempts->host, (exempts->server ? "(Server)" : "(Client)"));
 		} else if (!strcasecmp(argv[2], "DEL")) {
@@ -338,6 +340,10 @@ int __Bot_Message(char *origin, char **argv, int argc)
 					if (i == atoi(argv[3])) {
 						/* delete the entry */
 						exempts = lnode_get(lnode);
+						buf = malloc(512);
+						ircsnprintf(buf, 512, "Exempt/%s", exempts->host);
+						DelConf(buf);
+						free(buf);
 						list_delete(exempt, lnode);
 						prefmsg(u->nick, s_opsb, "Deleted %s %s out of exception list", exempts->host, (exempts->server ? "(Server)" : "(Client)"));
 						chanalert(s_opsb, "%s deleted %s %s out of exception list", u->nick, exempts->host, (exempts->server ? "(Server)" : "(Client)"));
@@ -460,8 +466,8 @@ int __Bot_Message(char *origin, char **argv, int argc)
 			return 0;
 		}
 		do_set(u, argv, argc);
-		if (opsb.confed == 1) 
-			savecache();
+		SetConf((void *)opsb.confed, CFGINT, "Confed");
+
 	} else {
 		prefmsg(u->nick, s_opsb, "Syntax Error. /msg %s help", s_opsb);
 	}
@@ -484,11 +490,11 @@ int do_set(User *u, char **av, int ac) {
 			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
 			return 0;
 		}
-	 	if (!strcasecmp(av[3], "0")) {
+	 	if (!strcasecmp(av[3], "0") || !strcasecmp(av[3], "off")) {
 			opsb.doscan = 1;
 			prefmsg(u->nick, s_opsb, "Scanning is now Enabled");
 			chanalert(s_opsb, "%s has Enabled Proxy Scanning", u->nick, av[3]);
-		} else if (!strcasecmp(av[3], "1")) {
+		} else if (!strcasecmp(av[3], "1") || !strcasecmp(av[3], "on")) {
 			opsb.doscan = 0;
 			prefmsg(u->nick, s_opsb, "Scanning is now Disabled");
 			chanalert(s_opsb, "%s has Disabled Proxy Scanning", u->nick, av[3]);
@@ -496,6 +502,27 @@ int do_set(User *u, char **av, int ac) {
 			prefmsg(u->nick, s_opsb, "Invalid Setting (must be 1 or 0) in DISABLESCAN");
 			return 0;
 		}
+		SetConf((void *)opsb.doscan, CFGINT, "DoScan");
+		opsb.confed = 1;
+		return 1;
+	} else if (!strcasecmp(av[2], "DOBAN")) {
+		if (ac < 4) {
+			prefmsg(u->nick, s_opsb, "Invalid Option. Try /msg %s help set", s_opsb);
+			return 0;
+		}
+	 	if (!strcasecmp(av[3], "0") || !strcasecmp(av[3], "off")) {
+			opsb.doban = 0;
+			prefmsg(u->nick, s_opsb, "Akill Bans for Open Proxies is now Disabled");
+			chanalert(s_opsb, "%s has Disabled Akills for Open Proxys", u->nick, av[3]);
+		} else if (!strcasecmp(av[3], "1") || !strcasecmp(av[3], "on")) {
+			opsb.doban = 1;
+			prefmsg(u->nick, s_opsb, "Akill Bans for Open Proxies is now Enabled");
+			chanalert(s_opsb, "%s has Enabled Akills for Open Proxies", u->nick, av[3]);
+		} else {
+			prefmsg(u->nick, s_opsb, "Invalid Setting (must be 1 or 0) in DOBAN");
+			return 0;
+		}
+		SetConf((void *)opsb.doban, CFGINT, "DoBan");
 		opsb.confed = 1;
 		return 1;
 	} else if (!strcasecmp(av[2], "TARGETIP")) {
@@ -510,6 +537,7 @@ int do_set(User *u, char **av, int ac) {
 		strlcpy(opsb.targethost, av[3], MAXHOST);
 		prefmsg(u->nick, s_opsb, "Target IP set to %s", av[3]);
 		chanalert(s_opsb, "%s changed the target ip to %s", u->nick, av[3]);
+		SetConf((void *)opsb.targethost, CFGSTR, "TargetHost");
 		opsb.confed = 1;
 		return 1;
 	} else if (!strcasecmp(av[2], "TARGETPORT")) {
@@ -524,6 +552,7 @@ int do_set(User *u, char **av, int ac) {
 		opsb.targetport = atoi(av[3]);
 		prefmsg(u->nick, s_opsb, "Target PORT set to %d", opsb.targetport);
 		chanalert(s_opsb, "%s changed the target port to %d", u->nick, opsb.targetport);
+		SetConf((void *)opsb.targetport, CFGINT, "TargetPort");
 		opsb.confed = 1;
 		return 1;
 	} else if (!strcasecmp(av[2], "OPMDOMAIN")) {
@@ -538,6 +567,7 @@ int do_set(User *u, char **av, int ac) {
 		strlcpy(opsb.opmdomain, av[3], MAXHOST);
 		prefmsg(u->nick, s_opsb, "OPM Domain changed to %s", opsb.opmdomain);
 		chanalert(s_opsb, "%s changed the opm domain to %s", u->nick, opsb.opmdomain);
+		SetConf((void *)opsb.opmdomain, CFGSTR, "OpmDomain");
 		opsb.confed = 1;
 		return 1;
 	} else if (!strcasecmp(av[2], "MAXBYTES")) {
@@ -552,6 +582,7 @@ int do_set(User *u, char **av, int ac) {
 		opsb.maxbytes = atoi(av[3]);
 		prefmsg(u->nick, s_opsb, "Max Bytes set to %d", opsb.maxbytes);
 		chanalert(s_opsb, "%s changed the Max Bytes setting to %d", u->nick, opsb.maxbytes);
+		SetConf((void *)opsb.maxbytes, CFGINT, "MaxBytes");
 		opsb.confed = 1;
 		return 1;
 	} else if (!strcasecmp(av[2], "TIMEOUT")) {
@@ -566,6 +597,7 @@ int do_set(User *u, char **av, int ac) {
 		opsb.timeout = atoi(av[3]);
 		prefmsg(u->nick, s_opsb, "Timeout set to %d", opsb.timeout);
 		chanalert(s_opsb, "%s changed the timeout to %d", u->nick, opsb.timeout);
+		SetConf((void *)opsb.timeout, CFGINT, "TimeOut");
 		opsb.confed = 1;
 		return 1;
 	} else if (!strcasecmp(av[2], "OPENSTRING")) {
@@ -578,6 +610,7 @@ int do_set(User *u, char **av, int ac) {
 		free(buf);
 		prefmsg(u->nick, s_opsb, "OPENSTRING changed to %s", opsb.lookforstring);
 		chanalert(s_opsb, "%s changed OPENSTRING to %s", u->nick, opsb.lookforstring);
+		SetConf((void *)opsb.lookforstring, CFGSTR, "TriggerString");
 		opsb.confed = 1;
 		return 0;
 	} else if (!strcasecmp(av[2], "SPLITTIME")) {
@@ -592,6 +625,7 @@ int do_set(User *u, char **av, int ac) {
 		opsb.timedif = atoi(av[3]);
 		prefmsg(u->nick, s_opsb, "SPLITTIME changed to %d", opsb.timedif);
 		chanalert(s_opsb, "%s changed the split time to %d", u->nick, opsb.timedif);
+		SetConf((void *)opsb.timedif, CFGINT, "SplitTime");
 		opsb.confed = 1;
 		return 0;
 	} else if (!strcasecmp(av[2], "SCANMSG")) {
@@ -604,6 +638,7 @@ int do_set(User *u, char **av, int ac) {
 		free(buf);
 		prefmsg(u->nick, s_opsb, "ScanMessage changed to %s", opsb.scanmsg);
 		chanalert(s_opsb, "%s changed the scan message to %s", u->nick, opsb.scanmsg);
+		SetConf((void *)opsb.scanmsg, CFGSTR, "ScanMsg");
 		opsb.confed = 1;
 		return 0;
 	} else if (!strcasecmp(av[2], "BANTIME")) {
@@ -618,6 +653,7 @@ int do_set(User *u, char **av, int ac) {
 		opsb.bantime = atoi(av[3]);
 		prefmsg(u->nick, s_opsb, "Ban time changed to %d", opsb.bantime);
 		chanalert(s_opsb, "%s changed ban time to %d", u->nick, opsb.bantime);
+		SetConf((void *)opsb.bantime, CFGINT, "BanTime");
 		opsb.confed = 1;
 		return 0;
 	} else if (!strcasecmp(av[2], "CACHETIME")) {
@@ -632,10 +668,12 @@ int do_set(User *u, char **av, int ac) {
 		opsb.cachetime = atoi(av[3]);
 		prefmsg(u->nick, s_opsb, "CacheTime set to %d", opsb.cachetime);
 		chanalert(s_opsb, "%s changed cachetime to %d", u->nick, opsb.cachetime);
+		SetConf((void *)opsb.cachetime, CFGINT, "CacheTime");
 		opsb.confed = 1;
 		return 0;
 	} else if (!strcasecmp(av[2], "LIST")) {
 		prefmsg(u->nick, s_opsb, "Proxy Scanning: %s", opsb.doscan == 1 ? "Yes" : "No");
+		prefmsg(u->nick, s_opsb, "Akill for Open Proxy: %s", opsb.doban == 1 ? "Yes" : "No");
 		prefmsg(u->nick, s_opsb, "TargetIP: %s", opsb.targethost);
 		prefmsg(u->nick, s_opsb, "TargetPort: %d", opsb.targetport);
 		prefmsg(u->nick, s_opsb, "OPM Domain: %s", opsb.opmdomain);
@@ -666,15 +704,12 @@ int Online(char **av, int ac) {
 		strlcat(s_opsb, "_", MAXNICK);
 		init_bot(s_opsb,"opsb",me.name,"Proxy Scanning Bot", "+S", __module_info.module_name);
 	}
-	loadcache();
 	if (opsb.confed == 0) {
 		add_mod_timer("unconf", "Un_configured_warn", "opsb", 60);
 		unconf();
 		getpeername(servsock, (struct sockaddr *)&sa, (socklen_t*)&ulen);
 		strlcpy(opsb.targethost, inet_ntoa(sa.sin_addr), MAXHOST);
 	}
-	add_mod_timer("cleanlist", "CleanProxyList", "opsb", 1);
-	add_mod_timer("savecache", "SaveProxyCache", "opsb", 600);
 	if (opsb.doscan) {
 		chanalert(s_opsb, "Open Proxy Scanning bot has started (Concurrent Scans: %d Sockets %d)", opsb.socks, opsb.socks *7);
 	} else {
@@ -821,113 +856,6 @@ int checkcache(scaninfo *scandata) {
 	node = list_next(cache, node);
 	}
 	return 0;
-}
-
-void savecache() {
-	lnode_t *node;
-	unsigned long *ip;
-	exemptinfo *exempts;
-	FILE *fp = fopen("data/opsb.db", "w");	
-
-	SET_SEGV_LOCATION();
-	
-	if (!fp) {
-		nlog(LOG_WARNING, LOG_MOD, "OPSB: warning, Can not open cache file for writting");
-		chanalert(s_opsb, "Warning, Can not open cache file for writting");
-		return;
-	}
-	fprintf(fp, "%s\n", opsb.opmdomain);
-	fprintf(fp, "%s\n", opsb.targethost);
-	fprintf(fp, "%s\n", opsb.lookforstring);
-	fprintf(fp, "%d\n", opsb.targetport);
-	fprintf(fp, "%d\n", opsb.maxbytes);
-	fprintf(fp, "%d\n", opsb.timeout);
-	fprintf(fp, "%d\n", opsb.timedif);
-	fprintf(fp, "%s\n", opsb.scanmsg);
-	fprintf(fp, "%d\n", opsb.bantime);
-	fprintf(fp, "%d\n", opsb.confed);
-	fprintf(fp, "%d\n", opsb.cachetime);
-	fprintf(fp, "%d\n", opsb.doscan);
-	/* exempts next */
-	node = list_first(exempt);
-	while (node) {
-		exempts = lnode_get(node);
-		fprintf(fp, "%s %d %s %s\n", exempts->host, exempts->server, exempts->who, exempts->reason);
-		node = list_next(exempt, node);
-	}
-	fprintf(fp, "#CACHE\n");
-	node = list_first(cache);
-	while (node) {
-		ip = lnode_get(node);
-		if (*ip < 1) break;
-		fprintf(fp, "%ld\n", *ip);
-		node = list_next(cache, node);
-	}
-	fclose(fp);
-}
-
-void loadcache() {
-	lnode_t *node;
-	unsigned long ip;
-	exemptinfo *exempts = NULL;
-	char buf[512];
-	int gotcache = 0;
-	FILE *fp = fopen("data/opsb.db", "r");
-	char *tmp;
-
-	SET_SEGV_LOCATION();
-
-	if (!fp) {
-		nlog(LOG_WARNING, LOG_MOD, "OPSB: Warning, Can not open Cache file for Reading");
-		return;
-	}
-	fgets(buf, 512, fp);
-	strlcpy(opsb.opmdomain, strtok(buf, "\n"), MAXHOST);
-	fgets(buf, 512, fp);
-	strlcpy(opsb.targethost, strtok(buf, "\n"), MAXHOST);
-	fgets(buf, 512, fp);
-	strlcpy(opsb.lookforstring, strtok(buf, "\n"), 512);
-	fgets(buf, 512, fp);
-	opsb.targetport = atoi(buf);
-	fgets(buf, 512, fp);
-	opsb.maxbytes = atoi(buf);
-	fgets(buf, 512, fp);
-	opsb.timeout = atoi(buf);
-	fgets(buf, 512, fp);
-	opsb.timedif = atoi(buf);
-	fgets(buf, 512, fp);
-	strlcpy(opsb.scanmsg, strtok(buf, "\n"), 512);
-	fgets(buf, 512, fp);
-	opsb.bantime = atoi(buf);
-	fgets(buf, 512, fp);
-	opsb.confed = atoi(buf);
-	fgets(buf, 512, fp);
-	opsb.cachetime = atoi(buf);
-	fgets(buf, 512, fp);
-	opsb.doscan = atoi(buf);
-	while (fgets(buf, 512, fp)) {
-		if (!strcasecmp("#CACHE\n", buf)) {
-			gotcache = 1;	
-		}
-		if (gotcache == 0) {
-			if (list_isfull(exempt))
-				break;
-			exempts = malloc(sizeof(exemptinfo));
-			strlcpy(exempts->host, strtok(buf, " "), MAXHOST);
-			exempts->server = atoi(strtok(NULL, " "));
-			strlcpy(exempts->who, strtok(NULL, " "), MAXNICK);
-			strlcpy(exempts->reason, strtok(NULL, "\n"), MAXHOST);
-			node = lnode_create(exempts);
-			list_prepend(exempt, node);			
-		} else {
-			if (list_isfull(cache))
-				break;
-			tmp = strtok(buf, "\n");
-			ip = strtol(tmp, (char **)NULL, 10);
-			if (ip > 0) addtocache(ip);
-		}
-	}
-	fclose(fp);
 }
 
 
@@ -1173,13 +1101,13 @@ void dnsblscan(char *data, adns_answer *a) {
 			case DO_OPM_LOOKUP:
 					if (a->nrrs > 0) {
 						/* TODO: print out what type of open proxy it is based on IP address returned */
-						if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "%s apears in DNS blacklist", scandata->lookup);
 						nlog(LOG_NOTICE, LOG_MOD, "Got Positive OPM lookup for %s (%s)", scandata->who, scandata->lookup);
 						scandata->dnsstate = OPMLIST;
 						opsb.opmhits++;
-#if 0
-						do_ban(scandata);
-#endif
+						chanalert(s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
+						globops(s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
+						if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) as its listed in %s", scandata->who, inet_ntoa(scandata->ipaddr), opsb.opmdomain);
+						sakill_cmd(inet_ntoa(scandata->ipaddr), "*", s_opsb, opsb.bantime, "Your host is listed as an Open Proxy. Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", inet_ntoa(scandata->ipaddr));
 						checkqueue();
 					} else {
 						if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "%s does not appear in DNS black list", scandata->lookup);
@@ -1251,7 +1179,13 @@ void reportdns(char *data, adns_answer *a) {
 int __ModInit(int modnum, int apiver)
 {
 	strlcpy(s_opsb, "opsb", MAXNICK);
-	
+	char *tmp;
+	char **data;
+	int i;
+	lnode_t *node;
+	char datapath[512];
+	exemptinfo *exempts;
+
 
 	/* we have to be carefull here. Currently, we have 7 sockets that get opened per connection. Soooo.
 	*  we check that MAX_SCANS is not greater than the maxsockets available / 7
@@ -1276,24 +1210,99 @@ int __ModInit(int modnum, int apiver)
 	opsb.ports = list_create(MAX_PORTS);
 
 	online = 0;				
-	strlcpy(opsb.opmdomain, "opm.blitzed.org", MAXHOST);
-	strlcpy(opsb.targethost, me.uplink, MAXHOST);
-	opsb.targetport = me.port;
-	opsb.maxbytes = 500;
-	opsb.timeout = 30;
-	opsb.timedif = 600;
+
+	if (GetConf((void *)&tmp, CFGSTR, "OpmDomain") <= 0) {
+		ircsnprintf(opsb.opmdomain, MAXHOST, "%s", "opm.blitzed.org");
+	} else {
+		strncpy(opsb.opmdomain, tmp, MAXHOST);
+		free(tmp);
+	}
+	if (GetConf((void *)&tmp, CFGSTR, "TargetHost") <= 0) {
+		ircsnprintf(opsb.targethost, MAXHOST, "%s", me.uplink);
+	} else {
+		strncpy(opsb.targethost, tmp, MAXHOST);
+		free(tmp);
+	}
+	if (GetConf((void *)&opsb.targetport, CFGINT, "TargetPort") <= 0) {
+		opsb.targetport = me.port;
+	}
+	if (GetConf((void *)&opsb.maxbytes, CFGINT, "MaxBytes") <= 0) {
+		opsb.maxbytes = 500;
+	}
+	if (GetConf((void *)&opsb.timeout, CFGINT, "TimeOut") <= 0) {
+		opsb.timeout = 30;
+	}
+	if (GetConf((void *)&opsb.timedif, CFGINT, "SplitTime") <= 0) {
+		opsb.timedif = 600;
+	}
+	if (GetConf((void *)&opsb.cachetime, CFGINT, "CacheTime") <= 0) {
+		opsb.cachetime = 3600;
+	}
+	if (GetConf((void *)&opsb.bantime, CFGINT, "BanTime") <= 0) {
+		opsb.bantime = 86400;
+	}
+	if (GetConf((void *)&opsb.doscan, CFGINT, "DoScan") <= 0) {
+		opsb.doscan = 1;
+	}
+	if (GetConf((void *)&opsb.doban, CFGINT, "DoBan") <= 0) {
+		opsb.doban = 1;
+	}
+	if (GetConf((void *)&opsb.confed, CFGINT, "Confed") <= 0) {
+		opsb.confed = 0;
+	}
+
+	if (GetConf((void *)&tmp, CFGSTR, "TriggerString") <= 0) {
+		ircsnprintf(opsb.lookforstring, 512, "*** Looking up your hostname...");
+	} else {
+		strncpy(opsb.lookforstring, tmp, 512);
+		free(tmp);
+	}
+	if (GetConf((void *)&tmp, CFGSTR, "ScanMsg") <= 0) {
+		ircsnprintf(opsb.scanmsg, 512, "Your Host is being Scanned for Open Proxies");
+	} else {
+		strncpy(opsb.scanmsg, tmp, 512);
+		free(tmp);
+	}
+	
+	if (GetDir("Exempt", &data) > 0) {
+		/* try */
+		for (i = 0; data[i] != NULL; i++) {
+			exempts = malloc(sizeof(exemptinfo));
+			strncpy(exempts->host, data[i], MAXHOST);
+	
+			ircsnprintf(datapath, MAXHOST, "Exempt/%s/Who", data[i]);
+			if (GetConf((void *)&tmp, CFGSTR, datapath) <= 0) {
+				free(exempts);
+				continue;
+			} else {
+				strncpy(exempts->who, tmp, MAXNICK);
+				free(tmp);
+			}
+			snprintf(datapath, MAXHOST, "Exempt/%s/Reason", data[i]);
+			if (GetConf((void *)&tmp, CFGSTR, datapath) <= 0) {
+				free(exempts);
+				continue;
+			} else {
+				strncpy(exempts->reason, tmp, MAXHOST);
+				free(tmp);
+			}
+			snprintf(datapath, MAXHOST, "Exempt/%s/Server", data[i]);
+			if (GetConf((void *)&exempts->server, CFGINT, datapath) <= 0) {
+				free(exempts);
+				continue;
+			}			
+			nlog(LOG_DEBUG2, LOG_MOD, "Adding %s (%d) Set by %s for %s to Exempt List", exempts->host, exempts->server, exempts->who, exempts->reason);
+			node = lnode_create(exempts);
+			list_prepend(exempt, node);			
+
+
+		}
+	}
+	
 	opsb.open = 0;
 	opsb.scanned = 0;
-	opsb.confed = 0;
-	opsb.cachetime = 3600;
-	opsb.bantime = 86400;
-	opsb.doscan = 1;
 	opsb.cachehits = 1;
 	opsb.opmhits = 1;
-	strlcpy(opsb.lookforstring, "*** Looking up your hostname...", 512);
-	strlcpy(opsb.scanmsg, "Your Host is being Scanned for Open Proxies", 512);
-
-	loadcache();
 
 	if (load_ports() != 1) {
 		nlog(LOG_WARNING, LOG_MOD, "Can't Load opsb. No Ports Defined for Scanned. Did you install Correctly?");
@@ -1311,3 +1320,14 @@ void __ModFini()
 };
 
 
+void save_exempts(exemptinfo *exempts) {
+	char path[255];
+
+	nlog(LOG_DEBUG1, LOG_MOD, "Saving Exempt List %s", exempts->host);
+	snprintf(path, 255, "Exempt/%s/Who", exempts->host);
+	SetConf((void *)exempts->who, CFGSTR, path);
+	snprintf(path, 255, "Exempt/%s/Reason", exempts->host);
+	SetConf((void *)exempts->reason, CFGSTR, path);
+	snprintf(path, 255, "Exempt/%s/Server", exempts->host);
+	SetConf((void *)exempts->server, CFGINT, path);
+}

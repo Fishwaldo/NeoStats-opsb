@@ -179,9 +179,8 @@ void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused)
 	chanalert(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
 	globops(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
 	if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, remote->ip, type_of_proxy(remote->protocol), remote->port);
+	if (opsb.doban) sakill_cmd(remote->ip, "*", s_opsb, opsb.bantime, "Open Proxy found on your host. %s(%d)", type_of_proxy(remote->protocol), remote->port);
 #if 0
-	sakill_cmd(remote->ip, "*", s_opsb, opsb.bantime, "Open Proxy found on your host. %s(%d)", type_of_proxy(remote->protocol), remote->port);
-
 	/* write out to a logfile */
 	if ((fp = fopen("logs/openproxies.log", "a")) == NULL) return;
 	fprintf(fp, "%d:%s:%s\n", remote->protocol, remote->ip, "empty");

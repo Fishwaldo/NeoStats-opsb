@@ -1195,6 +1195,7 @@ int libopm_before_poll(OPM_T *scanner, pollfd *ufds)
    unsigned int maxsize, size;
 
    size = 0;
+   libopm_check_closed(scanner);     /* Check for closed or timed out connections       */
    libopm_check_queue(scanner);      /* Move scans from the queue to the live scan list */
    libopm_check_establish(scanner);  /* Make new connections if possible                */
 
@@ -1285,7 +1286,6 @@ void libopm_after_poll(OPM_T *scanner, pollfd *ufds, unsigned int ufdssize)
          }
       }
    }
-   libopm_check_closed(scanner);     /* Check for closed or timed out connections       */
 
 }
 

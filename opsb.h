@@ -69,6 +69,7 @@ struct opsb {
 	int doscan;
 	int cachehits;
 	int opmhits;
+	int doban;
 	list_t *ports;
 } opsb;
 
