@@ -31,6 +31,7 @@
 #include <arpa/nameser.h>
 #include "dl.h"
 #include "stats.h"
+#include "conf.h"
 #include "opsb.h"
 #include "log.h"
 
@@ -40,6 +41,7 @@ static int ScanNick(char **av, int ac);
 int startscan(scaninfo *scandata);
 int do_set(User *u, char **av, int ac);
 void savecache();
+void save_ports();
 void loadcache();
 void unconf();
 
@@ -393,15 +395,24 @@ int __Bot_Message(char *origin, char **argv, int argc)
 				prefmsg(u->nick, s_opsb, "Unknown Proxy type %s", argv[3]);
 				return 0;
 			}
+			/* check for duplicates */
+			lnode = list_first(opsb.ports);
+			while (lnode) {
+				pl = lnode_get(lnode);
+				if ((pl->type == get_proxy_by_name(argv[3])) && (pl->port == atoi(argv[4]))) {
+					prefmsg(u->nick, s_opsb, "Duplicate Entry for Protocol %s", argv[3]);
+					return 0;
+				}
+				lnode = list_next(opsb.ports, lnode);
+			}
 			pl = malloc(sizeof(port_list));
 			pl->type = get_proxy_by_name(argv[3]);
 			pl->port = atoi(argv[4]);
+				
 			lnode = lnode_create(pl);
 			list_append(opsb.ports, lnode);
 			list_sort(opsb.ports, ports_sort);
-#if 0
 			save_ports();
-#endif
 			add_port(pl->type, pl->port);
 			prefmsg(u->nick, s_opsb, "Added Port %d for Protocol %s to Ports list", pl->port, argv[3]);
 			chanalert(s_opsb, "%s added port %d for protocol %s to Ports list", u->nick, pl->port, argv[3]);
@@ -424,9 +435,7 @@ int __Bot_Message(char *origin, char **argv, int argc)
 						free(pl);
 						/* just to be sure, lets sort the list */
 						list_sort(opsb.ports, ports_sort);
-#if 0
 						save_ports();
-#endif
 						return 1;
 					}
 					++i;
@@ -679,6 +688,37 @@ void unconf() {
 	chanalert(s_opsb, "Warning, OPSB is configured with default Settings. Please Update this ASAP");
 	globops(s_opsb, "Warning, OPSB is configured with default Settings, Please Update this ASAP");
 }
+
+void save_ports() {
+	lnode_t *pn;
+	port_list *pl;
+	char confpath[MAXHOST];
+	char ports[MAXHOST];
+	char tmpports[MAXHOST];
+	int lasttype = -1;
+	pn = list_first(opsb.ports);
+	while (pn) {
+		pl = lnode_get(pn);
+		/* if the port is different from the last round, and its not the first round, save it */
+		if ((pl->type != lasttype) && (lasttype != -1)) {
+			ircsnprintf(confpath, MAXHOST, "%s", type_of_proxy(lasttype));
+			SetConf((void *)ports, CFGSTR, confpath);
+		} 
+		if (pl->type != lasttype) {
+			ircsnprintf(ports, MAXHOST, "%d", pl->port);
+		} else {
+			ircsnprintf(tmpports, MAXHOST, "%s %d", ports, pl->port);
+			strlcpy(ports, tmpports, MAXHOST);
+		}
+		lasttype = pl->type;
+		pn = list_next(opsb.ports, pn);
+	}
+	ircsnprintf(confpath, MAXHOST, "%s", type_of_proxy(lasttype));
+	SetConf((void *)ports, CFGSTR, confpath);
+	flush_keeper();
+} 
+
+
 
 void checkqueue() {
 	lnode_t *scannode;
