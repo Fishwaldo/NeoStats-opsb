@@ -71,8 +71,7 @@ int opsb_cmd_exclude (CmdParams* cmdparams)
 		free(buf);
 		lnode = lnode_create(exempts);
 		list_append(exempt, lnode);
-		SaveExempts(exempts);			
-
+		DBAStore ("Exempt", exempts->host, exempts, sizeof(exemptinfo));
 		irc_prefmsg (opsb_bot, cmdparams->source, "Added %s (%s) exception to list", exempts->host, (exempts->server ? "(Server)" : "(Client)"));
 		irc_chanalert (opsb_bot, "%s added %s (%s) exception to list", cmdparams->source->name, exempts->host, (exempts->server ? "(Server)" : "(Client)"));
 	} else if (!ircstrcasecmp (cmdparams->av[0], "DEL")) {
@@ -86,14 +85,11 @@ int opsb_cmd_exclude (CmdParams* cmdparams)
 				if (i == atoi(cmdparams->av[1])) {
 					/* delete the entry */
 					exempts = lnode_get(lnode);
-					buf = malloc(BUFSIZE);
-					ircsnprintf(buf, BUFSIZE, "Exempt/%s", exempts->host);
-					DelConf(buf);
-					free(buf);
+					DBADelete ("Exempt", exempts->host);
 					list_delete(exempt, lnode);
 					irc_prefmsg (opsb_bot, cmdparams->source, "Deleted %s %s out of exception list", exempts->host, (exempts->server ? "(Server)" : "(Client)"));
 					irc_chanalert (opsb_bot, "%s deleted %s %s out of exception list", cmdparams->source->name, exempts->host, (exempts->server ? "(Server)" : "(Client)"));
-					free(exempts);
+					ns_free(exempts);
 					return 1;
 				}
 				++i;
@@ -112,62 +108,23 @@ int opsb_cmd_exclude (CmdParams* cmdparams)
 	return 0;
 }
 
-void SaveExempts (exemptinfo *exempts) 
+void new_exempt (void *data)
 {
-	char path[255];
+	lnode_t *node;
+	exemptinfo *exempts;
 
-	dlog (DEBUG1, "Saving Exempt List %s", exempts->host);
-	ircsnprintf (path, 255, "Exempt/%s/Who", exempts->host);
-	SetConf ((void *)exempts->who, CFGSTR, path);
-	ircsnprintf (path, 255, "Exempt/%s/Reason", exempts->host);
-	SetConf ((void *)exempts->reason, CFGSTR, path);
-	ircsnprintf (path, 255, "Exempt/%s/Server", exempts->host);
-	SetConf ((void *)exempts->server, CFGINT, path);
+	exempts = malloc(sizeof(exemptinfo));
+	os_memcpy (exempts, data, sizeof(exemptinfo));
+	free (data);
+	node = lnode_create(exempts);
+	list_prepend(exempt, node);			
+	dlog (DEBUG2, "Adding %s (%d) Set by %s for %s to Exempt List", exempts->host, exempts->server, exempts->who, exempts->reason);
 }
 
 void LoadExempts (void)
 {
-	int i;
-	lnode_t *node;
-	char **data;
-	char *tmp;
-	char datapath[BUFSIZE];
-	exemptinfo *exempts;
-
 	exempt = list_create(MAX_EXEMPTS);
-	if (GetDir ("Exempt", &data) > 0) {
-		/* try */
-		for (i = 0; data[i] != NULL; i++) {
-			exempts = malloc(sizeof(exemptinfo));
-			strlcpy(exempts->host, data[i], MAXHOST);
-	
-			ircsnprintf(datapath, CONFBUFSIZE, "Exempt/%s/Who", data[i]);
-			if (GetConf((void *)&tmp, CFGSTR, datapath) <= 0) {
-				free(exempts);
-				continue;
-			} else {
-				strlcpy(exempts->who, tmp, MAXNICK);
-				free(tmp);
-			}
-			ircsnprintf(datapath, CONFBUFSIZE, "Exempt/%s/Reason", data[i]);
-			if (GetConf((void *)&tmp, CFGSTR, datapath) <= 0) {
-				free(exempts);
-				continue;
-			} else {
-				strlcpy(exempts->reason, tmp, MAXREASON);
-				free(tmp);
-			}
-			ircsnprintf(datapath, CONFBUFSIZE, "Exempt/%s/Server", data[i]);
-			if (GetConf((void *)&exempts->server, CFGINT, datapath) <= 0) {
-				free(exempts);
-				continue;
-			}			
-			dlog (DEBUG2, "Adding %s (%d) Set by %s for %s to Exempt List", exempts->host, exempts->server, exempts->who, exempts->reason);
-			node = lnode_create(exempts);
-			list_prepend(exempt, node);			
-		}
-	}
-	free(data);	
+	DBAFetchRows ("Exempt", new_exempt);
 }
 
 int IsServerExempt (char *nick, char *host)

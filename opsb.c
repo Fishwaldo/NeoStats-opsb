@@ -35,7 +35,7 @@
 
 void reportdns(char *data, adns_answer *a);
 void dnsblscan(char *data, adns_answer *a);
-static int ScanNick (CmdParams* cmdparams);
+static int ss_event_signon (CmdParams* cmdparams);
 int startscan(scaninfo *scandata);
 void save_ports();
 static int unconf(void);
@@ -308,7 +308,7 @@ int opsb_cmd_ports (CmdParams* cmdparams)
 
 int do_set_cb (CmdParams* cmdparams, SET_REASON reason)
 {
-	SetConf((void *)1, CFGINT, "Confed");
+	DBAStoreConfigInt ("Confed", 1);
 	del_timer("unconf");
 	return NS_SUCCESS;
 }
@@ -334,7 +334,6 @@ static bot_setting opsb_settings[]=
 	{"MAXBYTES",	&opsb.maxbytes,		SET_TYPE_INT,		0,	100000,			NS_ULEVEL_ADMIN, "MaxBytes",	NULL,	opsb_help_set_maxbytes,		do_set_cb, (void*)500 },
 	{"TIMEOUT",		&opsb.timeout,		SET_TYPE_INT,		0,	120,		NS_ULEVEL_ADMIN, "TimeOut",		NULL,	opsb_help_set_timeout,		do_set_cb, (void*)30 },
 	{"OPENSTRING",	&opsb.lookforstring,SET_TYPE_MSG,		0,	BUFSIZE,	NS_ULEVEL_ADMIN, "TriggerString",NULL,	opsb_help_set_openstring,	do_set_cb, (void*)"*** Looking up your hostname..." },
-	{"SPLITTIME",	&opsb.timedif,		SET_TYPE_INT,		0,	900,			NS_ULEVEL_ADMIN, "SplitTime",	NULL,	opsb_help_set_splittime,	do_set_cb, (void*)600 },
 	{"SCANMSG",		&opsb.scanmsg,		SET_TYPE_MSG,		0,	BUFSIZE,	NS_ULEVEL_ADMIN, "ScanMsg",		NULL,	opsb_help_set_scanmsg,		do_set_cb, (void*)"Your Host is being Scanned for Open Proxies" },
 	{"BANTIME",		&opsb.bantime,		SET_TYPE_INT,		0,	360000,			NS_ULEVEL_ADMIN, "BanTime",		NULL,	opsb_help_set_bantime,		do_set_cb, (void*)86400 },
 	{"CACHETIME",	&opsb.cachetime,	SET_TYPE_INT,		0,	86400,			NS_ULEVEL_ADMIN, "CacheTime",	NULL,	opsb_help_set_cachetime,	do_set_cb, (void*)3600 },
@@ -397,30 +396,29 @@ void save_ports()
 {
 	lnode_t *pn;
 	port_list *pl;
-	char confpath[CONFBUFSIZE];
-	char ports[CONFBUFSIZE];
-	char tmpports[CONFBUFSIZE];
+	char confpath[512];
+	char ports[512];
+	char tmpports[512];
 	int lasttype = -1;
 	pn = list_first(opsb.ports);
 	while (pn) {
 		pl = lnode_get(pn);
 		/* if the port is different from the last round, and its not the first round, save it */
 		if ((pl->type != lasttype) && (lasttype != -1)) {
-			strlcpy(confpath, type_of_proxy(lasttype), CONFBUFSIZE);
-			SetConf((void *)ports, CFGSTR, confpath);
+			strlcpy(confpath, type_of_proxy(lasttype), 512);
+			DBAStoreConfigStr (confpath, ports, 512);
 		} 
 		if (pl->type != lasttype) {
-			ircsnprintf(ports, CONFBUFSIZE, "%d", pl->port);
+			ircsnprintf(ports, 512, "%d", pl->port);
 		} else {
-			ircsnprintf(tmpports, CONFBUFSIZE, "%s %d", ports, pl->port);
-			strlcpy(ports, tmpports, CONFBUFSIZE);
+			ircsnprintf(tmpports, 512, "%s %d", ports, pl->port);
+			strlcpy(ports, tmpports, 512);
 		}
 		lasttype = pl->type;
 		pn = list_next(opsb.ports, pn);
 	}
-	strlcpy(confpath, type_of_proxy(lasttype), CONFBUFSIZE);
-	SetConf((void *)ports, CFGSTR, confpath);
-	flush_keeper();
+	strlcpy(confpath, type_of_proxy(lasttype), 512);
+	DBAStoreConfigStr (confpath, ports, 512);
 } 
 
 void checkqueue() 
@@ -512,12 +510,12 @@ int checkcache(scaninfo *scandata)
 
 ModuleEvent module_events[] = 
 {
-	{ EVENT_NICKIP, 	ScanNick, EVENT_FLAG_EXCLUDE_ME},
+	{ EVENT_NICKIP, 	ss_event_signon, EVENT_FLAG_EXCLUDE_ME},
 	{ EVENT_NULL, 	NULL}
 };
 
 /* this function kicks of a scan of a user that just signed on the network */
-static int ScanNick (CmdParams* cmdparams)
+static int ss_event_signon (CmdParams* cmdparams)
 {
 	scaninfo *scandata;
 	lnode_t *scannode;
@@ -529,14 +527,14 @@ static int ScanNick (CmdParams* cmdparams)
 	{
 		return -1;
 	}
-	if (time(NULL) - cmdparams->source->tsconnect > opsb.timedif) {
-		dlog (DEBUG1, "Netsplit Nick %s, Not Scanning", cmdparams->source->name);
+	if (IsNetSplit(cmdparams->source)) {
+		dlog (DEBUG1, "Ignoring netsplit nick %s", cmdparams->source->name);
 		return -1;
 	}
 	scannode = list_find(opsbl, cmdparams->source->name, findscan);
 	if (!scannode) scannode = list_find(opsbq, cmdparams->source->name, findscan);
 	if (scannode) {
-		dlog (DEBUG1, "ScanNick(): Not scanning %s as we are already scanning them", cmdparams->source->name);
+		dlog (DEBUG1, "ss_event_signon(): Not scanning %s as we are already scanning them", cmdparams->source->name);
 		return -1;
 	}
 	irc_prefmsg (opsb_bot, cmdparams->source, "%s", opsb.scanmsg);
@@ -551,7 +549,7 @@ static int ScanNick (CmdParams* cmdparams)
 	scandata->dnsstate = DO_OPM_LOOKUP;
 	if (!startscan(scandata)) {
 		irc_chanalert (opsb_bot, "Warning Can't scan %s", cmdparams->source->name);
-		nlog (LOG_WARNING, "OBSB ScanNick(): Can't scan %s. Check logs for possible errors", cmdparams->source->name);
+		nlog (LOG_WARNING, "OBSB ss_event_signon(): Can't scan %s. Check logs for possible errors", cmdparams->source->name);
 	}
 	return 1;
 }
@@ -790,7 +788,7 @@ int ModInit (Module *mod_ptr)
 	strlcpy(opsb.targethost, me.uplink, MAXHOST);
 	opsb.targetport = me.port;
 	opsb.confed = 0;
-	GetConf((void *)&opsb.confed, CFGINT, "Confed");
+	DBAFetchConfigInt ("Confed", &opsb.confed);
 	ModuleConfig (opsb_settings);
 	/* we have to be careful here. Currently, we have 7 sockets that get opened per connection. Soooo.
 	*  we check that MAX_SCANS is not greater than the maxsockets available / 7
@@ -826,3 +824,11 @@ int ModInit (Module *mod_ptr)
 void ModFini()
 {
 }
+
+#ifdef WIN32 /* temp */
+
+int main (int argc, char **argv)
+{
+	return 0;
+}
+#endif

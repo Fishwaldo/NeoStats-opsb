@@ -142,15 +142,6 @@ const char *opsb_help_set_openstring [] = {
 	NULL
 };
 
-const char *opsb_help_set_splittime [] = {
-	"\2SPLITTIME\2",
-	"This is used to determine if users connecting to the network",
-	"are part of a net join (when two servers link together)",
-	"This setting should not be changed unless you know the",
-	"effects in full",
-	NULL
-};
-
 const char *opsb_help_set_scanmsg [] = {
 	"\2SCANMSG\2",
 	"Message sent to a user when we scan their hosts",

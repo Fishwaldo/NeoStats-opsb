@@ -168,7 +168,6 @@ extern const char *opsb_help_set_opmdomain [];
 extern const char *opsb_help_set_maxbytes [];
 extern const char *opsb_help_set_timeout [];
 extern const char *opsb_help_set_openstring [];
-extern const char *opsb_help_set_splittime [];
 extern const char *opsb_help_set_scanmsg [];
 extern const char *opsb_help_set_bantime [];
 extern const char *opsb_help_set_cachetime [];

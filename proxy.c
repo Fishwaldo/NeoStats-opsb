@@ -80,14 +80,15 @@ void add_port(int type, int port) {
 }
 
 int load_ports() {
-	char *portname, **av;
+	static char portname[512];
+	char **av;
 	int i, j, ac, ok;
 	port_list *prtlst;
 	lnode_t *pn;
 	
 	ok = 0;
 	for (i = 0; proxy_list[i].type != 0; i++) {
-		if (GetConf((void *)&portname, CFGSTR, proxy_list[i].name) <= 0) {
+		if (DBAFetchConfigStr (proxy_list[i].name, portname, 512) != NS_SUCCESS) {
 			nlog (LOG_WARNING, "Warning, No Ports defined for Protocol %s", proxy_list[i].name);
 		} else {
 			ac = split_buf(portname, &av, 0);
