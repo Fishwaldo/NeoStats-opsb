@@ -116,11 +116,13 @@ void save_ports()
 
 void load_port(char *type, char *portname)
 {
+	static char portlist[512];
 	char **av;
 	int j, ac;
 	port_list *prtlst;
 
-	ac = split_buf(portname, &av, 0);
+	strlcpy (portlist, portname, 512);
+	ac = split_buf(portlist, &av, 0);
 	for (j = 0; j < ac; j++) {
 		if (atoi(av[j]) == 0) {
 			nlog (LOG_WARNING, "Invalid port %s for proxy type %s", av[j], type);
