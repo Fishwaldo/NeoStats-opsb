@@ -1,0 +1,735 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+<article>
+  <title>OPSB Manual</title>
+
+  <para>Welcome to the Open Proxy Scanning Bot (OPSB) Manual. This document
+  will aid you in setting up and running OPSB on your IRC network.</para>
+
+  <para>OPSB is a Proxy Scanning Service that scans connecting clients for
+  Open Proxies. These Open Proxies are often used by malicious users and
+  trojans to connect to your network and attack the network, users, or
+  channels that you host. It bases its scanning engine on the BOPM proxy
+  scanning library available at http://www.blitzed.org, but unlike the BOPM
+  software, it has native support to scan all clients network wide, rather
+  than via individual servers. This means that you only need one OPSB service
+  running on your network to protect your entire IRC network. </para>
+
+  <para>Additionally, OPSB makes use of Open Proxy lists. These lists often
+  contain IP addresses of verified Open Proxies, and OPSB can ban these users
+  without even scanning. By default, OPSB uses the blitzed open proxy list
+  (More details available at http://opm.blitzed.org)</para>
+
+  <para>OPSB is flexible in that it has many advanced configuration options
+  available to IRC administrators, including the ability to easily modify the
+  protocols and ports to scan of connecting users, as well as exclude certian
+  users or servers from scanning. This allows you maxium flexibility without
+  the overhead of running multiple copies of proxy scanning software. In
+  addition, it has the ability to Queue up scans, so during periods of peak
+  usage, OPSB will not consume all bandwidth or file descriptors, but still
+  scan users in a timely manor. </para>
+
+  <para>Proxy Scanning is only one defence against Trojans and Malicious
+  users, and can not detect all types of open Proxies. We therefore recomend
+  that the IRC administrators run other software such as SecureServ, and
+  familiarize themselves with the OperServ functionality found in most
+  traditional IRC services packages. </para>
+
+  <para>By Default, OPSB scans the following protocols and ports (But this can
+  be easily customized)</para>
+
+  <itemizedlist>
+    <listitem>
+      <para>HTTP Proxies on Port 80, 3128, 8000, 8080</para>
+    </listitem>
+
+    <listitem>
+      <para>HTTP Post Proxies on Port 80, 3128, 8000, 8080</para>
+    </listitem>
+
+    <listitem>
+      <para>Wingate Servers on Port 23</para>
+    </listitem>
+
+    <listitem>
+      <para>Insecure Cisco Routers on port 23</para>
+    </listitem>
+
+    <listitem>
+      <para>SOCKS4 Servers on 1080</para>
+    </listitem>
+
+    <listitem>
+      <para>SOCKS5 Servers on 1080</para>
+    </listitem>
+  </itemizedlist>
+
+  <para>These ports are some of the more common ports, but administrators
+  might find other ports that are often associated with open proxies. In these
+  cases, the administrator can simple add the new port to be scanning without
+  restarting OPSB. </para>
+
+  <warning>
+    <para>When picking a host to run OPSB from, make sure you check with your
+    Shell or ISP provider to ensure that there are no Transparent HTTP proxies
+    enabled on that network. Transparent proxies are often used to speed up
+    HTTP downloads for users without requiring the user to update their
+    browser configuration. If you often get false positive scans on users on
+    port 80, then most likely your hosting provider has implemented a
+    Transparent Proxy. See if they can disable this transparent proxy for you,
+    or alternativly, find a new hosting provider that does not run a
+    transparent proxy. THERE IS NO WAY FOR OPSB TO DETECT IT IS BEHIND A
+    TRANSPARENT PROXY.</para>
+  </warning>
+
+  <warning>
+    <para>As of writting, this software is BETA quality. Not all functionality
+    has been implemented, and additionally, there might be some &#34;BAD&#34;
+    bugs in OPSB that cause it to AKILL your entire network. Our testing and
+    Development of OPSB was run on a large network, and so far, has proved
+    stable, and effective in protecting our network, BUT every users
+    enviroment is different. While we have taken all precautions and conducted
+    a extensive QA cycle before the release of OPSB, its a &#34;Use at your
+    Own Risk&#34; Module. Of Course, if you do have bad experiences with OPSB,
+    please let us know at <link linkend="???">http://www.neostats.net/boards/</link></para>
+  </warning>
+
+  <para>OPSB is written and maintained by Justin Hammond. It requires the
+  NeoStats software. More information about OPSB, or NeoStats, can be found at
+  <link linkend="???">http://www.neostats.net/</link></para>
+
+  <para>OPSB is Copyright, 2003 by Justin Hammond.</para>
+
+  <sect1>
+    <title>Prerequisites and Installation.</title>
+
+    <para>OPSB is designed to run on Top of NeoStats. The Following
+    requirements at the time of writting are required for NeoStats:<itemizedlist><listitem><para>A
+    Linux or BSD based Server or Shell.</para></listitem><listitem><para>A
+    supported IRCd. Currently, Hybrid7, Unreal, Ultimate2.x, Ultimate3.x,
+    NeoIRCd, Bahumat</para></listitem><listitem><para>Some basic Unix
+    administration Skill</para></listitem><listitem><para>Of Course, a IRC
+    network to connect it all together.</para></listitem></itemizedlist></para>
+
+    <para>Please refer to the NeoStats website for more information on the
+    requirements</para>
+
+    <para>OPSB itself requires the following:<itemizedlist><listitem><para>NeoStats
+    2.5.8 or Higher correctly installed and Running</para></listitem><listitem><para>The
+    time to read this entire document. <warning><para>OPSB has the potential
+    to Akill/Gline your entire network. Its strongly suggested that you read
+    this entire document before even attempting to compile OPSB, as I&#39;m
+    just going to laugh, if you didn&#39;t read, and it AKILL&#39;s your
+    entire network. This is Beta Software, there are BUGS. beware.</para></warning></para></listitem></itemizedlist></para>
+
+    <sect2>
+      <title>Compiling and Installation</title>
+
+      <para>As long as you have successfully setup NeoStats, and installed it
+      correctly, Compiling OPSB is very simple and straight forward. First you
+      must extract the files from the download package. This is as simple as:</para>
+
+      <screen>bash$<command> tar -xzf OPSB-&#60;ver&#62;.tar.gz</command></screen>
+
+      <para>This should then create a directory called OPSB-&#60;version&#62;
+      where &#60;version&#62; is the Version of OPSB. Then Proceed to Change
+      into the OPSB directory, and run Configure as follows:<screen>bash$<command>./configure [--enable-debug | --with-neostats=&#60;dir&#62;]</command></screen></para>
+
+      <para>--enable-debug is only usefull for diagnostics purposes when used
+      in conjuction with debugging tools. There should be no need to use this
+      option on a day to day basis</para>
+
+      <para>--with-neostats=&#60;dir&#62; should be used if your neostats
+      directory is not in a standard location (~/NeoStats/). Replace
+      &#60;dir&#62; with the full path to your NeoStats installation directory
+      (NOT SOURCE DIRECTORY)</para>
+
+      <para>Configuring OPSB will look something like the following screen:</para>
+
+      <screen>[Fish@fish-dt]$ ./configure
+checking for gcc... gcc
+checking for C compiler default output... a.out
+checking whether the C compiler works... yes
+checking whether we are cross compiling... no
+checking for suffix of executables...
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to accept ANSI C... none needed
+checking for a BSD-compatible install... /usr/bin/install -c
+checking for pcre_compile in -lpcre... yes
+checking Location of NeoStats...... /home/fish/NeoStats/
+checking for /home/fish/NeoStats//include/dl.h... yes
+checking Version of NeoStats...... Compatible Version
+checking Whether to Enable Debuging...... no
+configure: creating ./config.status
+config.status: creating Makefile
+
+(*----------------------------------------------------------*)
+(| To compile your module, please type &#39;make&#39;               |)
+(| If make completes without errors, then you               |)
+(| Must &#39;make install&#39;, but please be sure that NeoStats    |)
+(| Is not currently running with a module of the same name  |)
+(| Running, otherwise Make install will not work            |)
+(| !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! |)
+(| If you are running a BSD, make install may produce a     |)
+(| Error, if that is the case, then please manually copy    |)
+(| opsb.so to the NeoStats/dl directory                     |)
+(| !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! |)
+(*----------------------------------------------------------*)
+(| For Support please visit:                                |)
+(|    IRC:                   /server irc.irc-chat.org       |)
+(|                                   #neostats channel      |)
+(|    WWW:   http://www.neostats.net/boards/                |)
+(*----------------------------------------------------------*)
+(|This Module was written by:                               |)
+(|      fish (fish@dynam.ac)                                |)
+(*----------------------------------------------------------*)
+</screen>
+
+      <para>If the configuration did not produce a error, you may then move
+      onto Compiling OPSB. Compiling is simply just issuing the &#34;make&#34;
+      command (or &#34;gmake&#34; if you are running BSD):</para>
+
+      <screen>[Fish@fish-dt]$ make
+(cd libopm; make libopm.a)
+make[1]: Entering directory `/home/fish/opsb/libopm&#39;
+gcc -c -O2 -Wall -I. -I.. compat.c
+gcc -c -O2 -Wall -I. -I.. config.c
+gcc -c -O2 -Wall -I. -I.. inet.c
+gcc -c -O2 -Wall -I. -I.. libopm.c
+gcc -c -O2 -Wall -I. -I.. list.c
+gcc -c -O2 -Wall -I. -I.. malloc.c
+gcc -c -O2 -Wall -I. -I.. proxy.c
+ar cru libopm.a compat.o config.o inet.o libopm.o list.o malloc.o proxy.o 
+ranlib libopm.a
+make[1]: Leaving directory `/home/fish/opsb/libopm&#39;
+gcc -c -O2 -Wall -I/home/fish/NeoStats//include/ -I. -Ilibopm opsb.c
+gcc -c -O2 -Wall -I/home/fish/NeoStats//include/ -I. -Ilibopm proxy.c
+gcc -c -O2 -Wall -I/home/fish/NeoStats//include/ -I. -Ilibopm opsb_help.c
+ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm.a
+[1005|/home/fish/opsb]
+[Fish@fish-dt]$</screen>
+
+      <para>Again, check for Error messages. As long as there are not error
+      messages, &#34;make install&#34; will install OPSB, this README file,
+      and any auxiluary files needed into your NeoStats directory:</para>
+
+      <screen>[Fish@fish-dt]$ make install
+(cd libopm; make libopm.a)
+make[1]: Entering directory `/home/fish/opsb/libopm&#39;
+make[1]: `libopm.a&#39; is up to date.
+make[1]: Leaving directory `/home/fish/opsb/libopm&#39;
+ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm.a
+/usr/bin/install -c                                                                                                                  -m 644 opsb.so                  /home/fish/NeoStats//dl/
+/usr/bin/install -c                                                                                                                  -m 644 README.opsb opsb.Settings /home/fish/NeoStats//dl/../doc/
+[1006|/home/fish/opsb]</screen>
+
+      <para>If you recieve *ANY* errors at all during the this process, please
+      post them on our Support boards, at http//www.neostats.net/boards/</para>
+
+      <para>Once Installation is complete, you can either configure NeoStats
+      to load OPSB when it starts, or load OPSB via IRC.</para>
+
+      <para>To Configure NeoStats to automatically load OPSB when it boots,
+      add the following line to your &#34;neostats.cfg&#34; file in the
+      NeoStats directory:</para>
+
+      <para><command>LOAD_MODULE OPSB</command></para>
+
+      <para>To load OPSB via IRC, you must make sure you have the appropriate
+      permissions and issue the following command:</para>
+
+      <para><command>/msg neostats load OPSB</command></para>
+
+      <para>Thats it. OPSB is now loaded and ready for use (in fact, it will
+      already be running now, but read on for futher information.</para>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Basic Configuration</title>
+
+    <para>OPSB is completly configured online via IRC. When you first start up
+    OPSB, it attempts some &#34;Sane&#34; defaults for you to get started
+    with, but you should always review these settings as soon as you install.
+    Additionally, while its in this &#34;Default&#34; state, it will warn you
+    every so often via a global message as well as messages to the services
+    channel that it is still &#34;unconfigured&#34;. Some of the settings that
+    you may want to review right away are:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Exclusion Lists - You should setup a Exclude list for your IRC
+        Services server (NickServ etc)</para>
+      </listitem>
+
+      <listitem>
+        <para>Target IP address and Ports that OPSB tries to get the proxies
+        to connect to.</para>
+      </listitem>
+
+      <listitem>
+        <para>Default Ban Time when OPSB finds a open Proxy.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>These are outlined below:</para>
+
+    <sect2>
+      <title>Exclusion Lists</title>
+
+      <para>Exclusion lists allow you to specify certian Hostmasks or Servers
+      that should be excluded from monitoring by OPSB. This exclusion list
+      would allow a administrator to say, allow users on that are matched
+      against a open proxy, when the administrator has verified that the
+      trojan does not in fact exist on the users host. </para>
+
+      <caution>
+        <para>Exclusions should be setup for your Services Server, so that
+        OPSB does not try to scan ChanServ, or NickServ, or any of the bots
+        relating to Nickname protection.</para>
+      </caution>
+
+      <para><emphasis role="bold">Adding a Entry</emphasis></para>
+
+      <para>To add a entry to the Exclusion list, use the following format:</para>
+
+      <screen>/msg OPSB exclude add &#60;1/0&#62; &#60;type&#62; &#60;reason&#62;</screen>
+
+      <para>Where:</para>
+
+      <para>&#60;host&#62; = The HostName/Server or Channel name. WildCards ?
+      and * are permitted.</para>
+
+      <para>&#60;type&#62; = The type of exclusion. 0 is for HostNames, 1 is
+      for Servers</para>
+
+      <para>&#60;reason&#62; = a short description of the exclusion, for
+      operator reference only.</para>
+
+      <para>The output is as follows:</para>
+
+      <screen>&#62;OPSB&#60; exclude add services.irc-chat.net 1 Blah is my reason
+-OPSB- Added services.irc-chat.net (Server) exception to list</screen>
+
+      <para><emphasis role="bold">Listing an Entry</emphasis></para>
+
+      <para>To list the Exclusions simple type:</para>
+
+      <screen>/msg OPSB exclude list</screen>
+
+      <para>And all the current exclusions are listed. Additionaly, a Position
+      number is provided for use with the delete command. The output is as
+      follows:</para>
+
+      <screen>&#62;OPSB&#60; exclude list
+-OPSB- Exception List:
+-OPSB- 1) *.blah.com (Server) Added by Fish for Blah is my reason
+-OPSB- 2) is.blah.com (HostName) Added by Fish for can by high
+-OPSB- End of List.</screen>
+
+      <para><emphasis role="bold">Deleting an Entry</emphasis></para>
+
+      <para>To delete a entry, you should first lookup the Position of the
+      entry that you wish to delete. The format of the command is as follows:</para>
+
+      <screen>/msg OPSB exclude del &#60;num&#62;</screen>
+
+      <para>Where:</para>
+
+      <para>&#60;num&#62; is the position of the entry you wish to delete in
+      the list</para>
+
+      <para>The output of the command is as follows:</para>
+
+      <screen>&#62;OPSB&#60; exclude del 1
+-OPSB- Deleted services.irc-chat.net server out of exception list</screen>
+    </sect2>
+
+    <sect2>
+      <title>TARGET IP and TARGET PORT</title>
+
+      <para>By default, OPSB sets up each proxy scan to attempt to connect
+      back to the IP address and port of the server that NeoStats connects to.
+      This may not always be what you wish, as it can help a attacker map our
+      how your network is structured. Ideally, you should pick the IP address
+      of a IRC server you host that is stable and on a fast connection, and
+      enter its IP address and port numbers into OPSB. </para>
+
+      <para><emphasis role="bold">Changing the TargetIP</emphasis></para>
+
+      <para>To add a entry to the Helper list, use the following format:</para>
+
+      <screen>/msg OPSB set targetip &#60;newipaddress&#62;</screen>
+
+      <para>Where:</para>
+
+      <para>&#60;newipaddress&#62; = The ip address to attempt to get proxies
+      to connect to</para>
+
+      <para>The output is as follows:</para>
+
+      <screen> -&#62; *opsb* set targetip 203.208.228.144
+=opsb= Target IP set to 203.208.228.144</screen>
+
+      <para><emphasis role="bold">Changing the Target Port</emphasis></para>
+
+      <para>To list the helpers simple type:</para>
+
+      <screen>/msg OPSB set targetport &#60;newport&#62;</screen>
+
+      <para>Where:</para>
+
+      <para>&#60;newport&#62; = the new port to attempt to get proxies to
+      connect to</para>
+
+      <para>The output is as follows:</para>
+
+      <screen> -&#62; *opsb* set targetport 6667
+=opsb= Target PORT set to 6667</screen>
+    </sect2>
+
+    <sect2>
+      <title>BanTime</title>
+
+      <para>OPSB by default bans the IP/Hostname of a Open Proxy for 1 day
+      (86400 seconds). Some networks may wish to increase or decrease this
+      time value.</para>
+
+      <para><emphasis role="bold">Changing the Ban Time</emphasis></para>
+
+      <para>To change the bantime, type:</para>
+
+      <screen> -&#62; *opsb* set bantime 86400
+=opsb= Ban time changed to 86400</screen>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Detailed Configuration</title>
+
+    <para>OPSB attempts to be as configurable as possible in order to cater
+    for each individual networks requirements. This in turn though makes the
+    configuration very complex. There are many many settings with OPSB that
+    affect how it operates, how it responds and even, how affects the
+    performance of NeoStats Overall. Out of the box, OPSB provides sensible
+    defaults for these settings, but you may wish to read this section for
+    details on exactly what each option does, and its affect on how OPSB
+    operates.</para>
+
+    <para>The following list summaries the available Options you can set in
+    OPSB</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>CACHETIME </para>
+      </listitem>
+
+      <listitem>
+        <para>DISABLESCAN</para>
+      </listitem>
+
+      <listitem>
+        <para>DOBAN</para>
+      </listitem>
+
+      <listitem>
+        <para>OPMDOMAIN</para>
+      </listitem>
+
+      <listitem>
+        <para>MAXBYTES </para>
+      </listitem>
+
+      <listitem>
+        <para>TIMEOUT </para>
+      </listitem>
+
+      <listitem>
+        <para>OPENSTRING </para>
+      </listitem>
+
+      <listitem>
+        <para>SPLITTIME</para>
+      </listitem>
+
+      <listitem>
+        <para>SCANMSG</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>To change any of these settings, you use the Set Interface in OPSB.
+    Eg:</para>
+
+    <screen>/msg OPSB set &#60;option&#62; &#60;params&#62;</screen>
+
+    <para>To view the current settings, issue the following command:</para>
+
+    <screen>/msg OPSB set list</screen>
+
+    <para>The following Sections describes the different options, their
+    params, and the effect on OPSB in detail.</para>
+
+    <sect2>
+      <title>CACHETIME Setting</title>
+
+      <para>In order to improve performance, OPSB caches the results of scans
+      it has performed so if a user disconnects and reconnects, they are not
+      scanned again, and thus this saves bandwidth and improves the
+      performance of OPSB. By default, OPSB saves previous scans for 1 hour.
+      Smaller IRC networks may wish to increase this value, while larger IRC
+      networks that are concerned about performance or memory usage of OPSB
+      may with to leave this setting as it is. Setting the cache time to 0
+      disables the use of caching, and forces OPSB to scan every user
+      connecting every time. </para>
+
+      <para>To Change the setting, issue the following Command:</para>
+
+      <screen>/msg OPSB set CACHETIME &#60;seconds&#62; </screen>
+    </sect2>
+
+    <sect2>
+      <title>DISABLESCAN Setting</title>
+
+      <para>Sometimes a IRC administrator may wish to only make use of the
+      Open Proxy list lookup, and not actually perform a scan on users.
+      DISABLESCAN forces OPSB to only perform a lookup of the IP address in
+      the configured OPMDOMAIN. </para>
+
+      <para>If you wish to turn off Proxy checks, issue the following command</para>
+
+      <screen>/msg OPSB set DISABLESCAN &#60;ON/OFF&#62;</screen>
+    </sect2>
+
+    <sect2>
+      <title>DOBAN Setting</title>
+
+      <para>Often, when setting up OPSB for the first time, or making changes
+      to the ports that are to be scanning, you may wish to test OPSB without
+      it actually performing a AKILL. Turning DOBAN off disables the placement
+      of a AKILL on open Proxy hosts. </para>
+
+      <para>To Change the setting, issue the following Command:</para>
+
+      <screen>/msg OPSB set DOBAN &#60;ON/OFF&#62; </screen>
+    </sect2>
+
+    <sect2>
+      <title>OPMDOMAIN Setting</title>
+
+      <para>This setting changes with domain OPSB should consult for a
+      positive match on a particular IP address. By Default, OPSB checks
+      opm.blizted.org. Another list may be substituted instead of the default
+      on. At this time, we have not tested any other open proxy list, although
+      most lists should work with no problems. Please report success/failure
+      to our boards</para>
+
+      <para>To Change this Setting, issue the following Command:</para>
+
+      <screen>/msg OPSB set OPMDOMAIN &#60;newdomain&#62;</screen>
+    </sect2>
+
+    <sect2>
+      <title>MAXBYTES Setting</title>
+
+      <para>Maxbytes controls how much data to read from a open connection
+      before determining that the host in question does not contain a Open
+      Proxy. As we check ports that are common with legitimate applications
+      such as webservers, we don&#39;t need to download the entire webpage to
+      determine that it is not a open proxy. By default, we only read 500
+      bytes which should be sufficient for most networks. </para>
+
+      <para>To Change this Setting, issue the following Command:</para>
+
+      <screen>/msg OPSB set MAXBYTES &#60;bytelimit&#62;</screen>
+    </sect2>
+
+    <sect2>
+      <title>TIMEOUT</title>
+
+      <para>It is very common for users to now use personal firewall software
+      on their PC. This often leads to probes the the users ip address that
+      never actually get rejected or are successfull, but just hang trying to
+      connect. the Timeout value controls how long to wait before assuming
+      that the host is not operating a proxy. By default, we wait 30 seconds</para>
+
+      <para>To Change this setting, issue the following command:</para>
+
+      <screen>/msg OPSB set TIMEOUT &#60;seconds&#62;</screen>
+    </sect2>
+
+    <sect2>
+      <title>OPENSTRING</title>
+
+      <para>This setting controls what strings to look for that indicate a
+      Open Proxy. By default, we look for the standard string &#34;*** Looking
+      up your hostname...&#34; which is one of the first messages sent to
+      connecting IRC clients. There should be no need to change this setting.
+      Internally, OPSB also scans for common Trottle or akill messages.</para>
+
+      <para>To Change this setting, issue the following command:</para>
+
+      <screen>/msg OPSB set OPENSTRING &#60;newstring&#62;</screen>
+    </sect2>
+
+    <sect2>
+      <title>SPLITTIME</title>
+
+      <para>OPSB is very sensitive to timedrifts on the IRC network. In order
+      to not scan users that might be part of a Netjoin (When two IRC servers
+      reconnect after a Netsplit) we only scan users who&#39;s signon time is
+      less than this setting. If your IRC network times are not in sync, you
+      might experience issues where users connecting to one &#34;lagged&#34;
+      out server are not scanning. In this case, you should fix the time on
+      the affected server. A last resort is to increase this time value. By
+      default, we only scan users that connected in the last 300 seconds</para>
+
+      <para>To Change this setting, issue the following command:</para>
+
+      <screen>/msg OPSB set SPLITTIME &#60;seconds&#62;</screen>
+    </sect2>
+
+    <sect2>
+      <title>SCANMSG Setting</title>
+
+      <para>This setting changes the default message that is sent to users
+      when they sign on the IRC network. You can customise this message to
+      point to a webpage giving more details, or customize to your local
+      language. </para>
+
+      <para>To Change the setting, issue the following Command:</para>
+
+      <screen>/msg OPSB set SCANMSG &#60;msg&#62; </screen>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Operational Commands</title>
+
+    <para>OPSB has a number of commands that you can issue it in order to
+    perform checks or operations on your IRC network. These commands aid
+    Administrators in keeping their network secure, and keeping OPSB upto
+    date.</para>
+
+    <para>The following list summerizes these commands:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>LOOKUP</para>
+      </listitem>
+
+      <listitem>
+        <para>INFO</para>
+      </listitem>
+
+      <listitem>
+        <para>CHECK</para>
+      </listitem>
+
+      <listitem>
+        <para>STATUS</para>
+      </listitem>
+
+      <listitem>
+        <para>REMOVE</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>The following Sections Describe these commands in detail</para>
+
+    <sect2>
+      <title>LOOKUP Command</title>
+
+      <para>The lookup comand can perform DNS lookups for you. You can specify
+      what information you wish to retrive. This command is open to all users
+      by default.</para>
+
+      <para>The format of the command is as follows:</para>
+
+      <screen>/msg OPSB lookup  &#60;ip|hostname&#62; &#60;flag&#62;</screen>
+
+      <para>Where:</para>
+
+      <para>&#60;ip|hostname&#62; is the item you wish to lookup.</para>
+
+      <para>&#60;flag&#62; is optional, and specified what type of data you
+      wish to lookup. Available options include:</para>
+
+      <para>txt - Lookup Text Records rp - Lookup the Responsible Person for
+      this record ns - Lookup the Name Servers for this record soa - Lookup
+      the SOA for this Record</para>
+
+      <para>If no flag is given, we attempt to lookup the A record.</para>
+
+      <para>The output of the command is as follows:</para>
+
+      <screen> -&#62; *opsb* lookup irc.irc-chat.net
+=opsb= irc.irc-chat.net resolves to 202.181.4.129
+=opsb= irc.irc-chat.net resolves to 203.208.228.144
+=opsb= irc.irc-chat.net resolves to 216.218.235.254
+=opsb= irc.irc-chat.net resolves to 66.227.101.55</screen>
+    </sect2>
+
+    <sect2>
+      <title>INFO Command</title>
+
+      <para>This command provides users with information about what functions
+      OPSB performs. Its intended to just provide directions to users for more
+      information</para>
+
+      <para>The format of the command is as follows:</para>
+
+      <screen>/msg OPSB info</screen>
+    </sect2>
+
+    <sect2>
+      <title>CHECK Command</title>
+
+      <para>This command forces OPSB to perform a full scan on the specified
+      nickname, ip adress or hostname. </para>
+
+      <para>The format of the command is as follows:</para>
+
+      <screen>/msg OPSB check &#60;nick|host&#62;</screen>
+
+      <para>The output is as follows:</para>
+
+      <screen>=opsb= Checking fish for open Proxies
+&#60;opsb&#62; Starting proxy scan on Fish (XXXX.singnet.com.sg) by Request of Fish
+=opsb= Negitiation failed for protocol HTTP(80)
+=opsb= Negitiation failed for protocol HTTP(8000)
+=opsb= Negitiation failed for protocol HTTP(3128)
+=opsb= Negitiation failed for protocol SOCKS4(1080)
+=opsb= Negitiation failed for protocol SOCKS5(1080)
+=opsb= Negitiation failed for protocol WINGATE(23)
+=opsb= Negitiation failed for protocol ROUTER(23)
+=opsb= Negitiation failed for protocol HTTPPOST(80)
+=opsb= Negitiation failed for protocol HTTPPOST(8000)
+=opsb= Negitiation failed for protocol HTTPPOST(3128)
+=opsb= Closed Proxy on Protocol HTTP (8080)
+=opsb= Closed Proxy on Protocol HTTPPOST (8080)
+=opsb= scan finished on Fish
+=opsb= XXXX.singnet.com.sg does not appear in DNS black list</screen>
+    </sect2>
+
+    <sect2>
+      <title>STATUS Command</title>
+
+      <para>This command gives the Administrator statistics on the how OPSB is
+      performing, how many checks it has conducted, and other information
+      relating to the performance of OPSB.</para>
+
+      <para>The format of the command is as follows:</para>
+
+      <screen> -&#62; *opsb* status
+=opsb= Proxy Results:
+=opsb= Hosts Scanned: 5831 Hosts found Open: 1 Exceptions 0
+=opsb= Cache Entries: 128
+=opsb= Cache Hits: 5523
+=opsb= Blacklist Hits: 4
+=opsb= Currently Scanning 0 Proxies (0 in queue):</screen>
+    </sect2>
+  </sect1>
+</article>

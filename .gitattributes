@@ -2,10 +2,13 @@
 /ChangeLog -text
 /LICENSE -text
 /Makefile.in -text
+/OPSB.xml -text
 /README.opsb -text
+/README.opsb.html -text
 /aclocal.m4 -text
 /configure -text
 /configure.in -text
+/html.css -text
 /install-sh -text
 libopm/.cvsignore -text
 libopm/LICENSE -text
