@@ -55,11 +55,11 @@ typedef struct scanq scaninfo;
 struct opsb {
 	char user[MAXUSER]; 
 	char host[MAXHOST]; 
-	char rname[MAXREALNAME]; 
+	char realname[MAXREALNAME]; 
 	char opmdomain[MAXHOST];
 	int init;
 	char targethost[MAXHOST];
-	char lookforstring[512];
+	char lookforstring[BUFSIZE];
 	int targetport;
 	int maxbytes;
 	int timeout;
@@ -67,7 +67,7 @@ struct opsb {
 	int timedif;
 	int open;
 	int scanned;
-	char scanmsg[512];
+	char scanmsg[BUFSIZE];
 	int bantime;
 	int confed;
 	int cachetime;
@@ -75,6 +75,7 @@ struct opsb {
 	int cachehits;
 	int opmhits;
 	int doban;
+	int verbose;
 	list_t *ports;
 } opsb;
 
@@ -141,7 +142,7 @@ void addtocache(unsigned long ipaddr);
 
 /* proxy.c */
 void start_proxy_scan(lnode_t *scannode);
-void send_status(User *u);
+int do_status(User *u, char **av, int ac);
 void check_scan_free(scaninfo *scandata);
 int init_libopm();
 char *type_of_proxy(int type);
@@ -149,5 +150,36 @@ int get_proxy_by_name(const char *name);
 void add_port(int type, int port);
 int load_ports();
  
+/* help text */
+extern const char *opsb_help_lookup[];
+extern const char *opsb_help_info[];
+extern const char *opsb_help_check[];
+extern const char *opsb_help_status[];
+extern const char *opsb_help_exclude[];
+extern const char *opsb_help_remove[];
+extern const char *opsb_help_ports[];
+
+extern const char opsb_help_info_oneline[];
+extern const char opsb_help_status_oneline[];
+extern const char opsb_help_lookup_oneline[];
+extern const char opsb_help_remove_oneline[];
+extern const char opsb_help_check_oneline[];
+extern const char opsb_help_exclude_oneline[];
+extern const char opsb_help_ports_oneline[];
+extern const char opsb_help_set_oneline[];
+
+extern const char *opsb_help_set_disablescan [];
+extern const char *opsb_help_set_doban [];
+extern const char *opsb_help_set_targetip [];
+extern const char *opsb_help_set_targetport [];
+extern const char *opsb_help_set_opmdomain [];
+extern const char *opsb_help_set_maxbytes [];
+extern const char *opsb_help_set_timeout [];
+extern const char *opsb_help_set_openstring [];
+extern const char *opsb_help_set_splittime [];
+extern const char *opsb_help_set_scanmsg [];
+extern const char *opsb_help_set_bantime [];
+extern const char *opsb_help_set_cachetime [];
+extern const char *opsb_help_set_verbose [];
 
 #endif /* OPSB_H */

@@ -23,39 +23,14 @@
 
 #include "stats.h"
 
-const char *opsb_help[] = {
-	"\2Open Proxy Scanning Bot\2 scans the network for insecure",
-	"clients. For more info \2/msg opsb info\2",
-	"",
-	"The following commands can be used with opsb",
-	"",
-	"    LOOKUP     Lookup DNS record",
-	"    INFO       Information about opsb",
-	NULL
-};
-
-const char *opsb_help_oper[] = {
-	"",
-	"Additional commands for Operators",
-	"",
-	"    CHECK      Scan a selected user",
-	"    STATUS     View opsb state information",
-	"    SET        Change opsb configuration options",
-	"    EXCLUDE    Exclude a host from scanning",
-	"    PORTS      Allows you to customize the ports scanned",
-	"    REMOVE     Remove an akill set by opsb",
-	NULL
-};
-
-const char *opsb_help_on_help[] = {
-	"",
-	"To use a command, type",
-	"    \2/msg opsb command\2",
-	"For for more information on a command, type", 
-	"    \2/msg opsb HELP command\2.",
-	NULL
-};
-
+const char opsb_help_info_oneline[] = "Information about opsb";
+const char opsb_help_status_oneline[] = "View opsb state information";
+const char opsb_help_lookup_oneline[] = "Lookup DNS record";
+const char opsb_help_remove_oneline[] = "Remove an akill set by opsb";
+const char opsb_help_check_oneline[] = "Scan a selected user";
+const char opsb_help_exclude_oneline[] = "Exclude a host from scanning";
+const char opsb_help_ports_oneline[] = "Allows you to customize the ports scanned";
+const char opsb_help_set_oneline[] = "Change opsb configuration options";
 
 const char *opsb_help_lookup[] = {
 	"Syntax: \2LOOKUP <ip|hostname> <flag>\2",
@@ -81,8 +56,8 @@ const char *opsb_help_info[] = {
 	"",
 	"This bot is intended to scan clients connecting to this",
 	"network for insecure proxies. Insecure proxies are often",
-	"used to attack networks or channel with \2clone\2 bots",
-	"If you have Firewall, or IDS software, please ignore any",
+	"used to attack networks or channels with clone bots",
+	"If you have a firewall, or IDS software, please ignore any",
 	"errors that this scan may generate",
 	"",
 	"If you have any further questions, please contact network",
@@ -108,45 +83,100 @@ const char *opsb_help_status[] = {
 	NULL
 };
 
-const char *opsb_help_set[] = {
-	"Syntax: \2SET <OPTION> <SETTING>\2",
-	"",
-	"This command will set various options relating to OPSB.",
-	"You can view the settings by typing \2SET LIST\2",
-	"The Settings take effect straight away",
-	"The Options are:",
-	"    \2TARGETIP\2      - Change the IP address we try to",
-	"                        make the proxies connect to",
-	"                        This should be set to an IP address",
-	"                        of one of your IRC Servers.",
-	"    \2TARGETPORT\2    - Change the Port number we try to",
-	"                        make proxies connect to. This must",
-	"                        be a port that runs on your IRCD",
-	"    \2CACHETIME\2     - Amount of time (in seconds) that",
-	"                        an entry will be cached",
-	"    \2DISABLESCAN\2   - Disables the proxy scan and only",
-	"                        do a lookup in the DNS blacklist",
-	"                        to see if this host is listed as",
-	"                        an open proxy",
-	"\2Advanced Settings\2 - These settings should not be changed",
-	"                        unless you know the effects in full",
-	"    \2OPMDOMAIN\2     - Change the Domain we use to lookup",
-	"                        for Blacklists.",
-	"    \2MAXBYTES\2      - Maximum number of bytes we receive",
-	"                        from a proxy before disconnecting",
-	"    \2TIMEOUT\2       - Time we wait for a proxy to respond",
-	"                        to our servers before disconnecting,",
-	"                        and assuming its not an open Proxy",
-	"    \2OPENSTRING\2    - The string we expect to see if",
-	"                        there is an Open Proxy",
-	"    \2SPLITTIME\2     - This is used to determine if users",
-	"                        connecting to the network are part",
-	"                        of a Net join",
-	"                        (when two servers link together)",
-	"    \2SCANMSG\2       - This is the message sent to a user",
-	"                        when we scan their hosts",
-	"    \2BANTIME\2       - This is how long the user will be",
-	"                        banned from the network for",
+const char *opsb_help_set_disablescan [] = {
+	"\2DISABLESCAN\2",
+	"Disables the proxy scan and only do a lookup in the DNS",
+	"blacklist to see if this host is listed as an open proxy",
+	NULL
+};
+
+const char *opsb_help_set_doban [] = {
+	"\2DOBAN\2",
+	" ",
+	NULL
+};
+
+const char *opsb_help_set_targetip [] = {
+	"\2TARGETIP\2",
+	"Change the IP address we try to make the proxies connect to",
+	"This should be set to an IP address of one of your IRC Servers.",
+	NULL
+};
+
+const char *opsb_help_set_targetport [] = {
+	"\2TARGETPORT\2",
+	"Change the Port number we try to make proxies connect to.",
+	"This must be a port that runs on your IRCD",
+	NULL
+};
+
+const char *opsb_help_set_opmdomain [] = {
+	"\2OPMDOMAIN\2",
+	"Change the Domain we use to lookup for Blacklists.",
+	"This setting should not be changed unless you know the",
+	"effects in full",
+	NULL
+};
+
+const char *opsb_help_set_maxbytes [] = {
+	"\2MAXBYTES\2",
+	"Maximum number of bytes we receive from a proxy before disconnecting",
+	"This setting should not be changed unless you know the",
+	"effects in full",
+	NULL
+};
+
+const char *opsb_help_set_timeout [] = {
+	"\2TIMEOUT\2",
+	"Time we wait for a proxy to respond to our servers before",
+	"disconnecting and assuming its not an open proxy.",
+	"This setting should not be changed unless you know the",
+	"effects in full",
+	NULL
+};
+
+const char *opsb_help_set_openstring [] = {
+	"\2OPENSTRING\2",
+	"The string we expect to see if there is an open proxy",
+	"This setting should not be changed unless you know the",
+	"effects in full",
+	NULL
+};
+
+const char *opsb_help_set_splittime [] = {
+	"\2SPLITTIME\2",
+	"This is used to determine if users connecting to the network",
+	"are part of a net join (when two servers link together)",
+	"This setting should not be changed unless you know the",
+	"effects in full",
+	NULL
+};
+
+const char *opsb_help_set_scanmsg [] = {
+	"\2SCANMSG\2",
+	"Message sent to a user when we scan their hosts",
+	"This setting should not be changed unless you know the",
+	"effects in full",
+	NULL
+};
+
+const char *opsb_help_set_bantime [] = {
+	"\2BANTIME\2",
+	"How long the user will be banned from the network for",
+	"This setting should not be changed unless you know the",
+	"effects in full",
+	NULL
+};
+
+const char *opsb_help_set_cachetime [] = {
+	"\2CACHETIME\2",
+	"Time (in seconds) that an entry will be cached",
+	NULL
+};
+
+const char *opsb_help_set_verbose [] = {
+	"\2VERBOSE\2",
+	"Whether OPSB is verbose in operation or not",
 	NULL
 };
 

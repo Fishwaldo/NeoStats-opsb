@@ -5,6 +5,8 @@ Open Proxy Scanning Bot Module for NeoStats Changelog.
  - We now try to read nick, user, host and realname so these can be configured more 
    easily (M)
  - SET interface for nick/user/host/realname added (M)
+ - Ported to core command processor (M)
+ - Add verbose option so we can turn off some messages from OPSB (M)
 
 * Version 2.1 * 24/01/2004 * Fish (F) 
  - Sync up libopm with blitzed version to fix a Socks 5 bug (F)

@@ -259,7 +259,8 @@ void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused) 
 
 
 
-void send_status(User *u) {
+int do_status(User *u, char **av, int ac) 
+{
 	lnode_t *node;
 	scaninfo *scandata;
 
@@ -315,6 +316,7 @@ void send_status(User *u) {
 		}
 	node = list_next(opsbl, node);
 	}
+	return 0;
 }
 
 
