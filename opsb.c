@@ -205,7 +205,7 @@ int opsb_cmd_ports_list (CmdParams* cmdparams)
 		lnode = list_next(opsb.ports, lnode);
 	}
 	irc_prefmsg (opsb_bot, cmdparams->source, "End of list.");
-	irc_chanalert (opsb_bot, "%s requested Port List", cmdparams->source->name);
+	command_report(opsb_bot, "%s requested Port List", cmdparams->source->name);
 	return NS_SUCCESS;
 }
 
@@ -248,7 +248,7 @@ int opsb_cmd_ports_add (CmdParams* cmdparams)
 	save_ports();
 	add_port(pl->type, pl->port);
 	irc_prefmsg (opsb_bot, cmdparams->source, "Added Port %d for Protocol %s to Ports list", pl->port, cmdparams->av[1]);
-	irc_chanalert (opsb_bot, "%s added port %d for protocol %s to Ports list", cmdparams->source->name, pl->port, cmdparams->av[1]);
+	command_report(opsb_bot, "%s added port %d for protocol %s to Ports list", cmdparams->source->name, pl->port, cmdparams->av[1]);
 	return NS_SUCCESS;
 }
 
@@ -272,7 +272,7 @@ int opsb_cmd_ports_del (CmdParams* cmdparams)
 				lnode_destroy(lnode);
 				irc_prefmsg (opsb_bot, cmdparams->source, "Deleted Port %d of Protocol %s out of Ports list", pl->port, type_of_proxy(pl->type));
 				irc_prefmsg (opsb_bot, cmdparams->source, "You need to Restart OPSB for the changes to take effect");
-				irc_chanalert (opsb_bot, "%s deleted port %d of Protocol %s out of Ports list", cmdparams->source->name, pl->port, type_of_proxy(pl->type));
+				command_report(opsb_bot, "%s deleted port %d of Protocol %s out of Ports list", cmdparams->source->name, pl->port, type_of_proxy(pl->type));
 				ns_free(pl);
 				/* just to be sure, lets sort the list */
 				list_sort(opsb.ports, ports_sort);
