@@ -4,9 +4,6 @@
 /Makefile.in -text
 /README.opsb -text
 /configure -text
-/configure.in -text
-/install-sh -text
-/modconfig.h.in -text
 /opsb.c -text
 /opsb.h -text
 /opsb_help.c -text
