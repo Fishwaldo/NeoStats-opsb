@@ -26,7 +26,7 @@ along with this program; if not, write to
  */
 
 #ifdef WIN32
-#include "win32modconfig.h"
+#include "modconfigwin32.h"
 #else
 #include "modconfig.h"
 #endif

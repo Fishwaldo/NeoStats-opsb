@@ -159,6 +159,9 @@
 			RelativePath=".\Makefile.in">
 		</File>
 		<File
+			RelativePath=".\README.opsb">
+		</File>
+		<File
 			RelativePath=".\Relnotes">
 		</File>
 	</Files>

@@ -26,7 +26,7 @@
 #define OPSB_H
 
 #ifdef WIN32
-#include "win32modconfig.h"
+#include "modconfigwin32.h"
 #else
 #include "modconfig.h"
 #endif
