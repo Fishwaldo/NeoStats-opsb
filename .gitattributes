@@ -21,7 +21,6 @@ libopm/libopm.c -text
 libopm/libopm.h -text
 libopm/list.c -text
 libopm/list.h -text
-libopm/make -text
 libopm/malloc.c -text
 libopm/malloc.h -text
 libopm/opm.h -text
@@ -32,7 +31,6 @@ libopm/proxy.c -text
 libopm/proxy.h -text
 libopm/snprintf.c -text
 libopm/snprintf.h -text
-libopm/test.c -text
 /modconfig.h.in -text
 /opsb.c -text
 /opsb.h -text
