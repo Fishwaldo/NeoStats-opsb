@@ -745,7 +745,7 @@ void reportdns(char *data, adns_answer *a) {
 	checkqueue();
 }
 
-int ModInit (Module *mod_ptr)
+int ModInit( void )
 {
 	strlcpy(opsb.targethost, me.uplink, MAXHOST);
 	opsb.targetport = me.port;
@@ -782,8 +782,9 @@ int ModInit (Module *mod_ptr)
 	return NS_SUCCESS;
 }
 
-void ModFini()
+int ModFini( void )
 {
+	return NS_SUCCESS;
 }
 
 #ifdef WIN32 /* temp */
