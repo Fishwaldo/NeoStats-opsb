@@ -42,6 +42,7 @@ const char *opsb_help_oper[] = {
 	"    STATUS     View opsb state information",
 	"    SET        Change opsb configuration options",
 	"    EXCLUDE    Exclude a host from scanning",
+	"    PORTS      Allows you to customize the ports scanned",
 	"    REMOVE     Remove an akill set by opsb",
 	NULL
 };
@@ -81,8 +82,6 @@ const char *opsb_help_info[] = {
 	"This bot is intended to scan clients connecting to this",
 	"network for insecure proxies. Insecure proxies are often",
 	"used to attack networks or channel with \2clone\2 bots",
-	"This check scans the following ports:", 
-	"    3128, 8080, 80 23 and 1080",
 	"If you have Firewall, or IDS software, please ignore any",
 	"errors that this scan may generate",
 	"",
@@ -178,28 +177,34 @@ const char *opsb_help_exclude[] = {
 };
 
 const char *opsb_help_ports[] = {
-	"Syntax: \2EXCLUDE <LIST>\2",
-	"        \2EXCLUDE <ADD> <hostname> <type> <reason>\2",
-	"        \2EXCLUDE <DEL> <index>\2",
+	"Syntax: \2PORTS <LIST>\2",
+	"        \2PORTS <ADD> <type> <port>\2",
+	"        \2PORTS <DEL> <index>\2",
 	"",
-	"This command lets you view or manipulate the exception",
-	"list. Exception lists are used to exclude users, or",
-	"servers from scanning. You should at least add a server",
-	"entry for your services IRC name, to stop OPSB from",
-	"scanning Nickserv, Chanserv etc",
+	"This command lets you view or manipulate the ports",
+	"and proxy types scanned when users connect to your",
+	"IRC network. By Default, OPSB scans some default Ports",
+	"but you may wish to update this list with some additional",
+	"protocols and ports custom to your network"
 	"",
-	"\2LIST\2 will list the current exceptions together with an",
-	"ID number for use in removing entries.",
+	"\2LIST\2 will list the current ports and protocols scanned",
+	"and a ID number for use in removing entries.",
 	"",
-	"\2ADD\2 will add an entry of <hostname> to the exception" 
-	"list. Flag should be 1 to indicate a server name",
-	"(eg, services.irc-chat.net) or 0 to indicate a hostname",
-	"(eg, *.adsl.home.com). Reason allows you to set a"
-	"reason for the exclusion for future reference",
-	"Wildcards such as * and ? may be used in the hostname.",
+	"\2ADD\2 will add an entry of <type> running on port <port>",
+	"to the port list.",
+	"<type> can be either:", 
+	"       HTTP",
+	"       HTTPPOST",
+	"       SOCKS4",
+	"       SOCKS5",
+	"       WINGATE",
+	"       ROUTER",
+	"and port can be any valid port number. The new port is scanned",
+	"straight away",
 	"",
 	"\2DEL\2 will delete entry <index> from the list of",
-	"exclusions. Use the LIST command to find the index.",
+	"ports. Requires a Restart of OPSB to become effective. Alternatively",
+	"Reloading the OPSB module will make this effective",
 	NULL
 };
 

@@ -14,7 +14,7 @@
   scanning library available at http://www.blitzed.org, but unlike the BOPM
   software, it has native support to scan all clients network wide, rather
   than via individual servers. This means that you only need one OPSB service
-  running on your network to protect your entire IRC network. </para>
+  running on your network to protect your entire IRC network.</para>
 
   <para>Additionally, OPSB makes use of Open Proxy lists. These lists often
   contain IP addresses of verified Open Proxies, and OPSB can ban these users
@@ -28,13 +28,13 @@
   the overhead of running multiple copies of proxy scanning software. In
   addition, it has the ability to Queue up scans, so during periods of peak
   usage, OPSB will not consume all bandwidth or file descriptors, but still
-  scan users in a timely manor. </para>
+  scan users in a timely manor.</para>
 
   <para>Proxy Scanning is only one defence against Trojans and Malicious
   users, and can not detect all types of open Proxies. We therefore recomend
   that the IRC administrators run other software such as SecureServ, and
   familiarize themselves with the OperServ functionality found in most
-  traditional IRC services packages. </para>
+  traditional IRC services packages.</para>
 
   <para>By Default, OPSB scans the following protocols and ports (But this can
   be easily customized)</para>
@@ -68,7 +68,7 @@
   <para>These ports are some of the more common ports, but administrators
   might find other ports that are often associated with open proxies. In these
   cases, the administrator can simple add the new port to be scanning without
-  restarting OPSB. </para>
+  restarting OPSB.</para>
 
   <warning>
     <para>When picking a host to run OPSB from, make sure you check with your
@@ -81,18 +81,6 @@
     or alternativly, find a new hosting provider that does not run a
     transparent proxy. THERE IS NO WAY FOR OPSB TO DETECT IT IS BEHIND A
     TRANSPARENT PROXY.</para>
-  </warning>
-
-  <warning>
-    <para>As of writting, this software is BETA quality. Not all functionality
-    has been implemented, and additionally, there might be some &#34;BAD&#34;
-    bugs in OPSB that cause it to AKILL your entire network. Our testing and
-    Development of OPSB was run on a large network, and so far, has proved
-    stable, and effective in protecting our network, BUT every users
-    enviroment is different. While we have taken all precautions and conducted
-    a extensive QA cycle before the release of OPSB, its a &#34;Use at your
-    Own Risk&#34; Module. Of Course, if you do have bad experiences with OPSB,
-    please let us know at <link linkend="???">http://www.neostats.net/boards/</link></para>
   </warning>
 
   <para>OPSB is written and maintained by Justin Hammond. It requires the
@@ -284,7 +272,7 @@ ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm
       that should be excluded from monitoring by OPSB. This exclusion list
       would allow a administrator to say, allow users on that are matched
       against a open proxy, when the administrator has verified that the
-      trojan does not in fact exist on the users host. </para>
+      trojan does not in fact exist on the users host.</para>
 
       <caution>
         <para>Exclusions should be setup for your Services Server, so that
@@ -356,7 +344,7 @@ ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm
       This may not always be what you wish, as it can help a attacker map our
       how your network is structured. Ideally, you should pick the IP address
       of a IRC server you host that is stable and on a fast connection, and
-      enter its IP address and port numbers into OPSB. </para>
+      enter its IP address and port numbers into OPSB.</para>
 
       <para><emphasis role="bold">Changing the TargetIP</emphasis></para>
 
@@ -424,7 +412,7 @@ ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm
 
     <itemizedlist>
       <listitem>
-        <para>CACHETIME </para>
+        <para>CACHETIME</para>
       </listitem>
 
       <listitem>
@@ -440,15 +428,15 @@ ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm
       </listitem>
 
       <listitem>
-        <para>MAXBYTES </para>
+        <para>MAXBYTES</para>
       </listitem>
 
       <listitem>
-        <para>TIMEOUT </para>
+        <para>TIMEOUT</para>
       </listitem>
 
       <listitem>
-        <para>OPENSTRING </para>
+        <para>OPENSTRING</para>
       </listitem>
 
       <listitem>
@@ -457,6 +445,10 @@ ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm
 
       <listitem>
         <para>SCANMSG</para>
+      </listitem>
+
+      <listitem>
+        <para>PORTS</para>
       </listitem>
     </itemizedlist>
 
@@ -483,7 +475,7 @@ ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm
       networks that are concerned about performance or memory usage of OPSB
       may with to leave this setting as it is. Setting the cache time to 0
       disables the use of caching, and forces OPSB to scan every user
-      connecting every time. </para>
+      connecting every time.</para>
 
       <para>To Change the setting, issue the following Command:</para>
 
@@ -496,7 +488,7 @@ ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm
       <para>Sometimes a IRC administrator may wish to only make use of the
       Open Proxy list lookup, and not actually perform a scan on users.
       DISABLESCAN forces OPSB to only perform a lookup of the IP address in
-      the configured OPMDOMAIN. </para>
+      the configured OPMDOMAIN.</para>
 
       <para>If you wish to turn off Proxy checks, issue the following command</para>
 
@@ -509,7 +501,7 @@ ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm
       <para>Often, when setting up OPSB for the first time, or making changes
       to the ports that are to be scanning, you may wish to test OPSB without
       it actually performing a AKILL. Turning DOBAN off disables the placement
-      of a AKILL on open Proxy hosts. </para>
+      of a AKILL on open Proxy hosts.</para>
 
       <para>To Change the setting, issue the following Command:</para>
 
@@ -539,7 +531,7 @@ ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm
       Proxy. As we check ports that are common with legitimate applications
       such as webservers, we don&#39;t need to download the entire webpage to
       determine that it is not a open proxy. By default, we only read 500
-      bytes which should be sufficient for most networks. </para>
+      bytes which should be sufficient for most networks.</para>
 
       <para>To Change this Setting, issue the following Command:</para>
 
@@ -597,11 +589,93 @@ ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm
       <para>This setting changes the default message that is sent to users
       when they sign on the IRC network. You can customise this message to
       point to a webpage giving more details, or customize to your local
-      language. </para>
+      language.</para>
 
       <para>To Change the setting, issue the following Command:</para>
 
       <screen>/msg OPSB set SCANMSG &#60;msg&#62; </screen>
+    </sect2>
+
+    <sect2>
+      <title>PORTS Setting</title>
+
+      <para>The ports setting allows you to customize what ports and protocols
+      are scanned when users connect to your IRC network. This can be used to
+      detect proxies that are running on additional ports that OPSB does not
+      scan by default. </para>
+
+      <sect3>
+        <title>Listing Ports/Protocols</title>
+
+        <para>To list the current protocols and the assocated ports, issue the
+        following command:</para>
+
+        <screen>/msg OPSB ports list</screen>
+
+        <para>And the following is displayed:</para>
+
+        <screen>&#62;opsb&#60; ports list
+-opsb- Port List:
+-opsb- 1) HTTP Port: 80
+-opsb- 2) HTTP Port: 8080
+-opsb- 3) HTTP Port: 8000
+-opsb- 4) HTTP Port: 3128
+-opsb- 5) SOCKS4 Port: 1080
+-opsb- 6) SOCKS5 Port: 1080
+-opsb- 7) WINGATE Port: 23
+-opsb- 8) ROUTER Port: 23
+-opsb- 9) HTTPPOST Port: 80
+-opsb- 10) HTTPPOST Port: 8080
+-opsb- 11) HTTPPOST Port: 8000
+-opsb- 12) HTTPPOST Port: 3128
+-opsb- End of List.</screen>
+      </sect3>
+
+      <sect3>
+        <title>Adding Ports</title>
+
+        <para>To add a additional port to scan with a particular protocol, use
+        the following command:</para>
+
+        <screen>/msg opsb ports add &#60;type&#62; &#60;port&#62;</screen>
+
+        <para>Where:</para>
+
+        <para>&#60;type&#62; is the type of Protocol to use. Either:</para>
+
+        <para>HTTP</para>
+
+        <para>HTTPPOST</para>
+
+        <para>SOCKS4</para>
+
+        <para>SOCKS5</para>
+
+        <para>WINGATE</para>
+
+        <para>ROUTER</para>
+
+        <para>&#60;port&#62; is any valid port number between 1 and 65535</para>
+
+        <para>The change is imediate, and new users will have these ports
+        scanned when they connect. </para>
+      </sect3>
+
+      <sect3>
+        <title>Deleting Ports</title>
+
+        <para>If you wish to delete a port to be scanned, issue the following
+        command:</para>
+
+        <screen>/msg opsb ports del &#60;id&#62;</screen>
+
+        <para>Where &#60;id&#62; is the ID number of the port/Protocol you
+        wish to delete. ID can be obtained from a port listing command
+        described above. </para>
+
+        <para>OPSB requires a restart when deleting a port, so you should
+        either restart NeoStats, or Reload the OPSB module. </para>
+      </sect3>
     </sect2>
   </sect1>
 
@@ -688,7 +762,7 @@ ld -shared -o opsb.so                   opsb.o proxy.o opsb_help.o libopm/libopm
       <title>CHECK Command</title>
 
       <para>This command forces OPSB to perform a full scan on the specified
-      nickname, ip adress or hostname. </para>
+      nickname, ip adress or hostname.</para>
 
       <para>The format of the command is as follows:</para>
 

@@ -23,6 +23,11 @@ OPSB Manual
         3.7. OPENSTRING
         3.8. SPLITTIME
         3.9. SCANMSG Setting
+        3.10. PORTS Setting
+
+              3.10.1. Listing Ports/Protocols
+              3.10.2. Adding Ports
+              3.10.3. Deleting Ports
 
    4. Operational Commands
 
@@ -90,18 +95,6 @@ Warning
    transparent  proxy  for  you,  or  alternativly,  find  a  new hosting
    provider  that  does  not run a transparent proxy. THERE IS NO WAY FOR
    OPSB TO DETECT IT IS BEHIND A TRANSPARENT PROXY.
-
-Warning
-
-   As  of  writting, this software is BETA quality. Not all functionality
-   has been implemented, and additionally, there might be some "BAD" bugs
-   in  OPSB  that  cause it to AKILL your entire network. Our testing and
-   Development of OPSB was run on a large network, and so far, has proved
-   stable,  and  effective  in  protecting  our  network, BUT every users
-   enviroment  is  different.  While  we  have  taken all precautions and
-   conducted  a extensive QA cycle before the release of OPSB, its a "Use
-   at  your  Own  Risk" Module. Of Course, if you do have bad experiences
-   with OPSB, please let us know at http://www.neostats.net/boards/
 
    OPSB  is  written  and  maintained  by Justin Hammond. It requires the
    NeoStats  software.  More  information about OPSB, or NeoStats, can be
@@ -404,6 +397,7 @@ Caution
      * OPENSTRING
      * SPLITTIME
      * SCANMSG
+     * PORTS
 
    To  change  any  of these settings, you use the Set Interface in OPSB.
    Eg:
@@ -520,6 +514,75 @@ Caution
 
    To Change the setting, issue the following Command:
 /msg OPSB set SCANMSG <msg>
+
+3.10. PORTS Setting
+
+   The ports setting allows you to customize what ports and protocols are
+   scanned  when  users  connect to your IRC network. This can be used to
+   detect proxies that are running on additional ports that OPSB does not
+   scan by default.
+
+3.10.1. Listing Ports/Protocols
+
+   To  list  the  current  protocols  and  the assocated ports, issue the
+   following command:
+/msg OPSB ports list
+
+   And the following is displayed:
+>opsb< ports list
+-opsb- Port List:
+-opsb- 1) HTTP Port: 80
+-opsb- 2) HTTP Port: 8080
+-opsb- 3) HTTP Port: 8000
+-opsb- 4) HTTP Port: 3128
+-opsb- 5) SOCKS4 Port: 1080
+-opsb- 6) SOCKS5 Port: 1080
+-opsb- 7) WINGATE Port: 23
+-opsb- 8) ROUTER Port: 23
+-opsb- 9) HTTPPOST Port: 80
+-opsb- 10) HTTPPOST Port: 8080
+-opsb- 11) HTTPPOST Port: 8000
+-opsb- 12) HTTPPOST Port: 3128
+-opsb- End of List.
+
+3.10.2. Adding Ports
+
+   To  add  a additional port to scan with a particular protocol, use the
+   following command:
+/msg opsb ports add <type> <port>
+
+   Where:
+
+   <type> is the type of Protocol to use. Either:
+
+   HTTP
+
+   HTTPPOST
+
+   SOCKS4
+
+   SOCKS5
+
+   WINGATE
+
+   ROUTER
+
+   <port> is any valid port number between 1 and 65535
+
+   The  change  is  imediate, and new users will have these ports scanned
+   when they connect.
+
+3.10.3. Deleting Ports
+
+   If  you  wish  to  delete  a  port  to be scanned, issue the following
+   command:
+/msg opsb ports del <id>
+
+   Where  <id>  is the ID number of the port/Protocol you wish to delete.
+   ID can be obtained from a port listing command described above.
+
+   OPSB  requires  a  restart  when deleting a port, so you should either
+   restart NeoStats, or Reload the OPSB module.
 
 4. Operational Commands
 
