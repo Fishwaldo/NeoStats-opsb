@@ -1298,7 +1298,7 @@ int __ModInit(int modnum, int apiver)
 
 		}
 	}
-	
+	free(data);	
 	opsb.open = 0;
 	opsb.scanned = 0;
 	opsb.cachehits = 1;
