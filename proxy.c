@@ -20,7 +20,7 @@
 **  USA
 **
 ** NeoStats CVS Identification
-** $Id: proxy.c,v 1.13 2003/02/14 13:24:32 fishwaldo Exp $
+** $Id: proxy.c,v 1.14 2003/02/14 17:42:57 fishwaldo Exp $
 */
 
 
@@ -89,7 +89,7 @@ void do_ban(scaninfo *scandata) {
 		chanalert(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		globops(s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
 		if (scandata->u) prefmsg(scandata->u->nick, s_opsb, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, inet_ntoa(scandata->ipaddr), proxy_list[sockdata->type].type, proxy_list[sockdata->type].port);
-		sakill_cmd(inet_ntoa(scandata->ipaddr), "*", s_opsb, opsb.bantime, "Open Proxy found on your host. %s(%s) Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port, inet_ntoa(scandata->ipaddr));
+		sakill_cmd(inet_ntoa(scandata->ipaddr), "*", s_opsb, opsb.bantime, "Open Proxy found on your host. %s(%d) Please visit the following website for more info: www.blitzed.org/proxy?ip=%s", proxy_list[sockdata->type].type, proxy_list[sockdata->type].port, inet_ntoa(scandata->ipaddr));
 		if ((fp = fopen("logs/opsb.log", "a")) == NULL) return;
        		fprintf(fp, "%s:%s:%s\n", proxy_list[sockdata->type].type, inet_ntoa(scandata->ipaddr), scandata->connectstring);
                 fclose(fp);
