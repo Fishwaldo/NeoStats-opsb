@@ -30,7 +30,6 @@
 #else
 #include "modconfig.h"
 #endif
-#include "opm_types.h"
 
 typedef struct port_list {
 	int type;
@@ -59,6 +58,7 @@ typedef struct scaninfo{
 	time_t started;
 	int doneban;
 	char connectstring[BUFSIZE];
+	list_t *connections;
 } scaninfo;
 
 struct opsb {
@@ -98,9 +98,11 @@ typedef struct cache_entry {
 /* this is a list of cached scans */
 list_t *cache;
 
+
 typedef struct proxy_type {
 	int type;
 	char name[MAXNICK];
+         sockcb writefunc;
 } proxy_type;
 
 /* these are some state flags */
@@ -128,7 +130,6 @@ void check_scan_free(scaninfo *scandata);
 int init_libopm();
 char *type_of_proxy(int type);
 int get_proxy_by_name(const char *name);
-void add_port(int type, int port);
 int load_ports();
 void save_ports();
  

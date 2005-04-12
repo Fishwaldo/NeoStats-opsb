@@ -24,6 +24,7 @@
 */
 
 #include "neostats.h"
+#include "event.h"
 #ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #endif
@@ -48,16 +49,19 @@ void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused);
 typedef struct conninfo {
 	int type;
 	int port;
-	scaninfo *scandata;
 	int status;
-};
+	int bytesread;
+	OS_SOCKET fd;
+	Sock *sock;
+	scaninfo *scandata;
+} conninfo;
    
-#define PTYPE_HTTP 	0
-#define PTYPE_SOCKS4 	1 
-#define PTYPE_SOCKS5	2
-#define PTYPE_WINGATE	3
-#define PTYPE_ROUTER	4
-#define PTYPE_HTTPPOST	5
+#define PTYPE_HTTP 	1
+#define PTYPE_SOCKS4 	2 
+#define PTYPE_SOCKS5	3
+#define PTYPE_WINGATE	4
+#define PTYPE_ROUTER	5
+#define PTYPE_HTTPPOST	6
 
 char *defaultports[] = {
 	"80 8080 8000 3128",
@@ -68,13 +72,22 @@ char *defaultports[] = {
 	"80 8080 8000 3128",
 };
 
+int http_send (int fd, void *data);
+int sock4_send(int fd, void *data);
+int sock5_send(int fd, void *data);
+int wingate_send(int fd, void *data);
+int router_send(int fd, void *data);
+int httppost_send(int fd, void *data);
+int proxy_read(void *data, void *recv, size_t size);
+
+
 proxy_type proxy_list[] = {
-	{ PTYPE_HTTP, "HTTP" },
-	{ PTYPE_SOCKS4, "SOCKS4" },
-	{ PTYPE_SOCKS5, "SOCKS5" },
-	{ PTYPE_WINGATE, "WINGATE" },
-	{ PTYPE_ROUTER, "ROUTER"},
-	{ PTYPE_HTTPPOST, "HTTPPOST" },
+	{ PTYPE_HTTP, "HTTP",  http_send},
+	{ PTYPE_SOCKS4, "SOCKS4", sock4_send },
+	{ PTYPE_SOCKS5, "SOCKS5", sock5_send },
+	{ PTYPE_WINGATE, "WINGATE", wingate_send},
+	{ PTYPE_ROUTER, "ROUTER", router_send},
+	{ PTYPE_HTTPPOST, "HTTPPOST", httppost_send},
 	{ 0, "" }
 };
 
@@ -117,7 +130,7 @@ void save_ports()
 	DBAStoreConfigStr(type_of_proxy(lasttype), ports, 512);
 } 
 
-void load_port(char *type, char *portname)
+void load_port(int type, char *portname)
 {
 	static char portlist[512];
 	char **av;
@@ -128,7 +141,7 @@ void load_port(char *type, char *portname)
 	ac = split_buf(portlist, &av, 0);
 	for (j = 0; j < ac; j++) {
 		if (atoi(av[j]) == 0) {
-			nlog (LOG_WARNING, "Invalid port %s for proxy type %s", av[j], type);
+			nlog (LOG_WARNING, "Invalid port %s for proxy type %s", av[j], type_of_proxy(type));
 			continue;
 		}
 		if (list_isfull(opsb.ports)) {
@@ -136,11 +149,11 @@ void load_port(char *type, char *portname)
 			break;
 		}
 		prtlst = malloc(sizeof(port_list));
-		prtlst->type = proxy_list[j].type;
+		prtlst->type = type;
 		prtlst->port = atoi(av[j]);
 		prtlst->noopen = 0;
 		lnode_create_append (opsb.ports, prtlst);
-		dlog (DEBUG1, "Added port %d for protocol %s", prtlst->port, proxy_list[j].name);
+		dlog (DEBUG1, "Added port %d for protocol %s", prtlst->port, type_of_proxy(type));
 	}
 	ns_free(av);
 }
@@ -153,11 +166,11 @@ int load_ports() {
 	for (i = 0; proxy_list[i].type != 0; i++) {
 		if (DBAFetchConfigStr (proxy_list[i].name, portname, 512) != NS_SUCCESS) {
 			nlog (LOG_WARNING, "Warning, no ports defined for protocol %s, using defaults", proxy_list[i].name);
-			load_port(proxy_list[i].name, defaultports[i]);
+			load_port(proxy_list[i].type, defaultports[i]);
 			DBAStoreConfigStr(proxy_list[i].name, defaultports[i], 512);
 			ok = 1;
 		} else {
-			load_port(proxy_list[i].name, portname);
+			load_port(proxy_list[i].type, portname);
 			ok = 1;
 		}
 	}
@@ -171,34 +184,127 @@ int init_libopm() {
 void start_proxy_scan(scaninfo *scandata) 
 {
 	int i;
+	lnode_t *pn, *cn;
+	port_list *pl;
+	conninfo *ci;
+	char tmpname[512];
+	struct timeval tv;
 
 	SET_SEGV_LOCATION();
 
 	if (scandata->reqclient) irc_chanalert (opsb_bot, "Starting proxy scan on %s (%s) by Request of %s", scandata->who, scandata->lookup, scandata->reqclient->name);
+	tv.tv_sec = opsb.timeout;
+	tv.tv_usec = 0;
 	scandata->state = DOING_SCAN;
 	/* this is so we can timeout scans */
 	scandata->started = time(NULL);
+	scandata->connections = list_create(-1);
+	pn = list_first(opsb.ports);
+	while (pn) {
+		pl = lnode_get(pn);
+		ci = malloc(sizeof(conninfo));
+		ci->type = pl->type;
+		ci->port = pl->port;
+		ci->scandata = scandata;
+		/* get the callbacks etc */
+		for (i=0; proxy_list[i].type != 0; i++) {
+			if (proxy_list[i].type == pl->type) {
+				if ((ci->fd = sock_connect(SOCK_STREAM, scandata->ip, ci->port)) == NS_FAILURE) {
+					nlog(LOG_WARNING, "start_proxy_scan(): Failed Connect for protocol %s on port %d", type_of_proxy(ci->type), ci->port);
+					free(ci);
+					pn = list_next(opsb.ports, pn);
+					continue;
+				}
+				/* ok, it worked... lets add it as a standard socket */
+				ircsnprintf(tmpname, 512, "%s:%d-%d", type_of_proxy(ci->type), ci->port, ci->fd);
+				if (( ci->sock = AddSock(SOCK_STANDARD, tmpname, ci->fd, proxy_read, proxy_list[i].writefunc, EV_WRITE|EV_READ|EV_TIMEOUT|EV_PERSIST, ci, &tv)) == NULL) {
+					nlog(LOG_WARNING, "start_proxy_scan(): Failed AddSock for protocol %s on port %d", type_of_proxy(ci->type), ci->port);
+					os_sock_close(ci->fd);
+					free(ci);
+					pn = list_next(opsb.ports, pn);
+					continue;
+				}				
+			}
+		}
+		lnode_create_append(scandata->connections, ci);
+		pn = list_next(opsb.ports, pn);
+	}
+		
 
 	
-#if 0
-	if ((opsb.doscan == 1) || (scandata->reqclient)) {
-
-		remote  = opm_remote_create(inet_ntoa(scandata->ip));
-		remote->data = scandata;
-	   	switch(i = opm_scan(scanner, remote))
-      		{
-            		case OPM_SUCCESS:
-				dlog (DEBUG2, "Starting Scan on %s", inet_ntoa(scandata->ip));
-                        	break;
-                        case OPM_ERR_BADADDR:
-				nlog (LOG_WARNING, "Scan of %s %s Failed. Bad Address?", scandata->who, inet_ntoa(scandata->ip));
-                                opm_remote_free(remote);
-				scandata->state = FIN_SCAN;
-				check_scan_free(scandata);
-                }
-	}
-#endif
 }
+
+int http_send (int fd, void *data) {
+	conninfo *ci = (conninfo *)data;
+	struct timeval tv;
+	
+	/* our timeout */
+	tv.tv_sec = opsb.timeout;
+	tv.tv_usec = 0;
+	UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
+	printf("got write on %d\n", fd);
+}
+int sock4_send(int fd, void *data) {
+	conninfo *ci = (conninfo *)data;
+	struct timeval tv;
+	
+	/* our timeout */
+	tv.tv_sec = opsb.timeout;
+	tv.tv_usec = 0;
+	UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
+	printf("got write on %d\n", fd);
+}
+int sock5_send(int fd, void *data) {
+	conninfo *ci = (conninfo *)data;
+	struct timeval tv;
+	
+	/* our timeout */
+	tv.tv_sec = opsb.timeout;
+	tv.tv_usec = 0;
+	UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
+	printf("got write on %d\n", fd);
+}
+int wingate_send(int fd, void *data) {
+	conninfo *ci = (conninfo *)data;
+	struct timeval tv;
+	
+	/* our timeout */
+	tv.tv_sec = opsb.timeout;
+	tv.tv_usec = 0;
+	UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
+	printf("got write on %d\n", fd);
+}
+int router_send(int fd, void *data) {
+	conninfo *ci = (conninfo *)data;
+	struct timeval tv;
+	
+	/* our timeout */
+	tv.tv_sec = opsb.timeout;
+	tv.tv_usec = 0;
+	UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
+	printf("got write on %d\n", fd);
+}
+int httppost_send(int fd, void *data) {
+	conninfo *ci = (conninfo *)data;
+	struct timeval tv;
+	
+	/* our timeout */
+	tv.tv_sec = opsb.timeout;
+	tv.tv_usec = 0;
+	UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
+	printf("got write on %d\n", fd);
+}
+
+int proxy_read (void *data, void *recv, size_t size) {
+	conninfo *ci = (conninfo *)data;
+	/* XXX delete CI */
+	printf("%d\n", size);
+
+}
+
+
+
+
 void check_scan_free(scaninfo *scandata) {
 	lnode_t *scannode;
 	if (scandata->state == DOING_SCAN) {
@@ -240,7 +346,8 @@ void open_proxy(conninfo *connection)
 	irc_globops  (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->ip, type_of_proxy(connection->type), connection->port);
 	if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->ip, type_of_proxy(connection->type), connection->port);
 	if (opsb.doakill) 
-		irc_akill (opsb_bot, remote->ip, "*", opsb.akilltime, "Open Proxy found on your host. %s(%d)", type_of_proxy(connection->type), connection->port);
+		/* XXX IP */
+		irc_akill (opsb_bot, "", "*", opsb.akilltime, "Open Proxy found on your host. %s(%d)", type_of_proxy(connection->type), connection->port);
 
 	/* no point continuing the scan if they are found open */
 	scandata->state = GOTOPENPROXY;

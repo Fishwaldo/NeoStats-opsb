@@ -200,7 +200,7 @@ int opsb_cmd_ports_add (CmdParams* cmdparams)
 	lnode_create_append(opsb.ports, pl);
 	list_sort(opsb.ports, ports_sort);
 	save_ports();
-	add_port(pl->type, pl->port);
+/* 	add_port(pl->type, pl->port); */
 	irc_prefmsg (opsb_bot, cmdparams->source, "Added Port %d for Protocol %s to Ports list", pl->port, cmdparams->av[1]);
 	CommandReport(opsb_bot, "%s added port %d for protocol %s to Ports list", cmdparams->source->name, pl->port, cmdparams->av[1]);
 	return NS_SUCCESS;
