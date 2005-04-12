@@ -24,11 +24,4 @@ using this version.
 
 Known issues that we are aware of and should not be reported:
 
-* You may get a warning during compilation similar to:
-* proxy.c: In function `init_libopm':
-* proxy.c:199: warning: passing arg 3 of `add_sockpoll' from incompatible 
-* pointer type
-* proxy.c:199: warning: passing arg 4 of `add_sockpoll' from incompatible 
-* pointer type gcc -c -
-* This does not affect the running of OPSB
-
+None
