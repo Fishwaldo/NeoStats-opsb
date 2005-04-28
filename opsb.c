@@ -617,7 +617,9 @@ int ModInit( void )
 		nlog (LOG_WARNING, "Can't Load opsb. No Ports Defined for Scanner. Did you install Correctly?");
 		return NS_FAILURE;
 	}
-	init_libopm();
+	if (init_scanengine() != NS_SUCCESS) {
+		return NS_FAILURE;
+	}
 	/* tell NeoStats we want nickip */
 	me.want_nickip = 1;
 	return NS_SUCCESS;

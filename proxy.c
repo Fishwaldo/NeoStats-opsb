@@ -104,6 +104,19 @@ int get_proxy_by_name(const char *name) {
 	return 0;
 }
 
+char http_send_buf[BUFSIZE];
+int http_send_buf_len;
+char httppost_send_buf[BUFSIZE];
+int httppost_send_buf_len;
+char router_send_buf[BUFSIZE];
+int router_send_buf_len;
+char wingate_send_buf[BUFSIZE];
+int wingate_send_buf_len;
+char socks4_send_buf[BUFSIZE];
+int socks4_send_buf_len;
+char socks5_send_buf[BUFSIZE];
+int socks5_send_buf_len;
+
 void save_ports() 
 {
 	lnode_t *pn;
@@ -177,8 +190,36 @@ int load_ports() {
 	return ok;				
 }
 
-int init_libopm() {
+int init_scanengine() {
+	struct in_addr addr;
+	unsigned long laddr;
+	/* set up our send buffers */
+	http_send_buf_len = ircsnprintf(http_send_buf, BUFSIZE, "CONNECT %s:%d HTTP/1.0\r\n\r\n", opsb.targetip, opsb.targetport);
+	httppost_send_buf_len = ircsnprintf(httppost_send_buf, BUFSIZE, "POST http://%s:%d/ HTTP/1.0\r\nContent-type: text/plain\r\nContent-length: 5\r\n\r\nquit\r\n\r\n", opsb.targetip, opsb.targetport);
+	router_send_buf_len = ircsnprintf(router_send_buf, BUFSIZE, "cisco\r\ntelnet %s %d\r\n", opsb.targetip, opsb.targetport);
+	wingate_send_buf_len = ircsnprintf(wingate_send_buf, BUFSIZE, "%s:%d\r\n", opsb.targetip, opsb.targetport);
+	
+	if (inet_aton(opsb.targetip, &addr) != 0) {
+	         laddr = htonl(addr.s_addr);
+	} else {
+		nlog(LOG_ERROR, "Couldn't Setup connect address for init_scan_engine");
+		return NS_FAILURE;
+	}
+	/* taken from libopm */
+	socks4_send_buf_len = ircsnprintf(socks4_send_buf, BUFSIZE, "%c%c%c%c%c%c%c%c%c",  4, 1,
+		(((unsigned short) opsb.targetport) >> 8) & 0xFF,
+	         (((unsigned short) opsb.targetport) & 0xFF),
+	         (char) (laddr >> 24) & 0xFF, (char) (laddr >> 16) & 0xFF,
+	         (char) (laddr >> 8) & 0xFF, (char) laddr & 0xFF, 0);
+	
+	socks5_send_buf_len = ircsnprintf(socks5_send_buf, BUFSIZE, "%c%c%c%c%c%c%c%c%c%c%c%c%c", 5, 1, 0, 5, 1, 0, 1,
+                 (char) (laddr >> 24) & 0xFF, (char) (laddr >> 16) & 0xFF,
+                 (char) (laddr >> 8) & 0xFF, (char) laddr & 0xFF,
+                 (((unsigned short) opsb.targetport) >> 8) & 0xFF,
+                 (((unsigned short) opsb.targetport) & 0xFF));	
+	
 	return NS_SUCCESS;
+
 }         
 
 void start_proxy_scan(scaninfo *scandata) 
@@ -238,67 +279,80 @@ int http_send (int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
-	/* our timeout */
-	tv.tv_sec = opsb.timeout;
-	tv.tv_usec = 0;
-	UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
-	printf("got write on %d\n", fd);
+	if (send_to_sock(ci->sock, http_send_buf, http_send_buf_len) != NS_FAILURE) {
+		/* our timeout */
+		tv.tv_sec = opsb.timeout;
+		tv.tv_usec = 0;
+		UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
+	}
+	return NS_SUCCESS;
 }
 int sock4_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
-	/* our timeout */
-	tv.tv_sec = opsb.timeout;
-	tv.tv_usec = 0;
-	UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
-	printf("got write on %d\n", fd);
+	if (send_to_sock(ci->sock, socks4_send_buf, socks4_send_buf_len) != NS_FAILURE) {
+		/* our timeout */
+		tv.tv_sec = opsb.timeout;
+		tv.tv_usec = 0;
+		UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
+	}
+	return NS_SUCCESS;
 }
 int sock5_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
-	/* our timeout */
-	tv.tv_sec = opsb.timeout;
-	tv.tv_usec = 0;
-	UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
-	printf("got write on %d\n", fd);
+	if (send_to_sock(ci->sock, socks5_send_buf, socks5_send_buf_len) != NS_FAILURE) {
+		/* our timeout */
+		tv.tv_sec = opsb.timeout;
+		tv.tv_usec = 0;
+		UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
+	}
+	return NS_SUCCESS;
 }
 int wingate_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
-	/* our timeout */
-	tv.tv_sec = opsb.timeout;
-	tv.tv_usec = 0;
-	UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
-	printf("got write on %d\n", fd);
+	if (send_to_sock(ci->sock, wingate_send_buf, wingate_send_buf_len) != NS_FAILURE) {
+		/* our timeout */
+		tv.tv_sec = opsb.timeout;
+		tv.tv_usec = 0;
+		UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
+	}
+	return NS_SUCCESS;
 }
 int router_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
-	/* our timeout */
-	tv.tv_sec = opsb.timeout;
-	tv.tv_usec = 0;
-	UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
-	printf("got write on %d\n", fd);
+	if (send_to_sock(ci->sock, wingate_send_buf, wingate_send_buf_len) != NS_FAILURE) {
+		/* our timeout */
+		tv.tv_sec = opsb.timeout;
+		tv.tv_usec = 0;
+		UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
+	}
+	return NS_SUCCESS;
 }
 int httppost_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
-	/* our timeout */
-	tv.tv_sec = opsb.timeout;
-	tv.tv_usec = 0;
-	UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
-	printf("got write on %d\n", fd);
+	if (send_to_sock(ci->sock, wingate_send_buf, wingate_send_buf_len) != NS_FAILURE) {
+		/* our timeout */
+		tv.tv_sec = opsb.timeout;
+		tv.tv_usec = 0;
+		UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
+	}
+	return NS_SUCCESS;
 }
 
 int proxy_read (void *data, void *recv, size_t size) {
 	conninfo *ci = (conninfo *)data;
 	/* XXX delete CI */
-	printf("%d\n", size);
+	
+	printf("%s\n%d\n", (char *)recv, size);
 
 }
 

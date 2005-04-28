@@ -127,7 +127,7 @@ void addtocache(unsigned long ip);
 void start_proxy_scan(scaninfo *scandata);
 int opsb_cmd_status (CmdParams* cmdparams) ;
 void check_scan_free(scaninfo *scandata);
-int init_libopm();
+int init_scanengine();
 char *type_of_proxy(int type);
 int get_proxy_by_name(const char *name);
 int load_ports();
