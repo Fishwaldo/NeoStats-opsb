@@ -103,6 +103,8 @@ typedef struct proxy_type {
 	int type;
 	char name[MAXNICK];
          sockcb writefunc;
+         int scanned;
+         int noopen;
 } proxy_type;
 
 /* these are some state flags */

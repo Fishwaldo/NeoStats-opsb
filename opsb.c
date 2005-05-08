@@ -129,13 +129,14 @@ int opsb_cmd_check (CmdParams* cmdparams)
 		/* is it a ip address or host */
 		if (inet_aton(cmdparams->av[0], &scandata->ip) <= 0) {
 			scandata->ip.s_addr = 0;
-		}
-		if (dns_lookup(scandata->lookup, adns_r_a, dnsblscan, (void *)scandata) != 1) {
-			nlog (LOG_WARNING, "DNS: startscan() DO_DNS_HOST_LOOKUP dns_lookup() failed");
-			ns_free(scandata);
-			return 0;
-		}
+			if (dns_lookup(scandata->lookup, adns_r_a, dnsblscan, (void *)scandata) != 1) {
+				nlog (LOG_WARNING, "DNS: startscan() DO_DNS_HOST_LOOKUP dns_lookup() failed");
+				ns_free(scandata);
+				return 0;
+			}
+			irc_prefmsg (opsb_bot, cmdparams->source, "Checking %s for open Proxies", cmdparams->av[0]);
 		return 0;
+		}
 	}
 	irc_prefmsg (opsb_bot, cmdparams->source, "Checking %s for open Proxies", cmdparams->av[0]);
 	if (!startscan(scandata)) 
@@ -263,6 +264,7 @@ int do_set_cb (CmdParams* cmdparams, SET_REASON reason)
 		opsb.confed = 1;
 		DBAStoreConfigInt ("Confed", &opsb.confed);
 		DelTimer("unconf");
+		init_scanengine();
 	}
 	return NS_SUCCESS;
 }
@@ -287,8 +289,8 @@ static bot_cmd opsb_commands[]=
 
 static bot_setting opsb_settings[]=
 {
-	{"TARGETIP",	&opsb.targetip,		SET_TYPE_IPV4,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetip,	do_set_cb 		},
-	{"TARGETPORT",	&opsb.targetport,		SET_TYPE_INT,	0,	65535,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetport,	do_set_cb 		},
+	{"TARGETIP",	&opsb.targetip,		SET_TYPE_IPV4,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetip,	do_set_cb, (void*)"10.1.1.24" 		},
+	{"TARGETPORT",	&opsb.targetport,		SET_TYPE_INT,	0,	65535,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetport,	do_set_cb, (void*)6667	},
 	{"AKILL",	&opsb.doakill,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akill,	do_set_cb, (void*)1 	},	
 	{"AKILLTIME",	&opsb.akilltime,		SET_TYPE_INT,	0,	20736000,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akilltime,	do_set_cb, (void*)86400 	},
 	{"MAXBYTES",	&opsb.maxbytes,		SET_TYPE_INT,	0,	100000,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_maxbytes,	do_set_cb, (void*)500 	},
@@ -330,7 +332,6 @@ int ModSynch (void)
 	if (opsb.confed == 0) {
 		AddTimer (TIMER_TYPE_INTERVAL, unconf, "unconf", 60);
 		unconf();
-		strlcpy(opsb.targetip, me.uplink, MAXHOST);
 	}
 	if(opsb.verbose) {
 		irc_chanalert (opsb_bot, "Open Proxy Scanning bot has started (Concurrent Scans: %d Sockets %d)", opsb.socks, opsb.socks *7);
@@ -588,9 +589,6 @@ void dnsblscan(void *data, adns_answer *a)
 
 int ModInit( void )
 {
-	strlcpy(opsb.targetip, me.uplink, MAXHOST);
-	opsb.targetport = me.port;
-	opsb.confed = 0;
 	DBAFetchConfigInt ("Confed", &opsb.confed);
 	ModuleConfig (opsb_settings);
 	/* we have to be careful here. Currently, we have 7 sockets that get opened per connection. Soooo.
@@ -616,6 +614,9 @@ int ModInit( void )
 	if (load_ports() != 1) {
 		nlog (LOG_WARNING, "Can't Load opsb. No Ports Defined for Scanner. Did you install Correctly?");
 		return NS_FAILURE;
+	}
+	if (strlen(opsb.targetip) <= 0) {
+		strlcpy(opsb.targetip, "10.1.1.26", MAXHOST);
 	}
 	if (init_scanengine() != NS_SUCCESS) {
 		return NS_FAILURE;
