@@ -153,6 +153,13 @@ const char *opsb_help_set_cachetime [] = {
 	NULL
 };
 
+const char *opsb_help_set_cachesize [] = {
+	"\2CACHESIZE <size>\2",
+	"The total number of clean hosts that OPSB will cache",
+	"Setting this too large may cause NeoStats to Lag",
+	NULL
+};
+
 const char *opsb_help_set_verbose [] = {
 	"\2VERBOSE <ON|OFF>\2",
 	"Whether OPSB is verbose in operation or not",

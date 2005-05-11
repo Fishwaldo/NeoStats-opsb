@@ -76,6 +76,7 @@ struct opsb {
 	int akilltime;
 	int confed;
 	int cachetime;
+	int cachesize;
 	int doscan;
 	int cachehits;
 	int opmhits;
@@ -163,5 +164,5 @@ extern const char *opsb_help_set_akilltime [];
 extern const char *opsb_help_set_cachetime [];
 extern const char *opsb_help_set_verbose [];
 extern const char *opsb_help_set_exclusions[];
-
+extern const char *opsb_help_set_cachesize[];
 #endif /* OPSB_H */

@@ -298,6 +298,7 @@ static bot_setting opsb_settings[]=
 	{"OPENSTRING",	&opsb.openstring,		SET_TYPE_MSG,	0,	BUFSIZE,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_openstring,	do_set_cb, (void*)"*** Looking up your hostname..." },
 	{"SCANMSG",	&opsb.scanmsg,		SET_TYPE_MSG,	0,	BUFSIZE,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_scanmsg,	do_set_cb, (void*)"Your Host is being Scanned for Open Proxies" },
 	{"CACHETIME",	&opsb.cachetime,		SET_TYPE_INT,	0,	86400,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_cachetime,	do_set_cb, (void*)3600 	},
+	{"CACHESIZE",	&opsb.cachesize,		SET_TYPE_INT,	0,	10000,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_cachesize,	do_set_cb, (void*)1000	},
 	{"VERBOSE",	&opsb.verbose,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_verbose,	do_set_cb, (void*)1 	},
 	{"EXCLUSIONS",	&opsb.exclusions,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN,	NULL,	opsb_help_set_exclusions,	opsb_set_exclusions_cb, (void *)0 },
 	{NULL,		NULL,			0,		0,	0, 	0,		NULL,	NULL,			NULL	},
@@ -604,19 +605,19 @@ int ModInit( void )
 	}
 	/* queue can be anything we want */
 	opsbq = list_create(MAX_QUEUE);
-	/* scan cache is MAX_QUEUE size (why not?) */
-	cache = list_create(MAX_QUEUE);
+	cache = list_create(opsb.cachesize);
 	opsb.ports = list_create(MAX_PORTS);
 	opsb.open = 0;
 	opsb.scanned = 0;
-	opsb.cachehits = 1;
-	opsb.opmhits = 1;
+	opsb.cachehits = 0;
+	opsb.opmhits = 0;
 	if (load_ports() != 1) {
 		nlog (LOG_WARNING, "Can't Load opsb. No Ports Defined for Scanner. Did you install Correctly?");
 		return NS_FAILURE;
 	}
+	/* XXX needs work */
 	if (strlen(opsb.targetip) <= 0) {
-		strlcpy(opsb.targetip, "10.1.1.26", MAXHOST);
+		strlcpy(opsb.targetip, me.uplink, MAXHOST);
 	}
 	if (init_scanengine() != NS_SUCCESS) {
 		return NS_FAILURE;

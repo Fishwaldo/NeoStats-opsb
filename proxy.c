@@ -382,7 +382,7 @@ int proxy_read (void *data, void *recv, size_t size) {
 				free(ci);
 			}
 			if (list_count(si->connections) == 0) {
-				si->state = FIN_SCAN;			
+				if (si->state == DOING_SCAN) si->state = FIN_SCAN;			
 				check_scan_free(si);
 			}
 			return NS_FAILURE;
@@ -391,6 +391,7 @@ int proxy_read (void *data, void *recv, size_t size) {
 			for (i = 0; stdmatchstrings[i] != NULL; i++) {
 				if (match(stdmatchstrings[i], recv)) {
 					proxy_list[ci->type-1].noopen++;
+					if (si->state == DOING_SCAN) si->state = GOTOPENPROXY;
 					open_proxy(ci);
 				}
 			}
