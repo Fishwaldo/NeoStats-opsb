@@ -169,7 +169,7 @@ void load_port(int type, char *portname)
 			nlog (LOG_WARNING, "Ports list is full.");
 			break;
 		}
-		prtlst = malloc(sizeof(port_list));
+		prtlst = ns_malloc(sizeof(port_list));
 		prtlst->type = type;
 		prtlst->port = atoi(av[j]);
 		prtlst->noopen = 0;
@@ -252,7 +252,7 @@ void start_proxy_scan(scaninfo *scandata)
 	pn = list_first(opsb.ports);
 	while (pn) {
 		pl = lnode_get(pn);
-		ci = malloc(sizeof(conninfo));
+		ci = ns_malloc(sizeof(conninfo));
 		ci->type = pl->type;
 		ci->port = pl->port;
 		ci->scandata = scandata;
@@ -261,7 +261,7 @@ void start_proxy_scan(scaninfo *scandata)
 			if (proxy_list[i].type == pl->type) {
 				if ((ci->fd = sock_connect(SOCK_STREAM, scandata->ip, ci->port)) == NS_FAILURE) {
 					nlog(LOG_WARNING, "start_proxy_scan(): Failed Connect for protocol %s on port %d", type_of_proxy(ci->type), ci->port);
-					free(ci);
+					ns_free(ci);
 					pn = list_next(opsb.ports, pn);
 					continue;
 				}
@@ -270,7 +270,7 @@ void start_proxy_scan(scaninfo *scandata)
 				if (( ci->sock = AddSock(SOCK_STANDARD, tmpname, ci->fd, proxy_read, proxy_list[i].writefunc, EV_WRITE|EV_READ|EV_TIMEOUT|EV_PERSIST, ci, &tv)) == NULL) {
 					nlog(LOG_WARNING, "start_proxy_scan(): Failed AddSock for protocol %s on port %d", type_of_proxy(ci->type), ci->port);
 					os_sock_close(ci->fd);
-					free(ci);
+					ns_free(ci);
 					pn = list_next(opsb.ports, pn);
 					continue;
 				}				
@@ -379,7 +379,7 @@ int proxy_read (void *data, void *recv, size_t size) {
 				list_delete(si->connections, connode);
 				lnode_destroy(connode);
 				if (si->reqclient) irc_prefmsg(opsb_bot, si->reqclient, "Connection on %s (%s:%d) for Protocol %s Closed", si->who, si->lookup, ci->port, type_of_proxy(ci->type));
-				free(ci);
+				ns_free(ci);
 			}
 			if (list_count(si->connections) == 0) {
 				if (si->state == DOING_SCAN) si->state = FIN_SCAN;			

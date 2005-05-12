@@ -101,7 +101,7 @@ int opsb_cmd_check (CmdParams* cmdparams)
 		irc_prefmsg (opsb_bot, cmdparams->source, "Already Scanning (or in queue) %s. Not Scanning again", cmdparams->av[0]);
 		return NS_SUCCESS;
 	}
-	scandata = malloc( sizeof( scaninfo ) );
+	scandata = ns_malloc( sizeof( scaninfo ) );
 	scandata->doneban = 0;
 	scandata->reqclient = cmdparams->source;
 	scanuser = FindUser( cmdparams->av[0] );
@@ -194,7 +194,7 @@ int opsb_cmd_ports_add (CmdParams* cmdparams)
 		}
 		lnode = list_next(opsb.ports, lnode);
 	}
-	pl = malloc(sizeof(port_list));
+	pl = ns_malloc(sizeof(port_list));
 	pl->type = get_proxy_by_name(cmdparams->av[1]);
 	pl->port = atoi(cmdparams->av[2]);
 		
@@ -394,7 +394,7 @@ void addtocache(unsigned long ip)
 		cachenode = list_next(cache, cachenode);
 	}
 	
-	ce = malloc(sizeof(cache_entry));
+	ce = ns_malloc(sizeof(cache_entry));
 	ce->ip = ip;
 	ce->when = time(NULL);
 	lnode_create_append(cache, ce);
@@ -480,7 +480,7 @@ static int ss_event_signon (CmdParams* cmdparams)
 		return -1;
 	}
 	irc_prefmsg (opsb_bot, cmdparams->source, "%s", opsb.scanmsg);
-	scandata = malloc(sizeof(scaninfo));
+	scandata = ns_malloc(sizeof(scaninfo));
 	scandata->reqclient = NULL;
 	scandata->doneban = 0;
 	strlcpy(scandata->who, cmdparams->source->name, MAXHOST);
