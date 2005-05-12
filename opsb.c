@@ -125,7 +125,7 @@ int opsb_cmd_check (CmdParams* cmdparams)
 	} else {
 		strlcpy(scandata->who, cmdparams->av[0], MAXHOST);
 		strlcpy(scandata->lookup, cmdparams->av[0], MAXHOST);
-		memset (scandata->server, 0, MAXHOST);
+		os_memset (scandata->server, 0, MAXHOST);
 		/* is it a ip address or host */
 		if (inet_aton(cmdparams->av[0], &scandata->ip) <= 0) {
 			scandata->ip.s_addr = 0;
@@ -506,7 +506,6 @@ int startscan(scaninfo *scandata)
 	
 	/* only check the cache when we have IP addy */
 	if (scandata->ip.s_addr > 0) {
-		printf("check cache\n");
 		i = checkcache(scandata);
 		if ((i > 0) && (scandata->reqclient == NULL)) {
 			ns_free(scandata);
@@ -631,11 +630,3 @@ int ModFini( void )
 {
 	return NS_SUCCESS;
 }
-
-#ifdef WIN32 /* temp */
-
-int main (int argc, char **argv)
-{
-	return 0;
-}
-#endif
