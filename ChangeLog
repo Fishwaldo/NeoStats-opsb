@@ -1,5 +1,11 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
+3.0.a3-dev - Mark (M) & Fish (F)
+ - Fix event and command return values. (M)
+ - Clean up config.h entries. (M)
+ - Fix Win32 CRT calls. (M)
+ - Port to new socket code. (F)
+
 3.0.a2 - Mark (M)
  - Add option to use NeoStats global excludes. (M)
  - Update settings table to a2 compatible format. (M)

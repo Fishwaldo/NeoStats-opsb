@@ -22,9 +22,6 @@
 */
 
 #include "neostats.h"
-#ifdef HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
 #ifdef HAVE_ARPA_NAMESER_H
 #include <arpa/nameser.h>
 #endif
@@ -132,10 +129,10 @@ int opsb_cmd_check (CmdParams* cmdparams)
 			if (dns_lookup(scandata->lookup, adns_r_a, dnsblscan, (void *)scandata) != 1) {
 				nlog (LOG_WARNING, "DNS: startscan() DO_DNS_HOST_LOOKUP dns_lookup() failed");
 				ns_free(scandata);
-				return 0;
+				return NS_SUCCESS;
 			}
 			irc_prefmsg (opsb_bot, cmdparams->source, "Checking %s for open Proxies", cmdparams->av[0]);
-		return 0;
+			return NS_SUCCESS;
 		}
 	}
 	irc_prefmsg (opsb_bot, cmdparams->source, "Checking %s for open Proxies", cmdparams->av[0]);
@@ -467,17 +464,17 @@ static int ss_event_signon (CmdParams* cmdparams)
 	/* don't scan users from a server that is excluded */
 	if (ModIsServerExcluded (cmdparams->source->uplink))
 	{
-		return -1;
+		return NS_SUCCESS;
 	}
 	if (IsNetSplit(cmdparams->source)) {
 		dlog (DEBUG1, "Ignoring netsplit nick %s", cmdparams->source->name);
-		return -1;
+		return NS_SUCCESS;
 	}
 	scannode = list_find(opsbl, cmdparams->source->name, findscan);
 	if (!scannode) scannode = list_find(opsbq, cmdparams->source->name, findscan);
 	if (scannode) {
 		dlog (DEBUG1, "ss_event_signon(): Not scanning %s as we are already scanning them", cmdparams->source->name);
-		return -1;
+		return NS_SUCCESS;
 	}
 	irc_prefmsg (opsb_bot, cmdparams->source, "%s", opsb.scanmsg);
 	scandata = ns_malloc(sizeof(scaninfo));
@@ -492,7 +489,7 @@ static int ss_event_signon (CmdParams* cmdparams)
 		irc_chanalert (opsb_bot, "Warning Can't scan %s", cmdparams->source->name);
 		nlog (LOG_WARNING, "OBSB ss_event_signon(): Can't scan %s. Check logs for possible errors", cmdparams->source->name);
 	}
-	return 1;
+	return NS_SUCCESS;
 }
 
 /* this function is the entry point for all scans. Any scan you want to kick off is started with this function. */
@@ -515,7 +512,7 @@ int startscan(scaninfo *scandata)
 	if (list_isfull(opsbl)) {
 		if (list_isfull(opsbq)) {
 			irc_chanalert (opsb_bot, "Warning, Both Current and queue lists are full. Not Adding additional scans");
-			dlog (DEBUG1, "OPSB: dropped scaning of %s, as queue is full", scandata->who);
+			dlog (DEBUG1, "OPSB: dropped scanning of %s, as queue is full", scandata->who);
 			if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "To Busy. Try again later");
 			ns_free(scandata);
 			return 0;
@@ -621,8 +618,6 @@ int ModInit( void )
 	if (init_scanengine() != NS_SUCCESS) {
 		return NS_FAILURE;
 	}
-	/* tell NeoStats we want nickip */
-	me.want_nickip = 1;
 	return NS_SUCCESS;
 }
 
