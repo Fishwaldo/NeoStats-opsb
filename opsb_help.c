@@ -24,27 +24,10 @@
 #include "neostats.h"
 
 const char opsb_help_status_oneline[] = "View opsb state information";
-const char opsb_help_lookup_oneline[] = "Lookup DNS record";
 const char opsb_help_remove_oneline[] = "Remove an akill set by opsb";
 const char opsb_help_check_oneline[] = "Scan a selected user";
 const char opsb_help_ports_oneline[] = "Allows you to customize the ports scanned";
 const char opsb_help_set_oneline[] = "Change opsb configuration options";
-
-const char *opsb_help_lookup[] = {
-	"Syntax: \2LOOKUP <ip|hostname> [type]\2",
-	"",
-	"Lookup DNS records for an ip address or hostname.",
-	"The default lookup is the ip address for a hostname",
-	"or the hostname for an ip address.",
-	"",
-	"Options for type are:",
-	"    txt - text records",
-	"    rp  - responsible person for this record",
-	"    ns  - name servers for this record",
-	"    soa - SOA for this record",
-	"",
-	NULL
-};
 
 const char *opsb_about[] = {
 	"\2Open Proxy Scanning Bot Information\2",

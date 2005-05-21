@@ -276,9 +276,6 @@ void start_proxy_scan(scaninfo *scandata)
 		lnode_create_append(scandata->connections, ci);
 		pn = list_next(opsb.ports, pn);
 	}
-		
-
-	
 }
 
 int http_send (int fd, void *data) {

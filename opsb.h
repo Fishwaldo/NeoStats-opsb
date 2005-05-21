@@ -133,7 +133,6 @@ int load_ports();
 void save_ports();
  
 /* help text */
-extern const char *opsb_help_lookup[];
 extern const char *opsb_about[];
 extern const char *opsb_help_check[];
 extern const char *opsb_help_status[];
@@ -141,7 +140,6 @@ extern const char *opsb_help_remove[];
 extern const char *opsb_help_ports[];
 
 extern const char opsb_help_status_oneline[];
-extern const char opsb_help_lookup_oneline[];
 extern const char opsb_help_remove_oneline[];
 extern const char opsb_help_check_oneline[];
 extern const char opsb_help_ports_oneline[];

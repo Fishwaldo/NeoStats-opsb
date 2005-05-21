@@ -335,7 +335,7 @@ int ModSynch (void)
 		irc_chanalert (opsb_bot, "Open Proxy Scanning bot has started (Concurrent Scans: %d Sockets %d)", opsb.socks, opsb.socks *7);
 	}
 	return NS_SUCCESS;
-};
+}
 
 static int unconf(void) 
 {
