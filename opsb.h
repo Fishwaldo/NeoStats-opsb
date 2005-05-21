@@ -62,8 +62,6 @@ typedef struct scaninfo{
 } scaninfo;
 
 struct opsb {
-	char opmdomain[MAXHOST];
-	int init;
 	char targetip[MAXHOST];
 	char openstring[BUFSIZE];
 	int targetport;
@@ -77,9 +75,7 @@ struct opsb {
 	int confed;
 	int cachetime;
 	int cachesize;
-	int doscan;
 	int cachehits;
-	int opmhits;
 	int doakill;
 	int verbose;
 	int exclusions;
@@ -103,9 +99,9 @@ list_t *cache;
 typedef struct proxy_type {
 	int type;
 	char name[MAXNICK];
-         sockcb writefunc;
-         int scanned;
-         int noopen;
+	sockcb writefunc;
+	int scanned;
+	int noopen;
 } proxy_type;
 
 /* these are some state flags */
@@ -151,7 +147,6 @@ extern const char opsb_help_check_oneline[];
 extern const char opsb_help_ports_oneline[];
 extern const char opsb_help_set_oneline[];
 
-extern const char *opsb_help_set_doscan [];
 extern const char *opsb_help_set_akill [];
 extern const char *opsb_help_set_targetip [];
 extern const char *opsb_help_set_targetport [];

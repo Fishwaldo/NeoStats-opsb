@@ -61,7 +61,7 @@ const char *opsb_about[] = {
 };
 
 const char *opsb_help_check[] = {
-	"Syntax: \2CHECK <nick|ip|hostname>\2",
+	"Syntax: \2CHECK <NICK|IP|HOSTNAME>\2",
 	"",
 	"This option will scan either a user connected to your",
 	"network, an IP address, or Hostname for Insecure proxies,",
@@ -77,33 +77,26 @@ const char *opsb_help_status[] = {
 	NULL
 };
 
-const char *opsb_help_set_doscan [] = {
-	"\2SCAN <ON|OFF>\2",
-	"Disables the proxy scan and only do a lookup in the DNS",
-	"blacklist to see if this host is listed as an open proxy",
-	NULL
-};
-
 const char *opsb_help_set_akill [] = {
 	"\2AKILL <ON|OFF>\2",
-	" ",
+	"Whether to issue an akill for positive lookups",
 	NULL
 };
 
 const char *opsb_help_set_targetip [] = {
-	"\2TARGETIP <ip>\2",
+	"\2TARGETIP <IP>\2",
 	"IP address of server we try to make the proxies connect to",
 	NULL
 };
 
 const char *opsb_help_set_targetport [] = {
-	"\2TARGETPORT <port>\2",
+	"\2TARGETPORT <PORT>\2",
 	"IRCd port number we try to make proxies connect to.",
 	NULL
 };
 
 const char *opsb_help_set_opmdomain [] = {
-	"\2OPMDOMAIN <domain>\2",
+	"\2OPMDOMAIN <DOMAIN>\2",
 	"Domain used for blacklists.",
 	"This setting should not be changed unless you know the",
 	"effects in full",
@@ -111,7 +104,7 @@ const char *opsb_help_set_opmdomain [] = {
 };
 
 const char *opsb_help_set_maxbytes [] = {
-	"\2MAXBYTES <max>\2",
+	"\2MAXBYTES <MAX>\2",
 	"Maximum number of bytes we receive from a proxy before disconnecting",
 	"This setting should not be changed unless you know the",
 	"effects in full",
@@ -119,7 +112,7 @@ const char *opsb_help_set_maxbytes [] = {
 };
 
 const char *opsb_help_set_timeout [] = {
-	"\2TIMEOUT <time>\2",
+	"\2TIMEOUT <TIME>\2",
 	"Time we wait for a proxy to respond to our servers before",
 	"disconnecting and assuming its not an open proxy.",
 	"This setting should not be changed unless you know the",
@@ -128,7 +121,7 @@ const char *opsb_help_set_timeout [] = {
 };
 
 const char *opsb_help_set_openstring [] = {
-	"\2OPENSTRING <string>\2",
+	"\2OPENSTRING <STRING>\2",
 	"The string we expect to see if there is an open proxy",
 	"This setting should not be changed unless you know the",
 	"effects in full",
@@ -136,25 +129,25 @@ const char *opsb_help_set_openstring [] = {
 };
 
 const char *opsb_help_set_scanmsg [] = {
-	"\2SCANMSG <msg>\2",
+	"\2SCANMSG <MSG>\2",
 	"Message sent to a user when we scan their hosts",
 	NULL
 };
 
 const char *opsb_help_set_akilltime [] = {
-	"\2AKILLTIME <time>\2",
+	"\2AKILLTIME <TIME>\2",
 	"How long the user will be banned from the network for",
 	NULL
 };
 
 const char *opsb_help_set_cachetime [] = {
-	"\2CACHETIME <time>\2",
+	"\2CACHETIME <TIME>\2",
 	"Time (in seconds) that an entry will be cached",
 	NULL
 };
 
 const char *opsb_help_set_cachesize [] = {
-	"\2CACHESIZE <size>\2",
+	"\2CACHESIZE <SIZE>\2",
 	"The total number of clean hosts that OPSB will cache",
 	"Setting this too large may cause NeoStats to Lag",
 	NULL
@@ -205,7 +198,7 @@ const char *opsb_help_ports[] = {
 };
 
 const char *opsb_help_remove[] = {
-	"Syntax: \2REMOVE <ip|hostname>\2",
+	"Syntax: \2REMOVE <IP|HOSTNAME>\2",
 	"",
 	"Remove akills that have been set by opsb.",
 	"",

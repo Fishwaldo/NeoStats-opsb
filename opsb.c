@@ -606,7 +606,6 @@ int ModInit( void )
 	opsb.open = 0;
 	opsb.scanned = 0;
 	opsb.cachehits = 0;
-	opsb.opmhits = 0;
 	if (load_ports() != 1) {
 		nlog (LOG_WARNING, "Can't Load opsb. No Ports Defined for Scanner. Did you install Correctly?");
 		return NS_FAILURE;

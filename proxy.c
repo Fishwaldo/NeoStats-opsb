@@ -426,7 +426,7 @@ void check_scan_free(scaninfo *scandata) {
 
 
 void open_proxy(conninfo *connection)
-      {
+{
 	scaninfo *scandata = connection->scandata;
 
 	SET_SEGV_LOCATION();
@@ -464,7 +464,6 @@ int opsb_cmd_status (CmdParams* cmdparams)
 	irc_prefmsg (opsb_bot, cmdparams->source, "Hosts Scanned: %d Hosts found Open: %d", opsb.scanned, opsb.open);
 	irc_prefmsg (opsb_bot, cmdparams->source, "Cache Entries: %d", (int)list_count(cache));
 	irc_prefmsg (opsb_bot, cmdparams->source, "Cache Hits: %d", opsb.cachehits);
-	irc_prefmsg (opsb_bot, cmdparams->source, "Blacklist Hits: %d", opsb.opmhits);
 	for (i = 0; proxy_list[i].type != 0; i++) {
 		irc_prefmsg (opsb_bot, cmdparams->source, "Proxy %s Found %d Open %d", proxy_list[i].name, proxy_list[i].scanned, proxy_list[i].noopen);
 	}
