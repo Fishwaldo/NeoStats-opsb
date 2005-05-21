@@ -32,6 +32,9 @@ static int ss_event_signon (CmdParams* cmdparams);
 int startscan(scaninfo *scandata);
 void save_ports();
 static int unconf(void);
+int opsb_cmd_list (CmdParams* cmdparams);
+int opsb_cmd_add (CmdParams* cmdparams);
+int opsb_cmd_del (CmdParams* cmdparams);
 
 Bot *opsb_bot;
 
@@ -141,7 +144,7 @@ int opsb_cmd_check (CmdParams* cmdparams)
 	return NS_SUCCESS;
 }
 
-int opsb_cmd_ports_list (CmdParams* cmdparams) 
+int opsb_cmd_list (CmdParams* cmdparams) 
 {
 	port_list *pl;
 	int i;
@@ -161,14 +164,11 @@ int opsb_cmd_ports_list (CmdParams* cmdparams)
 	return NS_SUCCESS;
 }
 
-int opsb_cmd_ports_add (CmdParams* cmdparams) 
+int opsb_cmd_add (CmdParams* cmdparams) 
 {
 	port_list *pl;
 	lnode_t *lnode;
 
-	if (cmdparams->ac < 3) {
-		return NS_ERR_SYNTAX_ERROR;
-	}
 	if (list_isfull(opsb.ports)) {
 		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Ports list is full");
 		return NS_SUCCESS;
@@ -204,15 +204,12 @@ int opsb_cmd_ports_add (CmdParams* cmdparams)
 	return NS_SUCCESS;
 }
 
-int opsb_cmd_ports_del (CmdParams* cmdparams) 
+int opsb_cmd_del (CmdParams* cmdparams) 
 {
 	port_list *pl;
 	int i;
 	lnode_t *lnode;
 
-	if (cmdparams->ac < 1) {
-		return NS_ERR_SYNTAX_ERROR;
-	}
 	if (atoi(cmdparams->av[1]) != 0) {
 		lnode = list_first(opsb.ports);
 		i = 1;
@@ -242,18 +239,6 @@ int opsb_cmd_ports_del (CmdParams* cmdparams)
 	return NS_SUCCESS;
 }
 
-int opsb_cmd_ports (CmdParams* cmdparams) 
-{
-	if (!ircstrcasecmp (cmdparams->av[0], "LIST")) {
-		return opsb_cmd_ports_list (cmdparams);
-	} else if (!ircstrcasecmp (cmdparams->av[0], "ADD")) {
-		return opsb_cmd_ports_add (cmdparams);
-	} else if (!ircstrcasecmp (cmdparams->av[0], "DEL")) {
-		return opsb_cmd_ports_del (cmdparams);
-	}
-	return NS_ERR_SYNTAX_ERROR;
-}
-
 int do_set_cb (CmdParams* cmdparams, SET_REASON reason)
 {
 	if( reason == SET_CHANGE )
@@ -277,11 +262,13 @@ static int opsb_set_exclusions_cb( CmdParams *cmdparams, SET_REASON reason )
 
 static bot_cmd opsb_commands[]=
 {
-	{"STATUS",	opsb_cmd_status,		0,	NS_ULEVEL_OPER,	opsb_help_status,	opsb_help_status_oneline},
-	{"REMOVE",	opsb_cmd_remove,		1,	NS_ULEVEL_OPER,	opsb_help_remove,	opsb_help_remove_oneline},
-	{"CHECK",	opsb_cmd_check,		1,	NS_ULEVEL_OPER,	opsb_help_check,	opsb_help_check_oneline},
-	{"PORTS",	opsb_cmd_ports,		1,	NS_ULEVEL_ADMIN,	opsb_help_ports,	opsb_help_ports_oneline},
-	{NULL,		NULL,			0, 	0,		NULL, 		NULL}
+	{"STATUS",	opsb_cmd_status,	0,	NS_ULEVEL_OPER,		opsb_help_status,	opsb_help_status_oneline},
+	{"REMOVE",	opsb_cmd_remove,	1,	NS_ULEVEL_OPER,		opsb_help_remove,	opsb_help_remove_oneline},
+	{"CHECK",	opsb_cmd_check,		1,	NS_ULEVEL_OPER,		opsb_help_check,	opsb_help_check_oneline},
+	{"ADD",		opsb_cmd_add,		3,	NS_ULEVEL_ADMIN,	opsb_help_add,		opsb_help_add_oneline},
+	{"DEL",		opsb_cmd_del,		1,	NS_ULEVEL_ADMIN,	opsb_help_del,		opsb_help_del_oneline},
+	{"LIST",	opsb_cmd_list,		0,	NS_ULEVEL_ADMIN,	opsb_help_list,		opsb_help_list_oneline},
+	{NULL,		NULL,				0, 	0,		NULL, 		NULL}
 };
 
 static bot_setting opsb_settings[]=

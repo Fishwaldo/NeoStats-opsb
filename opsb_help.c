@@ -26,8 +26,9 @@
 const char opsb_help_status_oneline[] = "View opsb state information";
 const char opsb_help_remove_oneline[] = "Remove an akill set by opsb";
 const char opsb_help_check_oneline[] = "Scan a selected user";
-const char opsb_help_ports_oneline[] = "Allows you to customize the ports scanned";
-const char opsb_help_set_oneline[] = "Change opsb configuration options";
+const char opsb_help_add_oneline[] = "Add a port to scanning";
+const char opsb_help_del_oneline[] = "Delete a port from scanning";
+const char opsb_help_list_oneline[] = "List protocols and ports scanned";
 
 const char *opsb_about[] = {
 	"\2Open Proxy Scanning Bot Information\2",
@@ -75,14 +76,6 @@ const char *opsb_help_set_targetip [] = {
 const char *opsb_help_set_targetport [] = {
 	"\2TARGETPORT <PORT>\2",
 	"IRCd port number we try to make proxies connect to.",
-	NULL
-};
-
-const char *opsb_help_set_opmdomain [] = {
-	"\2OPMDOMAIN <DOMAIN>\2",
-	"Domain used for blacklists.",
-	"This setting should not be changed unless you know the",
-	"effects in full",
 	NULL
 };
 
@@ -148,21 +141,10 @@ const char *opsb_help_set_exclusions[] = {
 	NULL
 };
 
-const char *opsb_help_ports[] = {
-	"Syntax: \2PORTS <LIST>\2",
-	"        \2PORTS <ADD> <type> <port>\2",
-	"        \2PORTS <DEL> <index>\2",
+const char *opsb_help_add[] = {
+	"Syntax: \2ADD <type> <port>\2",
 	"",
-	"This command lets you view or manipulate the ports",
-	"and proxy types scanned when users connect to your",
-	"IRC network. By Default, OPSB scans some default Ports",
-	"but you may wish to update this list with some additional",
-	"protocols and ports custom to your network"
-	"",
-	"\2LIST\2 will list the current ports and protocols scanned",
-	"and a ID number for use in removing entries.",
-	"",
-	"\2ADD\2 will add an entry of <type> running on port <port>",
+	"Add an entry of <type> running on port <port>",
 	"to the port list.",
 	"<type> can be either:", 
 	"       HTTP",
@@ -173,10 +155,22 @@ const char *opsb_help_ports[] = {
 	"       ROUTER",
 	"and port can be any valid port number. The new port is scanned",
 	"straight away",
+	NULL
+};
+
+const char *opsb_help_del[] = {
+	"Syntax: \2DEL <index>\2",
 	"",
-	"\2DEL\2 will delete entry <index> from the list of",
-	"ports. Requires a Restart of OPSB to become effective. Alternatively",
-	"Reloading the OPSB module will make this effective",
+	"Delete entry <index> from the list of ports. ",
+	"Requires a restart of OPSB to become effective.",
+	NULL
+};
+
+const char *opsb_help_list[] = {
+	"Syntax: \2LIST\2",
+	"",
+	"List the current ports and protocols scanned",
+	"and a ID number for use in removing entries.",
 	NULL
 };
 

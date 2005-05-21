@@ -137,18 +137,20 @@ extern const char *opsb_about[];
 extern const char *opsb_help_check[];
 extern const char *opsb_help_status[];
 extern const char *opsb_help_remove[];
-extern const char *opsb_help_ports[];
+extern const char *opsb_help_add[];
+extern const char *opsb_help_del[];
+extern const char *opsb_help_list[];
 
 extern const char opsb_help_status_oneline[];
 extern const char opsb_help_remove_oneline[];
 extern const char opsb_help_check_oneline[];
-extern const char opsb_help_ports_oneline[];
-extern const char opsb_help_set_oneline[];
+extern const char opsb_help_add_oneline[];
+extern const char opsb_help_del_oneline[];
+extern const char opsb_help_list_oneline[];
 
 extern const char *opsb_help_set_akill [];
 extern const char *opsb_help_set_targetip [];
 extern const char *opsb_help_set_targetport [];
-extern const char *opsb_help_set_opmdomain [];
 extern const char *opsb_help_set_maxbytes [];
 extern const char *opsb_help_set_timeout [];
 extern const char *opsb_help_set_openstring [];
