@@ -25,11 +25,7 @@
 #ifndef OPSB_H
 #define OPSB_H
 
-#ifdef WIN32
-#include "modconfigwin32.h"
-#else
-#include "modconfig.h"
-#endif
+#include MODULECONFIG
 
 typedef struct port_list {
 	int type;
