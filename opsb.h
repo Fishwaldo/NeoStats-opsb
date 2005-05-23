@@ -21,7 +21,6 @@
 ** $Id$
 */
 
-
 #ifndef OPSB_H
 #define OPSB_H
 
@@ -30,8 +29,8 @@
 typedef struct port_list {
 	int type;
 	int port;
-	int nofound;
-	int noopen;
+	int numfound;
+	int numopen;
 } port_list;
 
 extern Bot *opsb_bot;
@@ -53,7 +52,6 @@ typedef struct scaninfo{
 	int doreport;
 	time_t started;
 	int doneban;
-	char connectstring[BUFSIZE];
 	list_t *connections;
 } scaninfo;
 
@@ -97,23 +95,20 @@ typedef struct proxy_type {
 	char name[MAXNICK];
 	sockcb writefunc;
 	int scanned;
-	int noopen;
+	int numopen;
 } proxy_type;
 
 /* these are some state flags */
 #define REPORT_DNS 	0x0001
 #define DO_DNS_HOST_LOOKUP	0x0002 
-/* #define DO_OPM_LOOKUP	0x0004 */
 #define DOING_SCAN	0x0008
 #define GOTOPENPROXY	0x0010
 #define OPMLIST		0x0020
 #define NOOPMLIST		0x0040
 #define FIN_SCAN		0x0080
 
-
 /* opsb.c */
 int findscan(const void *key1, const void *key2);
-void do_ban(scaninfo *scandata);
 void checkqueue();
 void addtocache(unsigned long ip);
 
@@ -126,7 +121,7 @@ int init_scanengine();
 char *type_of_proxy(int type);
 int get_proxy_by_name(const char *name);
 int load_ports();
-void save_ports();
+void save_ports( void );
  
 /* help text */
 extern const char *opsb_about[];
@@ -156,4 +151,5 @@ extern const char *opsb_help_set_cachetime [];
 extern const char *opsb_help_set_verbose [];
 extern const char *opsb_help_set_exclusions[];
 extern const char *opsb_help_set_cachesize[];
+
 #endif /* OPSB_H */

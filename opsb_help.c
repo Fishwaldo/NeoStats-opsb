@@ -23,7 +23,7 @@
 
 #include "neostats.h"
 
-const char opsb_help_status_oneline[] = "View opsb state information";
+const char opsb_help_status_oneline[] = "View opsb status";
 const char opsb_help_remove_oneline[] = "Remove an akill set by opsb";
 const char opsb_help_check_oneline[] = "Scan a selected user";
 const char opsb_help_add_oneline[] = "Add a port to scanning";
@@ -45,7 +45,7 @@ const char *opsb_about[] = {
 };
 
 const char *opsb_help_check[] = {
-	"Syntax: \2CHECK <NICK|IP|HOSTNAME>\2",
+	"Syntax: \2CHECK <nick|ip|hostname>\2",
 	"",
 	"This option will scan either a user connected to your",
 	"network, an IP address, or Hostname for Insecure proxies,",
@@ -68,19 +68,19 @@ const char *opsb_help_set_akill [] = {
 };
 
 const char *opsb_help_set_targetip [] = {
-	"\2TARGETIP <IP>\2",
+	"\2TARGETIP <ip>\2",
 	"IP address of server we try to make the proxies connect to",
 	NULL
 };
 
 const char *opsb_help_set_targetport [] = {
-	"\2TARGETPORT <PORT>\2",
+	"\2TARGETPORT <port>\2",
 	"IRCd port number we try to make proxies connect to.",
 	NULL
 };
 
 const char *opsb_help_set_maxbytes [] = {
-	"\2MAXBYTES <MAX>\2",
+	"\2MAXBYTES <max>\2",
 	"Maximum number of bytes we receive from a proxy before disconnecting",
 	"This setting should not be changed unless you know the",
 	"effects in full",
@@ -88,7 +88,7 @@ const char *opsb_help_set_maxbytes [] = {
 };
 
 const char *opsb_help_set_timeout [] = {
-	"\2TIMEOUT <TIME>\2",
+	"\2TIMEOUT <time>\2",
 	"Time we wait for a proxy to respond to our servers before",
 	"disconnecting and assuming its not an open proxy.",
 	"This setting should not be changed unless you know the",
@@ -97,7 +97,7 @@ const char *opsb_help_set_timeout [] = {
 };
 
 const char *opsb_help_set_openstring [] = {
-	"\2OPENSTRING <STRING>\2",
+	"\2OPENSTRING <string>\2",
 	"The string we expect to see if there is an open proxy",
 	"This setting should not be changed unless you know the",
 	"effects in full",
@@ -105,25 +105,25 @@ const char *opsb_help_set_openstring [] = {
 };
 
 const char *opsb_help_set_scanmsg [] = {
-	"\2SCANMSG <MSG>\2",
+	"\2SCANMSG <msg>\2",
 	"Message sent to a user when we scan their hosts",
 	NULL
 };
 
 const char *opsb_help_set_akilltime [] = {
-	"\2AKILLTIME <TIME>\2",
+	"\2AKILLTIME <time>\2",
 	"How long the user will be banned from the network for",
 	NULL
 };
 
 const char *opsb_help_set_cachetime [] = {
-	"\2CACHETIME <TIME>\2",
+	"\2CACHETIME <time>\2",
 	"Time (in seconds) that an entry will be cached",
 	NULL
 };
 
 const char *opsb_help_set_cachesize [] = {
-	"\2CACHESIZE <SIZE>\2",
+	"\2CACHESIZE <size>\2",
 	"The total number of clean hosts that OPSB will cache",
 	"Setting this too large may cause NeoStats to Lag",
 	NULL
@@ -144,17 +144,11 @@ const char *opsb_help_set_exclusions[] = {
 const char *opsb_help_add[] = {
 	"Syntax: \2ADD <type> <port>\2",
 	"",
-	"Add an entry of <type> running on port <port>",
-	"to the port list.",
-	"<type> can be either:", 
-	"       HTTP",
-	"       HTTPPOST",
-	"       SOCKS4",
-	"       SOCKS5",
-	"       WINGATE",
-	"       ROUTER",
-	"and port can be any valid port number. The new port is scanned",
-	"straight away",
+	"Add an entry to the port scan list.",
+	"<type> must be one of:", 
+	"    HTTP, HTTPPOST, SOCKS4, SOCKS5, WINGATE, ROUTER",
+	"<port> must be a valid port number.",
+	"The new port is scanned straight away",
 	NULL
 };
 
@@ -175,10 +169,9 @@ const char *opsb_help_list[] = {
 };
 
 const char *opsb_help_remove[] = {
-	"Syntax: \2REMOVE <IP|HOSTNAME>\2",
+	"Syntax: \2REMOVE <ip|hostname>\2",
 	"",
 	"Remove akills that have been set by opsb.",
-	"",
 	"<ip|hostname> is the hostname listed in your akill list",
 	"(usually found with /stats a)",
 	NULL

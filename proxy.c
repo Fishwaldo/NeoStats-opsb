@@ -30,18 +30,20 @@
 #endif
 #include "opsb.h"
 
-int proxy_connect(unsigned long ip, int port, char *who);
-#if 0
-void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
-void negfailed(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
-void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
-void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
-void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused);
-#endif
-
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
+
+typedef enum PORT_TYPE
+{
+	PTYPE_HTTP = 1,
+	PTYPE_SOCKS4, 
+	PTYPE_SOCKS5,
+	PTYPE_WINGATE,
+	PTYPE_ROUTER,
+	PTYPE_HTTPPOST,
+	PTYPE_MAX
+}PORT_TYPE;
 
 typedef struct conninfo {
 	int type;
@@ -53,12 +55,23 @@ typedef struct conninfo {
 	scaninfo *scandata;
 } conninfo;
    
-#define PTYPE_HTTP 	1
-#define PTYPE_SOCKS4 	2 
-#define PTYPE_SOCKS5	3
-#define PTYPE_WINGATE	4
-#define PTYPE_ROUTER	5
-#define PTYPE_HTTPPOST	6
+#if 0
+int proxy_connect(unsigned long ip, int port, char *who);
+void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
+void negfailed(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
+void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
+void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
+void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused);
+#endif
+
+int http_send (int fd, void *data);
+int sock4_send(int fd, void *data);
+int sock5_send(int fd, void *data);
+int wingate_send(int fd, void *data);
+int router_send(int fd, void *data);
+int httppost_send(int fd, void *data);
+int proxy_read(void *data, void *recv, size_t size);
+void open_proxy(conninfo *connection);
 
 char *defaultports[] = {
 	"80 8080 8000 3128",
@@ -76,16 +89,6 @@ char *stdmatchstrings[] = {
 	NULL
 };
 
-int http_send (int fd, void *data);
-int sock4_send(int fd, void *data);
-int sock5_send(int fd, void *data);
-int wingate_send(int fd, void *data);
-int router_send(int fd, void *data);
-int httppost_send(int fd, void *data);
-int proxy_read(void *data, void *recv, size_t size);
-void open_proxy(conninfo *connection);
-
-
 proxy_type proxy_list[] = {
 	{ PTYPE_HTTP, "HTTP",  http_send},
 	{ PTYPE_SOCKS4, "SOCKS4", sock4_send },
@@ -95,19 +98,6 @@ proxy_type proxy_list[] = {
 	{ PTYPE_HTTPPOST, "HTTPPOST", httppost_send},
 	{ 0, "" }
 };
-
-char *type_of_proxy(int type) {
-	return proxy_list[type-1].name;
-}
-int get_proxy_by_name(const char *name) {
-	int i;
-	for (i=0; proxy_list[i].type != 0; i++) {
-		if (!ircstrcasecmp (proxy_list[i].name, name)) {
-			return proxy_list[i].type;
-		}
-	}
-	return 0;
-}
 
 char http_send_buf[BUFSIZE];
 int http_send_buf_len;
@@ -122,13 +112,56 @@ int socks4_send_buf_len;
 char socks5_send_buf[BUFSIZE];
 int socks5_send_buf_len;
 
-void save_ports() 
+/** @brief type_of_proxy
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+char *type_of_proxy(int type)
+{
+	return proxy_list[type-1].name;
+}
+
+/** @brief get_proxy_by_name
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+int get_proxy_by_name(const char *name) {
+	int i;
+	for (i=0; proxy_list[i].type != 0; i++) {
+		if (!ircstrcasecmp (proxy_list[i].name, name)) {
+			return proxy_list[i].type;
+		}
+	}
+	return 0;
+}
+
+/** @brief save_ports
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+void save_ports( void )
 {
 	lnode_t *pn;
 	port_list *pl;
 	static char ports[512];
 	static char tmpports[512];
 	int lasttype = -1;
+
 	pn = list_first(opsb.ports);
 	while (pn) {
 		pl = lnode_get(pn);
@@ -147,6 +180,15 @@ void save_ports()
 	}
 	DBAStoreConfigStr(type_of_proxy(lasttype), ports, 512);
 } 
+
+/** @brief load_port
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
 
 void load_port(int type, char *portname)
 {
@@ -169,12 +211,21 @@ void load_port(int type, char *portname)
 		prtlst = ns_malloc(sizeof(port_list));
 		prtlst->type = type;
 		prtlst->port = atoi(av[j]);
-		prtlst->noopen = 0;
+		prtlst->numopen = 0;
 		lnode_create_append (opsb.ports, prtlst);
 		dlog (DEBUG1, "Added port %d for protocol %s", prtlst->port, type_of_proxy(type));
 	}
 	ns_free(av);
 }
+
+/** @brief load_ports
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
 
 int load_ports() {
 	static char portname[512];
@@ -195,9 +246,20 @@ int load_ports() {
 	return ok;				
 }
 
-int init_scanengine() {
+/** @brief init_scanengine
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+int init_scanengine( void )
+{
 	struct in_addr addr;
 	unsigned long laddr;
+
 	/* set up our send buffers */
 	http_send_buf_len = ircsnprintf(http_send_buf, BUFSIZE, "CONNECT %s:%d HTTP/1.0\r\n\r\nquit\r\n\r\n", opsb.targetip, opsb.targetport);
 	httppost_send_buf_len = ircsnprintf(httppost_send_buf, BUFSIZE, "POST http://%s:%d/ HTTP/1.0\r\nContent-type: text/plain\r\nContent-length: 5\r\n\r\nquit\r\n\r\n", opsb.targetip, opsb.targetport);
@@ -226,6 +288,15 @@ int init_scanengine() {
 	return NS_SUCCESS;
 
 }         
+
+/** @brief start_proxy_scan
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
 
 void start_proxy_scan(scaninfo *scandata) 
 {
@@ -278,7 +349,16 @@ void start_proxy_scan(scaninfo *scandata)
 	}
 }
 
-int http_send (int fd, void *data) {
+/** @brief http_send
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+int http_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	if (send_to_sock(ci->sock, http_send_buf, http_send_buf_len) != NS_FAILURE) {
@@ -289,6 +369,16 @@ int http_send (int fd, void *data) {
 	}
 	return NS_SUCCESS;
 }
+
+/** @brief sock4_send
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
 int sock4_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
@@ -301,6 +391,16 @@ int sock4_send(int fd, void *data) {
 	}
 	return NS_SUCCESS;
 }
+
+/** @brief sock5_send
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
 int sock5_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
@@ -313,6 +413,16 @@ int sock5_send(int fd, void *data) {
 	}
 	return NS_SUCCESS;
 }
+
+/** @brief wingate_send
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
 int wingate_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
@@ -325,6 +435,16 @@ int wingate_send(int fd, void *data) {
 	}
 	return NS_SUCCESS;
 }
+
+/** @brief router_send
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
 int router_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
@@ -337,6 +457,16 @@ int router_send(int fd, void *data) {
 	}
 	return NS_SUCCESS;
 }
+
+/** @brief httppost_send
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
 int httppost_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
@@ -349,16 +479,36 @@ int httppost_send(int fd, void *data) {
 	return NS_SUCCESS;
 }
 
-static int findconn(const void *key1, const void *key2) {
+/** @brief findconn
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+static int findconn( const void *key1, const void *key2 )
+{
 	const conninfo *ci1 = key1;
 	const conninfo *ci2 = key2;
-	if ((ci1->type == ci2->type) && (ci1->port == ci2->port)) {
+
+	if ((ci1->type == ci2->type) && (ci1->port == ci2->port))
 		return 0;
-	}
 	return -1;
 }
 
-int proxy_read (void *data, void *recv, size_t size) {
+/** @brief proxy_read 
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+int proxy_read( void *data, void *recv, size_t size )
+{
 	conninfo *ci = (conninfo *)data;
 	scaninfo *si = ci->scandata;
 	lnode_t *connode;
@@ -384,7 +534,7 @@ int proxy_read (void *data, void *recv, size_t size) {
 			proxy_list[ci->type-1].scanned++;
 			for (i = 0; stdmatchstrings[i] != NULL; i++) {
 				if (match(stdmatchstrings[i], recv)) {
-					proxy_list[ci->type-1].noopen++;
+					proxy_list[ci->type-1].numopen++;
 					if (si->state == DOING_SCAN) si->state = GOTOPENPROXY;
 					open_proxy(ci);
 				}
@@ -394,8 +544,14 @@ int proxy_read (void *data, void *recv, size_t size) {
 	return NS_SUCCESS;
 }
 
-
-
+/** @brief check_scan_free
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
 
 void check_scan_free(scaninfo *scandata) {
 	lnode_t *scannode;
@@ -420,7 +576,14 @@ void check_scan_free(scaninfo *scandata) {
 	checkqueue();												
 }
 
-
+/** @brief open_proxy
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
 
 void open_proxy(conninfo *connection)
 {
@@ -447,7 +610,16 @@ void open_proxy(conninfo *connection)
 	scandata->doneban = 1;	
 }
 
-int opsb_cmd_status (CmdParams* cmdparams) 
+/** @brief opsb_cmd_status
+ *
+ *  STATUS command handler
+ *
+ *  @param cmdparam struct
+ *
+ *  @return NS_SUCCESS if suceeds else result of command
+ */
+
+int opsb_cmd_status( CmdParams* cmdparams )
 {
 	lnode_t *node;
 	scaninfo *scandata;
@@ -462,7 +634,7 @@ int opsb_cmd_status (CmdParams* cmdparams)
 	irc_prefmsg (opsb_bot, cmdparams->source, "Cache Entries: %d", (int)list_count(cache));
 	irc_prefmsg (opsb_bot, cmdparams->source, "Cache Hits: %d", opsb.cachehits);
 	for (i = 0; proxy_list[i].type != 0; i++) {
-		irc_prefmsg (opsb_bot, cmdparams->source, "Proxy %s Found %d Open %d", proxy_list[i].name, proxy_list[i].scanned, proxy_list[i].noopen);
+		irc_prefmsg (opsb_bot, cmdparams->source, "Proxy %s Found %d Open %d", proxy_list[i].name, proxy_list[i].scanned, proxy_list[i].numopen);
 	}
 	irc_prefmsg (opsb_bot, cmdparams->source, "Currently Scanning %d Proxies (%d in queue):", (int)list_count(opsbl), (int)list_count(opsbq));
 	node = list_first(opsbl);
@@ -493,5 +665,3 @@ int opsb_cmd_status (CmdParams* cmdparams)
 	}
 	return 0;
 }
-
-

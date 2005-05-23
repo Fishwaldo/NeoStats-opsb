@@ -21,20 +21,31 @@
 ** $Id$
 */
 
+/*  TODO:
+ *  - Akill support.
+ *  - remove akill must check whether an akill was added by opsb before 
+ *    removing it otherwise blsb becomes a way for opers to remove any 
+ *    akill on the network including those they may not normally have 
+ *    access to.
+ */
+
 #include "neostats.h"
 #ifdef HAVE_ARPA_NAMESER_H
 #include <arpa/nameser.h>
 #endif
 #include "opsb.h"
 
-void dnsblscan(void *scandata, adns_answer *a);
-static int ss_event_signon (CmdParams* cmdparams);
-int startscan(scaninfo *scandata);
-void save_ports();
-static int unconf(void);
-int opsb_cmd_list (CmdParams* cmdparams);
-int opsb_cmd_add (CmdParams* cmdparams);
-int opsb_cmd_del (CmdParams* cmdparams);
+void dns_callback( void *scandata, adns_answer *a );
+static int startscan( scaninfo *scandata );
+static int unconf( void );
+static int event_nickip (CmdParams* cmdparams);
+static int opsb_cmd_list( CmdParams* cmdparams );
+static int opsb_cmd_add( CmdParams* cmdparams );
+static int opsb_cmd_del( CmdParams* cmdparams );
+static int opsb_cmd_check( CmdParams* cmdparams );
+static int opsb_cmd_remove( CmdParams* cmdparams );
+static int opsb_set_cb( CmdParams* cmdparams, SET_REASON reason );
+static int opsb_set_exclusions_cb( CmdParams *cmdparams, SET_REASON reason );
 
 Bot *opsb_bot;
 
@@ -51,7 +62,7 @@ const char *opsb_copyright[] = {
  */
 ModuleInfo module_info = {
 	"OPSB",
-	"An Open Proxy Scanning Bot",
+	"Open Proxy Scanning Bot",
 	opsb_copyright,
 	opsb_about,
 	NEOSTATS_VERSION,
@@ -62,37 +73,124 @@ ModuleInfo module_info = {
 	0,
 };
 
-int findscan(const void *key1, const void *key2) {
-        const scaninfo *chan1 = key1;
-        return (ircstrcasecmp (chan1->who, key2));
+static bot_cmd opsb_commands[]=
+{
+	{"STATUS",	opsb_cmd_status,	0,	NS_ULEVEL_OPER,		opsb_help_status,	opsb_help_status_oneline},
+	{"REMOVE",	opsb_cmd_remove,	1,	NS_ULEVEL_OPER,		opsb_help_remove,	opsb_help_remove_oneline},
+	{"CHECK",	opsb_cmd_check,		1,	NS_ULEVEL_OPER,		opsb_help_check,	opsb_help_check_oneline},
+	{"ADD",		opsb_cmd_add,		3,	NS_ULEVEL_ADMIN,	opsb_help_add,		opsb_help_add_oneline},
+	{"DEL",		opsb_cmd_del,		1,	NS_ULEVEL_ADMIN,	opsb_help_del,		opsb_help_del_oneline},
+	{"LIST",	opsb_cmd_list,		0,	NS_ULEVEL_ADMIN,	opsb_help_list,		opsb_help_list_oneline},
+	{NULL,		NULL,				0, 	0,		NULL, 		NULL}
+};
+
+static bot_setting opsb_settings[]=
+{
+	{"TARGETIP",	opsb.targetip,		SET_TYPE_IPV4,	0,	MAXHOST,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetip,	opsb_set_cb, (void*)"10.1.1.24" 		},
+	{"TARGETPORT",	&opsb.targetport,	SET_TYPE_INT,	0,	65535,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetport,	opsb_set_cb, (void*)6667	},
+	{"AKILL",		&opsb.doakill,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akill,	opsb_set_cb, (void*)1 	},	
+	{"AKILLTIME",	&opsb.akilltime,	SET_TYPE_INT,	0,	20736000,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akilltime,	opsb_set_cb, (void*)86400 	},
+	{"MAXBYTES",	&opsb.maxbytes,		SET_TYPE_INT,	0,	100000,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_maxbytes,	opsb_set_cb, (void*)500 	},
+	{"TIMEOUT",		&opsb.timeout,		SET_TYPE_INT,	0,	120,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_timeout,	opsb_set_cb, (void*)30 	},
+	{"OPENSTRING",	opsb.openstring,	SET_TYPE_MSG,	0,	BUFSIZE,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_openstring,	opsb_set_cb, (void*)"*** Looking up your hostname..." },
+	{"SCANMSG",		opsb.scanmsg,		SET_TYPE_MSG,	0,	BUFSIZE,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_scanmsg,	opsb_set_cb, (void*)"Your Host is being Scanned for Open Proxies" },
+	{"CACHETIME",	&opsb.cachetime,	SET_TYPE_INT,	0,	86400,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_cachetime,	opsb_set_cb, (void*)3600 	},
+	{"CACHESIZE",	&opsb.cachesize,	SET_TYPE_INT,	0,	10000,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_cachesize,	opsb_set_cb, (void*)1000	},
+	{"VERBOSE",		&opsb.verbose,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_verbose,	opsb_set_cb, (void*)1 	},
+	{"EXCLUSIONS",	&opsb.exclusions,	SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN,	NULL,	opsb_help_set_exclusions,	opsb_set_exclusions_cb, (void *)0 },
+	{NULL,			NULL,				0,					0,	0, 	0,		NULL,	NULL,			NULL	},
+};
+
+/** BotInfo */
+static BotInfo opsb_botinfo = 
+{
+	"opsb", 
+	"opsb1", 
+	"opsb", 
+	BOT_COMMON_HOST, 
+	"Proxy Scanning Bot", 	
+	BOT_FLAG_SERVICEBOT|BOT_FLAG_RESTRICT_OPERS|BOT_FLAG_DEAF, 
+	opsb_commands, 
+	opsb_settings,
+};
+
+ModuleEvent module_events[] = 
+{
+	{ EVENT_NICKIP, event_nickip, EVENT_FLAG_EXCLUDE_ME },
+	{ EVENT_NULL, 	NULL }
+};
+
+
+/** @brief ports_sort
+ *
+ *  list handler to find scan
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+int findscan( const void *key1, const void *key2 )
+{
+	const scaninfo *chan1 = key1;
+
+	return ircstrcasecmp( chan1->who, key2 );
 }
 
-int ports_sort(const void *key1, const void *key2) {
+/** @brief ports_sort
+ *
+ *  Sort ports list handler
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+int ports_sort( const void *key1, const void *key2 )
+{
 	port_list *pl1 = (port_list *)key1;
 	port_list *pl2 = (port_list *)key2;
-	if (pl1->type == pl2->type) {
-		if (pl1->port == pl2->port) {
+
+	if (pl1->type == pl2->type)
+	{
+		if (pl1->port == pl2->port)
 			return 0;
-		} else if (pl1->port > pl2->port) {
+		if (pl1->port > pl2->port)
 			return 1;
-		} else {
-			return -1;
-		}
-	} else if (pl1->type > pl2->type) {
-		return 1;
+		return -1;
 	}
+	if (pl1->type > pl2->type)
+		return 1;
 	return -1;
 }
 
 
-int opsb_cmd_remove (CmdParams* cmdparams) 
+/** @brief opsb_cmd_remove
+ *
+ *  REMOVE command handler
+ *
+ *  @param cmdparam struct
+ *
+ *  @return NS_SUCCESS if suceeds else result of command
+ */
+
+int opsb_cmd_remove( CmdParams* cmdparams )
 {
 	irc_rakill (opsb_bot, cmdparams->av[0], "*");
 	irc_chanalert (opsb_bot, "%s attempted to remove an akill for *@%s", cmdparams->source->name, cmdparams->av[0]);
 	return NS_SUCCESS;
 }
 
-int opsb_cmd_check (CmdParams* cmdparams) 
+/** @brief opsb_cmd_check
+ *
+ *  CHECK command handler
+ *
+ *  @param cmdparam struct
+ *
+ *  @return NS_SUCCESS if suceeds else result of command
+ */
+
+int opsb_cmd_check( CmdParams* cmdparams )
 {
 	Client *scanuser;
 	scaninfo *scandata;
@@ -129,7 +227,7 @@ int opsb_cmd_check (CmdParams* cmdparams)
 		/* is it a ip address or host */
 		if (inet_aton(cmdparams->av[0], &scandata->ip) <= 0) {
 			scandata->ip.s_addr = 0;
-			if (dns_lookup(scandata->lookup, adns_r_a, dnsblscan, (void *)scandata) != 1) {
+			if (dns_lookup(scandata->lookup, adns_r_a, dns_callback, (void *)scandata) != 1) {
 				nlog (LOG_WARNING, "DNS: startscan() DO_DNS_HOST_LOOKUP dns_lookup() failed");
 				ns_free(scandata);
 				return NS_SUCCESS;
@@ -143,6 +241,15 @@ int opsb_cmd_check (CmdParams* cmdparams)
 		irc_prefmsg (opsb_bot, cmdparams->source, "Check Failed");
 	return NS_SUCCESS;
 }
+
+/** @brief opsb_cmd_list
+ *
+ *  LIST command handler
+ *
+ *  @param cmdparam struct
+ *
+ *  @return NS_SUCCESS if suceeds else result of command
+ */
 
 int opsb_cmd_list (CmdParams* cmdparams) 
 {
@@ -163,6 +270,15 @@ int opsb_cmd_list (CmdParams* cmdparams)
 	CommandReport(opsb_bot, "%s requested Port List", cmdparams->source->name);
 	return NS_SUCCESS;
 }
+
+/** @brief opsb_cmd_add
+ *
+ *  ADD command handler
+ *
+ *  @param cmdparam struct
+ *
+ *  @return NS_SUCCESS if suceeds else result of command
+ */
 
 int opsb_cmd_add (CmdParams* cmdparams) 
 {
@@ -204,6 +320,15 @@ int opsb_cmd_add (CmdParams* cmdparams)
 	return NS_SUCCESS;
 }
 
+/** @brief opsb_cmd_del
+ *
+ *  DEL command handler
+ *
+ *  @param cmdparam struct
+ *
+ *  @return NS_SUCCESS if suceeds else result of command
+ */
+
 int opsb_cmd_del (CmdParams* cmdparams) 
 {
 	port_list *pl;
@@ -239,7 +364,18 @@ int opsb_cmd_del (CmdParams* cmdparams)
 	return NS_SUCCESS;
 }
 
-int do_set_cb (CmdParams* cmdparams, SET_REASON reason)
+/** @brief opsb_set_cb
+ *
+ *  Set callback
+ *  Remove unconfigured warning if needed
+ *
+ *  @cmdparams pointer to commands param struct
+ *  @cmdparams reason for SET
+ *
+ *  @return NS_SUCCESS if suceeds else NS_FAILURE
+ */
+
+int opsb_set_cb( CmdParams* cmdparams, SET_REASON reason )
 {
 	if( reason == SET_CHANGE )
 	{
@@ -251,6 +387,17 @@ int do_set_cb (CmdParams* cmdparams, SET_REASON reason)
 	return NS_SUCCESS;
 }
 
+/** @brief opsb_set_exclusions_cb
+ *
+ *  Set callback for exclusions
+ *  Enable or disable exclude event flag
+ *
+ *  @cmdparams pointer to commands param struct
+ *  @cmdparams reason for SET
+ *
+ *  @return NS_SUCCESS if suceeds else NS_FAILURE
+ */
+
 static int opsb_set_exclusions_cb( CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
@@ -260,69 +407,14 @@ static int opsb_set_exclusions_cb( CmdParams *cmdparams, SET_REASON reason )
 	return NS_SUCCESS;
 }
 
-static bot_cmd opsb_commands[]=
-{
-	{"STATUS",	opsb_cmd_status,	0,	NS_ULEVEL_OPER,		opsb_help_status,	opsb_help_status_oneline},
-	{"REMOVE",	opsb_cmd_remove,	1,	NS_ULEVEL_OPER,		opsb_help_remove,	opsb_help_remove_oneline},
-	{"CHECK",	opsb_cmd_check,		1,	NS_ULEVEL_OPER,		opsb_help_check,	opsb_help_check_oneline},
-	{"ADD",		opsb_cmd_add,		3,	NS_ULEVEL_ADMIN,	opsb_help_add,		opsb_help_add_oneline},
-	{"DEL",		opsb_cmd_del,		1,	NS_ULEVEL_ADMIN,	opsb_help_del,		opsb_help_del_oneline},
-	{"LIST",	opsb_cmd_list,		0,	NS_ULEVEL_ADMIN,	opsb_help_list,		opsb_help_list_oneline},
-	{NULL,		NULL,				0, 	0,		NULL, 		NULL}
-};
-
-static bot_setting opsb_settings[]=
-{
-	{"TARGETIP",	opsb.targetip,		SET_TYPE_IPV4,	0,	MAXHOST,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetip,	do_set_cb, (void*)"10.1.1.24" 		},
-	{"TARGETPORT",	&opsb.targetport,	SET_TYPE_INT,	0,	65535,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetport,	do_set_cb, (void*)6667	},
-	{"AKILL",		&opsb.doakill,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akill,	do_set_cb, (void*)1 	},	
-	{"AKILLTIME",	&opsb.akilltime,	SET_TYPE_INT,	0,	20736000,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akilltime,	do_set_cb, (void*)86400 	},
-	{"MAXBYTES",	&opsb.maxbytes,		SET_TYPE_INT,	0,	100000,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_maxbytes,	do_set_cb, (void*)500 	},
-	{"TIMEOUT",		&opsb.timeout,		SET_TYPE_INT,	0,	120,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_timeout,	do_set_cb, (void*)30 	},
-	{"OPENSTRING",	opsb.openstring,	SET_TYPE_MSG,	0,	BUFSIZE,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_openstring,	do_set_cb, (void*)"*** Looking up your hostname..." },
-	{"SCANMSG",		opsb.scanmsg,		SET_TYPE_MSG,	0,	BUFSIZE,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_scanmsg,	do_set_cb, (void*)"Your Host is being Scanned for Open Proxies" },
-	{"CACHETIME",	&opsb.cachetime,	SET_TYPE_INT,	0,	86400,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_cachetime,	do_set_cb, (void*)3600 	},
-	{"CACHESIZE",	&opsb.cachesize,	SET_TYPE_INT,	0,	10000,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_cachesize,	do_set_cb, (void*)1000	},
-	{"VERBOSE",		&opsb.verbose,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_verbose,	do_set_cb, (void*)1 	},
-	{"EXCLUSIONS",	&opsb.exclusions,	SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN,	NULL,	opsb_help_set_exclusions,	opsb_set_exclusions_cb, (void *)0 },
-	{NULL,			NULL,				0,					0,	0, 	0,		NULL,	NULL,			NULL	},
-};
-
-/** BotInfo */
-static BotInfo opsb_botinfo = 
-{
-	"opsb", 
-	"opsb1", 
-	"opsb", 
-	BOT_COMMON_HOST, 
-	"Proxy Scanning Bot", 	
-	BOT_FLAG_SERVICEBOT|BOT_FLAG_RESTRICT_OPERS|BOT_FLAG_DEAF, 
-	opsb_commands, 
-	opsb_settings,
-};
-
-/** @brief ModSynch
+/** @brief unconf
  *
- *  Startup handler
+ *  unconfigured warn timer callback
  *
  *  @param none
  *
  *  @return NS_SUCCESS if suceeds else NS_FAILURE
  */
-
-int ModSynch (void)
-{
-	SET_SEGV_LOCATION();
-	opsb_bot = AddBot (&opsb_botinfo);
-	if (opsb.confed == 0) {
-		AddTimer (TIMER_TYPE_INTERVAL, unconf, "unconf", 60);
-		unconf();
-	}
-	if(opsb.verbose) {
-		irc_chanalert (opsb_bot, "Open Proxy Scanning bot has started (Concurrent Scans: %d Sockets %d)", opsb.socks, opsb.socks *7);
-	}
-	return NS_SUCCESS;
-}
 
 static int unconf(void) 
 {
@@ -333,6 +425,15 @@ static int unconf(void)
 	}
 	return NS_SUCCESS;
 }
+
+/** @brief checkqueue
+ *
+ *  check queue
+ *
+ *  @param none
+ *
+ *  @return none
+ */
 
 void checkqueue() 
 {
@@ -352,6 +453,15 @@ void checkqueue()
 	startscan(scandata);
 
 }
+
+/** @brief addtocache
+ *
+ *  add to cache
+ *
+ *  @param ip
+ *
+ *  @return 
+ */
 
 void addtocache(unsigned long ip) 
 {
@@ -383,6 +493,15 @@ void addtocache(unsigned long ip)
 	ce->when = time(NULL);
 	lnode_create_append(cache, ce);
 }
+
+/** @brief checkcache
+ *
+ *  check cache
+ *
+ *  @param scandata
+ *
+ *  @return 
+ */
 
 int checkcache(scaninfo *scandata) 
 {
@@ -434,14 +553,17 @@ int checkcache(scaninfo *scandata)
 	return 0;
 }
 
-ModuleEvent module_events[] = 
-{
-	{ EVENT_NICKIP, 	ss_event_signon, EVENT_FLAG_EXCLUDE_ME},
-	{ EVENT_NULL, 	NULL}
-};
+/** @brief event_nickip
+ *
+ *  NICKIP event handler
+ *  scan user that just signed on the network
+ *
+ *  @cmdparams pointer to commands param struct
+ *
+ *  @return NS_SUCCESS if suceeds else NS_FAILURE
+ */
 
-/* this function kicks of a scan of a user that just signed on the network */
-static int ss_event_signon (CmdParams* cmdparams)
+static int event_nickip (CmdParams* cmdparams)
 {
 	scaninfo *scandata;
 	lnode_t *scannode;
@@ -449,18 +571,19 @@ static int ss_event_signon (CmdParams* cmdparams)
 	SET_SEGV_LOCATION();
 
 	/* don't scan users from a server that is excluded */
-	if (ModIsServerExcluded (cmdparams->source->uplink))
-	{
+	if( ModIsServerExcluded( cmdparams->source->uplink ) )
 		return NS_SUCCESS;
-	}
-	if (IsNetSplit(cmdparams->source)) {
-		dlog (DEBUG1, "Ignoring netsplit nick %s", cmdparams->source->name);
+	if( IsNetSplit( cmdparams->source ) )
+	{
+		dlog( DEBUG1, "Ignoring netsplit nick %s", cmdparams->source->name );
 		return NS_SUCCESS;
 	}
 	scannode = list_find(opsbl, cmdparams->source->name, findscan);
-	if (!scannode) scannode = list_find(opsbq, cmdparams->source->name, findscan);
-	if (scannode) {
-		dlog (DEBUG1, "ss_event_signon(): Not scanning %s as we are already scanning them", cmdparams->source->name);
+	if (!scannode)
+		scannode = list_find(opsbq, cmdparams->source->name, findscan);
+	if (scannode)
+	{
+		dlog (DEBUG1, "event_nickip: Not scanning %s as we are already scanning them", cmdparams->source->name);
 		return NS_SUCCESS;
 	}
 	irc_prefmsg (opsb_bot, cmdparams->source, "%s", opsb.scanmsg);
@@ -470,17 +593,23 @@ static int ss_event_signon (CmdParams* cmdparams)
 	strlcpy(scandata->who, cmdparams->source->name, MAXHOST);
 	strlcpy(scandata->lookup, cmdparams->source->user->hostname, MAXHOST);
 	strlcpy(scandata->server, cmdparams->source->uplink->name, MAXHOST);
-	/*strlcpy(scandata->connectstring, recbuf, BUFSIZE);*/
 	scandata->ip.s_addr = cmdparams->source->ip.s_addr;
 	if (!startscan(scandata)) {
 		irc_chanalert (opsb_bot, "Warning Can't scan %s", cmdparams->source->name);
-		nlog (LOG_WARNING, "OBSB ss_event_signon(): Can't scan %s. Check logs for possible errors", cmdparams->source->name);
+		nlog (LOG_WARNING, "OBSB event_nickip: Can't scan %s. Check logs for possible errors", cmdparams->source->name);
 	}
 	return NS_SUCCESS;
 }
 
-/* this function is the entry point for all scans. Any scan you want to kick off is started with this function. */
-/* this includes moving scans from the queue to the active list */
+/** @brief startscan
+ *
+ *  entry point for all scans including moving scans 
+ *  from the queue to the active list
+ *
+ *  @param scaninfo *scandata
+ *
+ *  @return 
+ */
 
 int startscan(scaninfo *scandata) 
 {
@@ -511,7 +640,7 @@ int startscan(scaninfo *scandata)
 	}
 	start_proxy_scan(scandata);
 #if 0	
-	if (dns_lookup(scandata->lookup, adns_r_a, dnsblscan, scandata) != 1) {
+	if (dns_lookup(scandata->lookup, adns_r_a, dns_callback, scandata) != 1) {
 		nlog (LOG_WARNING, "OPSB: startscan() DO_DNS_HOST_LOOKUP dns_lookup() failed");
 		ns_free(scandata);
 		checkqueue();
@@ -523,9 +652,19 @@ int startscan(scaninfo *scandata)
 	return 1;		
 }
 
+/** @brief dns_callback
+ *
+ *  DNS callback
+ *
+ *  @param data
+ *  @param a
+ *
+ *  @return NS_SUCCESS if suceeds else result of command
+ */
+
 /* this function is called when either checking the opm list, or when we are trying to resolve the hostname */
 
-void dnsblscan(void *data, adns_answer *a) 
+void dns_callback(void *data, adns_answer *a) 
 {
 	scaninfo *scandata = (scaninfo *)data;
 	char *show;
@@ -552,13 +691,13 @@ void dnsblscan(void *data, adns_answer *a)
 			if (inet_aton(show, &scandata->ip) > 0) {
 				startscan(scandata);
 			} else {
-				nlog (LOG_CRITICAL, "OPSB: dnsblscan() GETNICKIP failed-> %s", show);
+				nlog (LOG_CRITICAL, "OPSB: dns_callback() GETNICKIP failed-> %s", show);
 				irc_chanalert (opsb_bot, "Warning, Couldn't get the address for %s", scandata->who);
 				ns_free(scandata);
 				checkqueue();
 			}
 		} else {
-			nlog (LOG_CRITICAL, "OPSB: dnsblscan GETNICKIP rr_info failed");
+			nlog (LOG_CRITICAL, "OPSB: dns_callback GETNICKIP rr_info failed");
 			irc_chanalert (opsb_bot, "Warning, Couldnt get the address for %s. rr_info failed", scandata->who); 
 			ns_free(scandata);
 			checkqueue();
@@ -570,6 +709,15 @@ void dnsblscan(void *data, adns_answer *a)
 		ns_free(scandata);
 	}
 }
+
+/** @brief ModInit
+ *
+ *  Init handler
+ *
+ *  @param none
+ *
+ *  @return NS_SUCCESS if suceeds else NS_FAILURE
+ */
 
 int ModInit( void )
 {
@@ -606,6 +754,38 @@ int ModInit( void )
 	}
 	return NS_SUCCESS;
 }
+
+/** @brief ModSynch
+ *
+ *  Startup handler
+ *
+ *  @param none
+ *
+ *  @return NS_SUCCESS if suceeds else NS_FAILURE
+ */
+
+int ModSynch (void)
+{
+	SET_SEGV_LOCATION();
+	opsb_bot = AddBot (&opsb_botinfo);
+	if (opsb.confed == 0) {
+		AddTimer (TIMER_TYPE_INTERVAL, unconf, "unconf", 60);
+		unconf();
+	}
+	if(opsb.verbose) {
+		irc_chanalert (opsb_bot, "Open Proxy Scanning bot has started (Concurrent Scans: %d Sockets %d)", opsb.socks, opsb.socks *7);
+	}
+	return NS_SUCCESS;
+}
+
+/** @brief ModFini
+ *
+ *  Fini handler
+ *
+ *  @param none
+ *
+ *  @return NS_SUCCESS if suceeds else NS_FAILURE
+ */
 
 int ModFini( void )
 {
