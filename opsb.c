@@ -89,12 +89,12 @@ static bot_setting opsb_settings[]=
 	{"TARGETIP",	opsb.targetip,		SET_TYPE_IPV4,	0,	MAXHOST,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetip,	opsb_set_cb, (void*)"10.1.1.24" 		},
 	{"TARGETPORT",	&opsb.targetport,	SET_TYPE_INT,	0,	65535,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetport,	opsb_set_cb, (void*)6667	},
 	{"AKILL",		&opsb.doakill,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akill,	opsb_set_cb, (void*)1 	},	
-	{"AKILLTIME",	&opsb.akilltime,	SET_TYPE_INT,	0,	20736000,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akilltime,	opsb_set_cb, (void*)86400 	},
+	{"AKILLTIME",	&opsb.akilltime,	SET_TYPE_INT,	0,	20736000,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akilltime,	opsb_set_cb, (void*)TS_ONE_DAY 	},
 	{"MAXBYTES",	&opsb.maxbytes,		SET_TYPE_INT,	0,	100000,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_maxbytes,	opsb_set_cb, (void*)500 	},
 	{"TIMEOUT",		&opsb.timeout,		SET_TYPE_INT,	0,	120,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_timeout,	opsb_set_cb, (void*)30 	},
 	{"OPENSTRING",	opsb.openstring,	SET_TYPE_MSG,	0,	BUFSIZE,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_openstring,	opsb_set_cb, (void*)"*** Looking up your hostname..." },
 	{"SCANMSG",		opsb.scanmsg,		SET_TYPE_MSG,	0,	BUFSIZE,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_scanmsg,	opsb_set_cb, (void*)"Your Host is being Scanned for Open Proxies" },
-	{"CACHETIME",	&opsb.cachetime,	SET_TYPE_INT,	0,	86400,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_cachetime,	opsb_set_cb, (void*)3600 	},
+	{"CACHETIME",	&opsb.cachetime,	SET_TYPE_INT,	0,	TS_ONE_DAY,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_cachetime,	opsb_set_cb, (void*)TS_ONE_HOUR 	},
 	{"CACHESIZE",	&opsb.cachesize,	SET_TYPE_INT,	0,	10000,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_cachesize,	opsb_set_cb, (void*)1000	},
 	{"VERBOSE",		&opsb.verbose,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_verbose,	opsb_set_cb, (void*)1 	},
 	{"EXCLUSIONS",	&opsb.exclusions,	SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN,	NULL,	opsb_help_set_exclusions,	opsb_set_exclusions_cb, (void *)0 },
@@ -769,7 +769,7 @@ int ModSynch (void)
 	SET_SEGV_LOCATION();
 	opsb_bot = AddBot (&opsb_botinfo);
 	if (opsb.confed == 0) {
-		AddTimer (TIMER_TYPE_INTERVAL, unconf, "unconf", 60);
+		AddTimer (TIMER_TYPE_INTERVAL, unconf, "unconf", TS_ONE_MINUTE);
 		unconf();
 	}
 	if(opsb.verbose) {
