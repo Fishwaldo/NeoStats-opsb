@@ -132,13 +132,6 @@ extern const char *opsb_help_add[];
 extern const char *opsb_help_del[];
 extern const char *opsb_help_list[];
 
-extern const char opsb_help_status_oneline[];
-extern const char opsb_help_remove_oneline[];
-extern const char opsb_help_check_oneline[];
-extern const char opsb_help_add_oneline[];
-extern const char opsb_help_del_oneline[];
-extern const char opsb_help_list_oneline[];
-
 extern const char *opsb_help_set_akill [];
 extern const char *opsb_help_set_targetip [];
 extern const char *opsb_help_set_targetport [];

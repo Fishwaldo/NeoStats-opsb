@@ -23,13 +23,6 @@
 
 #include "neostats.h"
 
-const char opsb_help_status_oneline[] = "View opsb status";
-const char opsb_help_remove_oneline[] = "Remove an akill set by opsb";
-const char opsb_help_check_oneline[] = "Scan a selected user";
-const char opsb_help_add_oneline[] = "Add a port to scanning";
-const char opsb_help_del_oneline[] = "Delete a port from scanning";
-const char opsb_help_list_oneline[] = "List protocols and ports scanned";
-
 const char *opsb_about[] = {
 	"\2Open Proxy Scanning Bot Information\2",
 	"",
@@ -45,6 +38,7 @@ const char *opsb_about[] = {
 };
 
 const char *opsb_help_check[] = {
+	"Scan a user, ip address or host",
 	"Syntax: \2CHECK <nick|ip|hostname>\2",
 	"",
 	"This option will scan either a user connected to your",
@@ -55,9 +49,50 @@ const char *opsb_help_check[] = {
 };
 
 const char *opsb_help_status[] = {
+	"Display opsb status",
 	"Syntax: \2STATUS\2",
 	"",
 	"Display status of the open proxy scanning bot",
+	NULL
+};
+
+const char *opsb_help_add[] = {
+	"Add a port to scanning",
+	"Syntax: \2ADD <type> <port>\2",
+	"",
+	"Add an entry to the port scan list.",
+	"<type> must be one of:", 
+	"    HTTP, HTTPPOST, SOCKS4, SOCKS5, WINGATE, ROUTER",
+	"<port> must be a valid port number.",
+	"The new port is scanned straight away",
+	NULL
+};
+
+const char *opsb_help_del[] = {
+	"Delete a port from scanning",
+	"Syntax: \2DEL <index>\2",
+	"",
+	"Delete entry <index> from the list of ports. ",
+	"Requires a restart of OPSB to become effective.",
+	NULL
+};
+
+const char *opsb_help_list[] = {
+	"List protocols and ports scanned",
+	"Syntax: \2LIST\2",
+	"",
+	"List the current ports and protocols scanned",
+	"and a ID number for use in removing entries.",
+	NULL
+};
+
+const char *opsb_help_remove[] = {
+	"Remove an akill set by opsb",
+	"Syntax: \2REMOVE <ip|hostname>\2",
+	"",
+	"Remove akills that have been set by opsb.",
+	"<ip|hostname> is the hostname listed in your akill list",
+	"(usually found with /stats a)",
 	NULL
 };
 
@@ -138,41 +173,5 @@ const char *opsb_help_set_verbose [] = {
 const char *opsb_help_set_exclusions[] = {
 	"\2EXCLUSIONS <ON|OFF>\2",
 	"Use global exclusion list in addition to local exclusion list",
-	NULL
-};
-
-const char *opsb_help_add[] = {
-	"Syntax: \2ADD <type> <port>\2",
-	"",
-	"Add an entry to the port scan list.",
-	"<type> must be one of:", 
-	"    HTTP, HTTPPOST, SOCKS4, SOCKS5, WINGATE, ROUTER",
-	"<port> must be a valid port number.",
-	"The new port is scanned straight away",
-	NULL
-};
-
-const char *opsb_help_del[] = {
-	"Syntax: \2DEL <index>\2",
-	"",
-	"Delete entry <index> from the list of ports. ",
-	"Requires a restart of OPSB to become effective.",
-	NULL
-};
-
-const char *opsb_help_list[] = {
-	"Syntax: \2LIST\2",
-	"",
-	"List the current ports and protocols scanned",
-	"and a ID number for use in removing entries.",
-	NULL
-};
-
-const char *opsb_help_remove[] = {
-	"Syntax: \2REMOVE <ip|hostname>\2",
-	"",
-	"Remove akills that have been set by opsb.",
-	"<ip|hostname> is the hostname listed in your akill list",
-	"(usually found with /stats a)",
 	NULL
 };

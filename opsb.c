@@ -75,13 +75,13 @@ ModuleInfo module_info = {
 
 static bot_cmd opsb_commands[]=
 {
-	{"STATUS",	opsb_cmd_status,	0,	NS_ULEVEL_OPER,		opsb_help_status,	opsb_help_status_oneline},
-	{"REMOVE",	opsb_cmd_remove,	1,	NS_ULEVEL_OPER,		opsb_help_remove,	opsb_help_remove_oneline},
-	{"CHECK",	opsb_cmd_check,		1,	NS_ULEVEL_OPER,		opsb_help_check,	opsb_help_check_oneline},
-	{"ADD",		opsb_cmd_add,		3,	NS_ULEVEL_ADMIN,	opsb_help_add,		opsb_help_add_oneline},
-	{"DEL",		opsb_cmd_del,		1,	NS_ULEVEL_ADMIN,	opsb_help_del,		opsb_help_del_oneline},
-	{"LIST",	opsb_cmd_list,		0,	NS_ULEVEL_ADMIN,	opsb_help_list,		opsb_help_list_oneline},
-	{NULL,		NULL,				0, 	0,		NULL, 		NULL}
+	{"STATUS",	opsb_cmd_status,	0,	NS_ULEVEL_OPER,		opsb_help_status},
+	{"REMOVE",	opsb_cmd_remove,	1,	NS_ULEVEL_OPER,		opsb_help_remove},
+	{"CHECK",	opsb_cmd_check,		1,	NS_ULEVEL_OPER,		opsb_help_check},
+	{"ADD",		opsb_cmd_add,		3,	NS_ULEVEL_ADMIN,	opsb_help_add},
+	{"DEL",		opsb_cmd_del,		1,	NS_ULEVEL_ADMIN,	opsb_help_del},
+	{"LIST",	opsb_cmd_list,		0,	NS_ULEVEL_ADMIN,	opsb_help_list},
+	{NULL,		NULL,				0, 	0,		NULL}
 };
 
 static bot_setting opsb_settings[]=
