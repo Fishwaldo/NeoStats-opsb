@@ -301,7 +301,7 @@ int init_scanengine( void )
 void start_proxy_scan(scaninfo *scandata) 
 {
 	int i;
-	lnode_t *pn, *cn;
+	lnode_t *pn;
 	port_list *pl;
 	conninfo *ci;
 	char tmpname[512];
