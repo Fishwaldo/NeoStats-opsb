@@ -175,3 +175,9 @@ const char *opsb_help_set_exclusions[] = {
 	"Use global exclusion list in addition to local exclusion list",
 	NULL
 };
+const char *opsb_help_set_doreport[] = {
+	"Enable Open Proxy Reporting",
+	"\2DOREPORT <ON|OFF>\2",
+	"Enable OPSB reporting of Open Proxies back to Secure.irc-chat.net",
+	NULL
+};

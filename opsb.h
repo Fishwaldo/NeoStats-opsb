@@ -71,6 +71,7 @@ struct opsb {
 	int cachesize;
 	int cachehits;
 	int doakill;
+	int doreport;
 	int verbose;
 	int exclusions;
 	list_t *ports;
@@ -144,5 +145,5 @@ extern const char *opsb_help_set_cachetime [];
 extern const char *opsb_help_set_verbose [];
 extern const char *opsb_help_set_exclusions[];
 extern const char *opsb_help_set_cachesize[];
-
+extern const char *opsb_help_set_doreport[];
 #endif /* OPSB_H */

@@ -14,8 +14,4 @@
 /modconfig.h.in -text
 /modconfigwin32.h -text
 /opsb.Settings -text
-/opsb.c -text
-/opsb.h -text
 /opsb.vcproj -text
-/opsb_help.c -text
-/proxy.c -text

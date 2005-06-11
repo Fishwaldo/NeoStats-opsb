@@ -1,6 +1,8 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
 3.0.a3-dev - Mark (M) & Fish (F)
+ - AKILL support and open proxy reporting (F)
+ - Get default targetip when starting up correctly (F)
  - Simplify command path. (M)
  - Fix event and command return values. (M)
  - Clean up config.h entries. (M)

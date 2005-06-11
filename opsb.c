@@ -86,7 +86,7 @@ static bot_cmd opsb_commands[]=
 
 static bot_setting opsb_settings[]=
 {
-	{"TARGETIP",	opsb.targetip,		SET_TYPE_IPV4,	0,	MAXHOST,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetip,	opsb_set_cb, (void*)"10.1.1.24" 		},
+	{"TARGETIP",	opsb.targetip,		SET_TYPE_IPV4,	0,	MAXHOST,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetip,	opsb_set_cb, (void*)0 		},
 	{"TARGETPORT",	&opsb.targetport,	SET_TYPE_INT,	0,	65535,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetport,	opsb_set_cb, (void*)6667	},
 	{"AKILL",		&opsb.doakill,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akill,	opsb_set_cb, (void*)1 	},	
 	{"AKILLTIME",	&opsb.akilltime,	SET_TYPE_INT,	0,	20736000,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akilltime,	opsb_set_cb, (void*)TS_ONE_DAY 	},
@@ -98,6 +98,7 @@ static bot_setting opsb_settings[]=
 	{"CACHESIZE",	&opsb.cachesize,	SET_TYPE_INT,	0,	10000,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_cachesize,	opsb_set_cb, (void*)1000	},
 	{"VERBOSE",		&opsb.verbose,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_verbose,	opsb_set_cb, (void*)1 	},
 	{"EXCLUSIONS",	&opsb.exclusions,	SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN,	NULL,	opsb_help_set_exclusions,	opsb_set_exclusions_cb, (void *)0 },
+	{"DOREPORT",	&opsb.doreport, SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN,  NULL,	opsb_help_set_doreport,	opsb_set_cb, (void *)1},	
 	{NULL,			NULL,				0,					0,	0, 	0,		NULL,	NULL,			NULL	},
 };
 
@@ -745,13 +746,6 @@ int ModInit( void )
 		nlog (LOG_WARNING, "Can't Load opsb. No Ports Defined for Scanner. Did you install Correctly?");
 		return NS_FAILURE;
 	}
-	/* XXX needs work */
-	if (strlen(opsb.targetip) <= 0) {
-		strlcpy(opsb.targetip, me.uplink, MAXHOST);
-	}
-	if (init_scanengine() != NS_SUCCESS) {
-		return NS_FAILURE;
-	}
 	return NS_SUCCESS;
 }
 
@@ -767,6 +761,12 @@ int ModInit( void )
 int ModSynch (void)
 {
 	SET_SEGV_LOCATION();
+	if (strlen(opsb.targetip) <= 0) {
+		strlcpy(opsb.targetip, inet_ntoa(me.srvip.sin_addr), MAXHOST);
+	}
+	if (init_scanengine() != NS_SUCCESS) {
+		return NS_FAILURE;
+	}
 	opsb_bot = AddBot (&opsb_botinfo);
 	if (opsb.confed == 0) {
 		AddTimer (TIMER_TYPE_INTERVAL, unconf, "unconf", TS_ONE_MINUTE);

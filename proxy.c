@@ -269,7 +269,7 @@ int init_scanengine( void )
 	if (inet_aton(opsb.targetip, &addr) != 0) {
 	         laddr = htonl(addr.s_addr);
 	} else {
-		nlog(LOG_ERROR, "Couldn't Setup connect address for init_scan_engine");
+		nlog(LOG_ERROR, "Couldn't Setup connect address for init_scan_engine: %s", opsb.targetip);
 		return NS_FAILURE;
 	}
 	/* taken from libopm */
@@ -588,7 +588,9 @@ void check_scan_free(scaninfo *scandata) {
 void open_proxy(conninfo *connection)
 {
 	scaninfo *scandata = connection->scandata;
-
+	Client *u;
+	char buf[1400];
+	
 	SET_SEGV_LOCATION();
 
 	if (scandata->doneban == 1)
@@ -599,11 +601,16 @@ void open_proxy(conninfo *connection)
 	irc_chanalert (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
 	irc_globops  (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
 	if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
-#if 0
+	u = FindUser(scandata->who);
+	if (u) 
+		irc_prefmsg(opsb_bot, u, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
 	if (opsb.doakill) 
-		/* XXX IP */
-		irc_akill (opsb_bot, "", "*", opsb.akilltime, "Open Proxy found on your host. %s(%d)", type_of_proxy(connection->type), connection->port);
-#endif
+		irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.akilltime, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
+	if (opsb.doreport) {
+		/* type\nport\nip\nnetwork\n */
+		ircsnprintf(buf, 1400, "%d\n%d\n%s\n%s\n", connection->type, connection->port, inet_ntoa(scandata->ip), me.name);
+		sendtoMQ(UPDATE_OPSBREPORT, buf, strlen(buf));
+	}
 	/* no point continuing the scan if they are found open */
 	scandata->state = GOTOPENPROXY;
 	/* XXX end scan */
