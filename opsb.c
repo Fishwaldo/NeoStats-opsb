@@ -37,7 +37,7 @@
 
 void dns_callback( void *scandata, adns_answer *a );
 static int startscan( scaninfo *scandata );
-static int unconf( void );
+static int unconf( void* );
 static int event_nickip (CmdParams* cmdparams);
 static int opsb_cmd_list( CmdParams* cmdparams );
 static int opsb_cmd_add( CmdParams* cmdparams );
@@ -417,7 +417,7 @@ static int opsb_set_exclusions_cb( CmdParams *cmdparams, SET_REASON reason )
  *  @return NS_SUCCESS if suceeds else NS_FAILURE
  */
 
-static int unconf(void) 
+static int unconf(void *userptr) 
 {
 	if (opsb.confed != 1) 
 	{
@@ -769,8 +769,8 @@ int ModSynch (void)
 	}
 	opsb_bot = AddBot (&opsb_botinfo);
 	if (opsb.confed == 0) {
-		AddTimer (TIMER_TYPE_INTERVAL, unconf, "unconf", TS_ONE_MINUTE);
-		unconf();
+		AddTimer (TIMER_TYPE_INTERVAL, unconf, "unconf", TS_ONE_MINUTE, NULL);
+		unconf( NULL );
 	}
 	if(opsb.verbose) {
 		irc_chanalert (opsb_bot, "Open Proxy Scanning bot has started (Concurrent Scans: %d Sockets %d)", opsb.socks, opsb.socks *7);
