@@ -81,7 +81,7 @@ static bot_cmd opsb_commands[]=
 	{"ADD",		opsb_cmd_add,		3,	NS_ULEVEL_ADMIN,	opsb_help_add},
 	{"DEL",		opsb_cmd_del,		1,	NS_ULEVEL_ADMIN,	opsb_help_del},
 	{"LIST",	opsb_cmd_list,		0,	NS_ULEVEL_ADMIN,	opsb_help_list},
-	{NULL,		NULL,				0, 	0,		NULL}
+	NS_CMD_END()
 };
 
 static bot_setting opsb_settings[]=
@@ -99,7 +99,7 @@ static bot_setting opsb_settings[]=
 	{"VERBOSE",		&opsb.verbose,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_verbose,	opsb_set_cb, (void*)1 	},
 	{"EXCLUSIONS",	&opsb.exclusions,	SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN,	NULL,	opsb_help_set_exclusions,	opsb_set_exclusions_cb, (void *)0 },
 	{"DOREPORT",	&opsb.doreport, SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN,  NULL,	opsb_help_set_doreport,	opsb_set_cb, (void *)1},	
-	{NULL,			NULL,				0,					0,	0, 	0,		NULL,	NULL,			NULL	},
+	NS_SETTING_END()
 };
 
 /** BotInfo */
