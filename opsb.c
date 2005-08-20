@@ -78,7 +78,7 @@ static bot_cmd opsb_commands[]=
 	{"STATUS",	opsb_cmd_status,	0,	NS_ULEVEL_OPER,		opsb_help_status},
 	{"REMOVE",	opsb_cmd_remove,	1,	NS_ULEVEL_OPER,		opsb_help_remove},
 	{"CHECK",	opsb_cmd_check,		1,	NS_ULEVEL_OPER,		opsb_help_check},
-	{"ADD",		opsb_cmd_add,		3,	NS_ULEVEL_ADMIN,	opsb_help_add},
+	{"ADD",		opsb_cmd_add,		2,	NS_ULEVEL_ADMIN,	opsb_help_add},
 	{"DEL",		opsb_cmd_del,		1,	NS_ULEVEL_ADMIN,	opsb_help_del},
 	{"LIST",	opsb_cmd_list,		0,	NS_ULEVEL_ADMIN,	opsb_help_list},
 	NS_CMD_END()
@@ -290,11 +290,11 @@ int opsb_cmd_add (CmdParams* cmdparams)
 		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Ports list is full");
 		return NS_SUCCESS;
 	}
-	if (!atoi(cmdparams->av[2])) {
+	if (!atoi(cmdparams->av[1])) {
 		irc_prefmsg (opsb_bot, cmdparams->source, "Port field does not contain a valid port");
 		return NS_SUCCESS;
 	}
-	if (get_proxy_by_name(cmdparams->av[1]) < 1) {
+	if (get_proxy_by_name(cmdparams->av[0]) < 1) {
 		irc_prefmsg (opsb_bot, cmdparams->source, "Unknown Proxy type %s", cmdparams->av[1]);
 		return NS_SUCCESS;
 	}
@@ -302,8 +302,8 @@ int opsb_cmd_add (CmdParams* cmdparams)
 	lnode = list_first(opsb.ports);
 	while (lnode) {
 		pl = lnode_get(lnode);
-		if ((pl->type == get_proxy_by_name(cmdparams->av[1])) && (pl->port == atoi(cmdparams->av[2]))) {
-			irc_prefmsg (opsb_bot, cmdparams->source, "Duplicate Entry for Protocol %s", cmdparams->av[1]);
+		if ((pl->type == get_proxy_by_name(cmdparams->av[0])) && (pl->port == atoi(cmdparams->av[1]))) {
+			irc_prefmsg (opsb_bot, cmdparams->source, "Duplicate Entry for Protocol %s", cmdparams->av[0]);
 			return NS_SUCCESS;
 		}
 		lnode = list_next(opsb.ports, lnode);
@@ -316,8 +316,8 @@ int opsb_cmd_add (CmdParams* cmdparams)
 	list_sort(opsb.ports, ports_sort);
 	save_ports();
 /* 	add_port(pl->type, pl->port); */
-	irc_prefmsg (opsb_bot, cmdparams->source, "Added Port %d for Protocol %s to Ports list", pl->port, cmdparams->av[1]);
-	CommandReport(opsb_bot, "%s added port %d for protocol %s to Ports list", cmdparams->source->name, pl->port, cmdparams->av[1]);
+	irc_prefmsg (opsb_bot, cmdparams->source, "Added Port %d for Protocol %s to Ports list", pl->port, cmdparams->av[0]);
+	CommandReport(opsb_bot, "%s added port %d for protocol %s to Ports list", cmdparams->source->name, pl->port, cmdparams->av[0]);
 	return NS_SUCCESS;
 }
 
@@ -336,11 +336,11 @@ int opsb_cmd_del (CmdParams* cmdparams)
 	int i;
 	lnode_t *lnode;
 
-	if (atoi(cmdparams->av[1]) != 0) {
+	if (atoi(cmdparams->av[0]) != 0) {
 		lnode = list_first(opsb.ports);
 		i = 1;
 		while (lnode) {
-			if (i == atoi(cmdparams->av[1])) {
+			if (i == atoi(cmdparams->av[0])) {
 				/* delete the entry */
 				pl = lnode_get(lnode);
 				list_delete(opsb.ports, lnode);
@@ -358,7 +358,7 @@ int opsb_cmd_del (CmdParams* cmdparams)
 			lnode = list_next(opsb.ports, lnode);
 		}		
 		/* if we get here, then we can't find the entry */
-		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Can't find entry %d. /msg %s ports list", atoi(cmdparams->av[1]), opsb_bot->name);
+		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Can't find entry %d. /msg %s ports list", atoi(cmdparams->av[0]), opsb_bot->name);
 	} else {
 		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Out of Range");
 	}
