@@ -118,7 +118,7 @@ static BotInfo opsb_botinfo =
 ModuleEvent module_events[] = 
 {
 	{ EVENT_NICKIP, event_nickip, EVENT_FLAG_EXCLUDE_ME },
-	{ EVENT_NULL, 	NULL }
+	NS_EVENT_END()
 };
 
 
