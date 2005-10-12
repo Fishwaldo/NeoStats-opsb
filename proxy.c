@@ -198,7 +198,7 @@ void load_port(int type, char *portname)
 	port_list *prtlst;
 
 	strlcpy (portlist, portname, 512);
-	ac = split_buf(portlist, &av, 0);
+	ac = split_buf(portlist, &av);
 	for (j = 0; j < ac; j++) {
 		if (atoi(av[j]) == 0) {
 			nlog (LOG_WARNING, "Invalid port %s for proxy type %s", av[j], type_of_proxy(type));
@@ -316,7 +316,7 @@ void start_proxy_scan(scaninfo *scandata)
 	scandata->state = DOING_SCAN;
 	/* this is so we can timeout scans */
 	scandata->started = time(NULL);
-	scandata->connections = list_create(-1);
+	scandata->connections = list_create(LISTCOUNT_T_MAX);
 	pn = list_first(opsb.ports);
 	while (pn) {
 		pl = lnode_get(pn);
