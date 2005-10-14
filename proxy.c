@@ -626,7 +626,7 @@ void open_proxy(conninfo *connection)
  *  @return NS_SUCCESS if suceeds else result of command
  */
 
-int opsb_cmd_status( CmdParams* cmdparams )
+int opsb_cmd_status( const CmdParams *cmdparams )
 {
 	lnode_t *node;
 	scaninfo *scandata;

@@ -38,14 +38,14 @@
 void dns_callback( void *scandata, adns_answer *a );
 static int startscan( scaninfo *scandata );
 static int unconf( void* );
-static int event_nickip (CmdParams* cmdparams);
-static int opsb_cmd_list( CmdParams* cmdparams );
-static int opsb_cmd_add( CmdParams* cmdparams );
-static int opsb_cmd_del( CmdParams* cmdparams );
-static int opsb_cmd_check( CmdParams* cmdparams );
-static int opsb_cmd_remove( CmdParams* cmdparams );
-static int opsb_set_cb( CmdParams* cmdparams, SET_REASON reason );
-static int opsb_set_exclusions_cb( CmdParams *cmdparams, SET_REASON reason );
+static int event_nickip (const CmdParams *cmdparams);
+static int opsb_cmd_list( const CmdParams *cmdparams );
+static int opsb_cmd_add( const CmdParams *cmdparams );
+static int opsb_cmd_del( const CmdParams *cmdparams );
+static int opsb_cmd_check( const CmdParams *cmdparams );
+static int opsb_cmd_remove( const CmdParams *cmdparams );
+static int opsb_set_cb( const CmdParams *cmdparams, SET_REASON reason );
+static int opsb_set_exclusions_cb( const CmdParams *cmdparams, SET_REASON reason );
 
 Bot *opsb_bot;
 
@@ -175,7 +175,7 @@ int ports_sort( const void *key1, const void *key2 )
  *  @return NS_SUCCESS if suceeds else result of command
  */
 
-int opsb_cmd_remove( CmdParams* cmdparams )
+int opsb_cmd_remove( const CmdParams *cmdparams )
 {
 	irc_rakill (opsb_bot, cmdparams->av[0], "*");
 	irc_chanalert (opsb_bot, "%s attempted to remove an akill for *@%s", cmdparams->source->name, cmdparams->av[0]);
@@ -191,7 +191,7 @@ int opsb_cmd_remove( CmdParams* cmdparams )
  *  @return NS_SUCCESS if suceeds else result of command
  */
 
-int opsb_cmd_check( CmdParams* cmdparams )
+int opsb_cmd_check( const CmdParams *cmdparams )
 {
 	Client *scanuser;
 	scaninfo *scandata;
@@ -252,7 +252,7 @@ int opsb_cmd_check( CmdParams* cmdparams )
  *  @return NS_SUCCESS if suceeds else result of command
  */
 
-int opsb_cmd_list (CmdParams* cmdparams) 
+int opsb_cmd_list (const CmdParams *cmdparams) 
 {
 	port_list *pl;
 	int i;
@@ -281,7 +281,7 @@ int opsb_cmd_list (CmdParams* cmdparams)
  *  @return NS_SUCCESS if suceeds else result of command
  */
 
-int opsb_cmd_add (CmdParams* cmdparams) 
+int opsb_cmd_add (const CmdParams *cmdparams) 
 {
 	port_list *pl;
 	lnode_t *lnode;
@@ -330,7 +330,7 @@ int opsb_cmd_add (CmdParams* cmdparams)
  *  @return NS_SUCCESS if suceeds else result of command
  */
 
-int opsb_cmd_del (CmdParams* cmdparams) 
+int opsb_cmd_del (const CmdParams *cmdparams) 
 {
 	port_list *pl;
 	int i;
@@ -376,7 +376,7 @@ int opsb_cmd_del (CmdParams* cmdparams)
  *  @return NS_SUCCESS if suceeds else NS_FAILURE
  */
 
-int opsb_set_cb( CmdParams* cmdparams, SET_REASON reason )
+int opsb_set_cb( const CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_CHANGE )
 	{
@@ -399,7 +399,7 @@ int opsb_set_cb( CmdParams* cmdparams, SET_REASON reason )
  *  @return NS_SUCCESS if suceeds else NS_FAILURE
  */
 
-static int opsb_set_exclusions_cb( CmdParams *cmdparams, SET_REASON reason )
+static int opsb_set_exclusions_cb( const CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
@@ -564,7 +564,7 @@ int checkcache(scaninfo *scandata)
  *  @return NS_SUCCESS if suceeds else NS_FAILURE
  */
 
-static int event_nickip (CmdParams* cmdparams)
+static int event_nickip (const CmdParams *cmdparams)
 {
 	scaninfo *scandata;
 	lnode_t *scannode;

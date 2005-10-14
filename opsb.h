@@ -116,7 +116,7 @@ void addtocache(unsigned long ip);
 
 /* proxy.c */
 void start_proxy_scan(scaninfo *scandata);
-int opsb_cmd_status (CmdParams* cmdparams) ;
+int opsb_cmd_status (const CmdParams *cmdparams) ;
 void check_scan_free(scaninfo *scandata);
 int init_scanengine();
 char *type_of_proxy(int type);
