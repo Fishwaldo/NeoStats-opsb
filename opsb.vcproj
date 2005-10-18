@@ -153,22 +153,10 @@
 			RelativePath=".\ChangeLog">
 		</File>
 		<File
-			RelativePath=".\configure.in">
-		</File>
-		<File
-			RelativePath=".\Makefile.in">
-		</File>
-		<File
-			RelativePath=".\modconfig.h.in">
-		</File>
-		<File
-			RelativePath=".\OPSB.xml">
+			RelativePath=".\License">
 		</File>
 		<File
 			RelativePath=".\README.opsb">
-		</File>
-		<File
-			RelativePath=".\README.opsb.html">
 		</File>
 		<File
 			RelativePath=".\Relnotes">
