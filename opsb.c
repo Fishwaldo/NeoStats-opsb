@@ -55,7 +55,7 @@ list_t *opsbl;
 list_t *cache;
 
 /** Copyright info */
-const char *opsb_copyright[] = {
+static const char *opsb_copyright[] = {
 	"Copyright (c) 1999-2005, NeoStats",
 	"http://www.neostats.net/",
 	NULL
@@ -153,7 +153,7 @@ int findscan( const void *key1, const void *key2 )
  *  @return 
  */
 
-int ports_sort( const void *key1, const void *key2 )
+static int ports_sort( const void *key1, const void *key2 )
 {
 	port_list *pl1 = (port_list *)key1;
 	port_list *pl2 = (port_list *)key2;
@@ -529,7 +529,7 @@ void addtocache(unsigned long ip)
  *  @return 
  */
 
-int checkcache(scaninfo *scandata) 
+static int checkcache(scaninfo *scandata) 
 {
 	Client *scanclient;
 	lnode_t *node, *node2;
@@ -690,7 +690,7 @@ int startscan(scaninfo *scandata)
 
 /* this function is called when either checking the opm list, or when we are trying to resolve the hostname */
 
-void dns_callback(void *data, adns_answer *a) 
+static void dns_callback(void *data, adns_answer *a) 
 {
 	scaninfo *scandata = (scaninfo *)data;
 	char *show;

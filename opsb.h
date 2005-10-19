@@ -27,12 +27,8 @@
 #include MODULECONFIG
 
 /* these are some state flags */
-#define REPORT_DNS 	0x0001
-#define DO_DNS_HOST_LOOKUP	0x0002 
 #define DOING_SCAN	0x0008
 #define GOTOPENPROXY	0x0010
-#define OPMLIST		0x0020
-#define NOOPMLIST		0x0040
 #define FIN_SCAN		0x0080
 /* max scans in the max concurrent scans at any one time */
 #define MAX_SCANS 100
@@ -44,7 +40,6 @@
 typedef struct port_list {
 	int type;
 	int port;
-	int numfound;
 	int numopen;
 } port_list;
 
@@ -55,7 +50,6 @@ typedef struct scaninfo{
 	char server[MAXHOST];
 	struct in_addr ip;
 	Client *reqclient;
-	int doreport;
 	time_t started;
 	int doneban;
 	list_t *connections;
@@ -113,7 +107,6 @@ void addtocache(unsigned long ip);
 /* proxy.c */
 void start_proxy_scan( scaninfo *scandata );
 int opsb_cmd_status( const CmdParams *cmdparams );
-void check_scan_free( scaninfo *scandata );
 int init_scanengine( void );
 char *type_of_proxy( int type );
 int get_proxy_by_name( const char *name );

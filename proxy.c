@@ -55,25 +55,16 @@ typedef struct conninfo {
 	scaninfo *scandata;
 } conninfo;
    
-#if 0
-int proxy_connect(unsigned long ip, int port, char *who);
-void open_proxy(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
-void negfailed(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
-void timeout(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
-void scan_end(OPM_T *scanner, OPM_REMOTE_T *remote, int notused, void *unused);
-void scan_error(OPM_T *scanner, OPM_REMOTE_T *remote, int opmerr, void *unused);
-#endif
+static int http_send (int fd, void *data);
+static int sock4_send(int fd, void *data);
+static int sock5_send(int fd, void *data);
+static int wingate_send(int fd, void *data);
+static int router_send(int fd, void *data);
+static int httppost_send(int fd, void *data);
+static int proxy_read(void *data, void *recv, size_t size);
+static void open_proxy(conninfo *connection);
 
-int http_send (int fd, void *data);
-int sock4_send(int fd, void *data);
-int sock5_send(int fd, void *data);
-int wingate_send(int fd, void *data);
-int router_send(int fd, void *data);
-int httppost_send(int fd, void *data);
-int proxy_read(void *data, void *recv, size_t size);
-void open_proxy(conninfo *connection);
-
-char *defaultports[] = {
+static char *defaultports[] = {
 	"80 8080 8000 3128",
 	"1080",
 	"1080",
@@ -82,35 +73,35 @@ char *defaultports[] = {
 	"80 8080 8000 3128",
 };
 
-char *stdmatchstrings[] = {
+static char *stdmatchstrings[] = {
 	"*Looking up your hostname*",
 	"*You have not registered*",
 	"*HTTP/1.0 200 Connection established*",
 	NULL
 };
 
-proxy_type proxy_list[] = {
-	{ PTYPE_HTTP, "HTTP",  http_send},
-	{ PTYPE_SOCKS4, "SOCKS4", sock4_send },
-	{ PTYPE_SOCKS5, "SOCKS5", sock5_send },
-	{ PTYPE_WINGATE, "WINGATE", wingate_send},
-	{ PTYPE_ROUTER, "ROUTER", router_send},
-	{ PTYPE_HTTPPOST, "HTTPPOST", httppost_send},
-	{ 0, "" }
+static proxy_type proxy_list[] = {
+	{ PTYPE_HTTP, "HTTP",  http_send, 0, 0},
+	{ PTYPE_SOCKS4, "SOCKS4", sock4_send, 0, 0 },
+	{ PTYPE_SOCKS5, "SOCKS5", sock5_send, 0, 0 },
+	{ PTYPE_WINGATE, "WINGATE", wingate_send, 0, 0},
+	{ PTYPE_ROUTER, "ROUTER", router_send, 0, 0},
+	{ PTYPE_HTTPPOST, "HTTPPOST", httppost_send, 0, 0},
+	{ 0, "", NULL, 0, 0 }
 };
 
-char http_send_buf[BUFSIZE];
-int http_send_buf_len;
-char httppost_send_buf[BUFSIZE];
-int httppost_send_buf_len;
+static char http_send_buf[BUFSIZE];
+static int http_send_buf_len;
+static char httppost_send_buf[BUFSIZE];
+static int httppost_send_buf_len;
 char router_send_buf[BUFSIZE];
 int router_send_buf_len;
-char wingate_send_buf[BUFSIZE];
-int wingate_send_buf_len;
-char socks4_send_buf[BUFSIZE];
-int socks4_send_buf_len;
-char socks5_send_buf[BUFSIZE];
-int socks5_send_buf_len;
+static char wingate_send_buf[BUFSIZE];
+static int wingate_send_buf_len;
+static char socks4_send_buf[BUFSIZE];
+static int socks4_send_buf_len;
+static char socks5_send_buf[BUFSIZE];
+static int socks5_send_buf_len;
 
 /** @brief type_of_proxy
  *
@@ -190,7 +181,7 @@ void save_ports( void )
  *  @return 
  */
 
-void load_port(int type, char *portname)
+static void load_port(int type, const char *portname)
 {
 	static char portlist[512];
 	char **av;
@@ -315,7 +306,8 @@ void start_proxy_scan(scaninfo *scandata)
 	scandata->started = time(NULL);
 	scandata->connections = list_create(LISTCOUNT_T_MAX);
 	pn = list_first(opsb.ports);
-	while (pn) {
+	while( pn != NULL )
+	{
 		pl = lnode_get(pn);
 		ci = ns_malloc(sizeof(conninfo));
 		ci->type = pl->type;
@@ -355,7 +347,7 @@ void start_proxy_scan(scaninfo *scandata)
  *  @return 
  */
 
-int http_send(int fd, void *data) {
+static int http_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	if (send_to_sock(ci->sock, http_send_buf, http_send_buf_len) != NS_FAILURE) {
@@ -376,7 +368,7 @@ int http_send(int fd, void *data) {
  *  @return 
  */
 
-int sock4_send(int fd, void *data) {
+static int sock4_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
@@ -398,7 +390,7 @@ int sock4_send(int fd, void *data) {
  *  @return 
  */
 
-int sock5_send(int fd, void *data) {
+static int sock5_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
@@ -420,7 +412,7 @@ int sock5_send(int fd, void *data) {
  *  @return 
  */
 
-int wingate_send(int fd, void *data) {
+static int wingate_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
@@ -442,7 +434,7 @@ int wingate_send(int fd, void *data) {
  *  @return 
  */
 
-int router_send(int fd, void *data) {
+static int router_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
@@ -464,7 +456,7 @@ int router_send(int fd, void *data) {
  *  @return 
  */
 
-int httppost_send(int fd, void *data) {
+static int httppost_send(int fd, void *data) {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	if (send_to_sock(ci->sock, httppost_send_buf, httppost_send_buf_len) != NS_FAILURE) {
@@ -495,6 +487,47 @@ static int findconn( const void *key1, const void *key2 )
 	return -1;
 }
 
+/** @brief check_scan_free
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+static void check_scan_free(scaninfo *scandata) {
+	lnode_t *scannode;
+	if (scandata->state == DOING_SCAN) {
+		dlog (DEBUG2, "Not Cleaning up Scaninfo for %s yet. Scan hasn't completed", scandata->who);
+		return;
+	}
+	if (scandata->state != GOTOPENPROXY) {
+		addtocache(scandata->ip.s_addr);	
+		dlog (DEBUG1, "%s's Host is clean. Adding to Cache", scandata->who);
+	}
+	scannode = list_find(opsbl, scandata->who, findscan);
+	if (scannode) {
+		dlog (DEBUG1, "%s scan finished. Cleaning up", scandata->who);
+		list_delete(opsbl, scannode);
+		lnode_destroy(scannode);
+		scandata->reqclient = NULL;
+		ns_free(scandata);
+	} else {
+		nlog (LOG_WARNING, "Damn, Can't find ScanNode %s. Something is fubar", scandata->who);
+	}
+	checkqueue();												
+}
+
+/** @brief open_proxy
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
 /** @brief proxy_read 
  *
  *  
@@ -504,7 +537,7 @@ static int findconn( const void *key1, const void *key2 )
  *  @return 
  */
 
-int proxy_read( void *data, void *recv, size_t size )
+static int proxy_read( void *data, void *recv, size_t size )
 {
 	conninfo *ci = (conninfo *)data;
 	scaninfo *si = ci->scandata;
@@ -541,48 +574,7 @@ int proxy_read( void *data, void *recv, size_t size )
 	return NS_SUCCESS;
 }
 
-/** @brief check_scan_free
- *
- *  
- *
- *  @param 
- *
- *  @return 
- */
-
-void check_scan_free(scaninfo *scandata) {
-	lnode_t *scannode;
-	if (scandata->state == DOING_SCAN) {
-		dlog (DEBUG2, "Not Cleaning up Scaninfo for %s yet. Scan hasn't completed", scandata->who);
-		return;
-	}
-	if (scandata->state != GOTOPENPROXY) {
-		addtocache(scandata->ip.s_addr);	
-		dlog (DEBUG1, "%s's Host is clean. Adding to Cache", scandata->who);
-	}
-	scannode = list_find(opsbl, scandata->who, findscan);
-	if (scannode) {
-		dlog (DEBUG1, "%s scan finished. Cleaning up", scandata->who);
-		list_delete(opsbl, scannode);
-		lnode_destroy(scannode);
-		scandata->reqclient = NULL;
-		ns_free(scandata);
-	} else {
-		nlog (LOG_WARNING, "Damn, Can't find ScanNode %s. Something is fubar", scandata->who);
-	}
-	checkqueue();												
-}
-
-/** @brief open_proxy
- *
- *  
- *
- *  @param 
- *
- *  @return 
- */
-
-void open_proxy(conninfo *connection)
+static void open_proxy(conninfo *connection)
 {
 	scaninfo *scandata = connection->scandata;
 	Client *u;
