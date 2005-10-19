@@ -49,6 +49,10 @@ static int opsb_set_target_cb( const CmdParams *cmdparams, SET_REASON reason );
 static int opsb_set_exclusions_cb( const CmdParams *cmdparams, SET_REASON reason );
 
 Bot *opsb_bot;
+opsbcfg opsb;
+list_t *opsbq;
+list_t *opsbl;
+list_t *cache;
 
 /** Copyright info */
 const char *opsb_copyright[] = {

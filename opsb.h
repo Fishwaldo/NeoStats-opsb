@@ -26,21 +26,27 @@
 
 #include MODULECONFIG
 
-typedef struct port_list {
-	int type;
-	int port;
-	int numfound;
-	int numopen;
-} port_list;
-
-extern Bot *opsb_bot;
-
+/* these are some state flags */
+#define REPORT_DNS 	0x0001
+#define DO_DNS_HOST_LOOKUP	0x0002 
+#define DOING_SCAN	0x0008
+#define GOTOPENPROXY	0x0010
+#define OPMLIST		0x0020
+#define NOOPMLIST		0x0040
+#define FIN_SCAN		0x0080
 /* max scans in the max concurrent scans at any one time */
 #define MAX_SCANS 100
 /* max queue is the max amount of scans that may be concurrent and queued. */
 #define MAX_QUEUE ( MAX_SCANS * 100 )
 /* max no of ports to scan */
 #define MAX_PORTS 50
+
+typedef struct port_list {
+	int type;
+	int port;
+	int numfound;
+	int numopen;
+} port_list;
 
 typedef struct scaninfo{
 	char who[MAXHOST];
@@ -55,7 +61,7 @@ typedef struct scaninfo{
 	list_t *connections;
 } scaninfo;
 
-struct opsb {
+typedef struct opsbcfg {
 	char targetip[MAXHOST];
 	char openstring[BUFSIZE];
 	int targetport;
@@ -75,21 +81,12 @@ struct opsb {
 	int verbose;
 	int exclusions;
 	list_t *ports;
-} opsb;
-
-/* this is the list of items to be queued */
-list_t *opsbq;
-/* this is the list of currently active scans */
-list_t *opsbl;
+} opsbcfg;
 
 typedef struct cache_entry {
 	unsigned long ip;
 	time_t when;
 } cache_entry;
-
-/* this is a list of cached scans */
-list_t *cache;
-
 
 typedef struct proxy_type {
 	int type;
@@ -99,14 +96,14 @@ typedef struct proxy_type {
 	int numopen;
 } proxy_type;
 
-/* these are some state flags */
-#define REPORT_DNS 	0x0001
-#define DO_DNS_HOST_LOOKUP	0x0002 
-#define DOING_SCAN	0x0008
-#define GOTOPENPROXY	0x0010
-#define OPMLIST		0x0020
-#define NOOPMLIST		0x0040
-#define FIN_SCAN		0x0080
+extern Bot *opsb_bot;
+extern opsbcfg opsb;
+/* this is the list of items to be queued */
+extern list_t *opsbq;
+/* this is the list of currently active scans */
+extern list_t *opsbl;
+/* this is a list of cached scans */
+extern list_t *cache;
 
 /* opsb.c */
 int findscan(const void *key1, const void *key2);
