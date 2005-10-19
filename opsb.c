@@ -474,7 +474,6 @@ void checkqueue()
 	list_delete(opsbq, scannode);
 	lnode_destroy(scannode);
 	startscan(scandata);
-
 }
 
 /** @brief addtocache
@@ -783,7 +782,8 @@ int ModInit( void )
 int ModSynch (void)
 {
 	SET_SEGV_LOCATION();
-	if (strlen(opsb.targetip) <= 0) {
+	if (strlen(opsb.targetip) == 0)
+	{
 		strlcpy(opsb.targetip, inet_ntoa(me.srvip.sin_addr), MAXHOST);
 	}
 	if (init_scanengine() != NS_SUCCESS) {

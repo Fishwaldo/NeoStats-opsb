@@ -61,7 +61,7 @@ struct opsb {
 	int targetport;
 	int maxbytes;
 	int timeout;
-	int socks;
+	unsigned int socks;
 	int open;
 	int scanned;
 	char scanmsg[BUFSIZE];
