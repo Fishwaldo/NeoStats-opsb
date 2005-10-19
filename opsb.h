@@ -38,7 +38,7 @@ extern Bot *opsb_bot;
 /* max scans in the max concurrent scans at any one time */
 #define MAX_SCANS 100
 /* max queue is the max amount of scans that may be concurrent and queued. */
-#define MAX_QUEUE MAX_SCANS * 100
+#define MAX_QUEUE ( MAX_SCANS * 100 )
 /* max no of ports to scan */
 #define MAX_PORTS 50
 
@@ -113,15 +113,14 @@ int findscan(const void *key1, const void *key2);
 void checkqueue();
 void addtocache(unsigned long ip);
 
-
 /* proxy.c */
-void start_proxy_scan(scaninfo *scandata);
-int opsb_cmd_status (const CmdParams *cmdparams) ;
-void check_scan_free(scaninfo *scandata);
-int init_scanengine();
-char *type_of_proxy(int type);
-int get_proxy_by_name(const char *name);
-int load_ports();
+void start_proxy_scan( scaninfo *scandata );
+int opsb_cmd_status( const CmdParams *cmdparams );
+void check_scan_free( scaninfo *scandata );
+int init_scanengine( void );
+char *type_of_proxy( int type );
+int get_proxy_by_name( const char *name );
+int load_ports( void );
 void save_ports( void );
  
 /* help text */

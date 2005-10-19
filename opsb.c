@@ -45,6 +45,7 @@ static int opsb_cmd_del( const CmdParams *cmdparams );
 static int opsb_cmd_check( const CmdParams *cmdparams );
 static int opsb_cmd_remove( const CmdParams *cmdparams );
 static int opsb_set_cb( const CmdParams *cmdparams, SET_REASON reason );
+static int opsb_set_target_cb( const CmdParams *cmdparams, SET_REASON reason );
 static int opsb_set_exclusions_cb( const CmdParams *cmdparams, SET_REASON reason );
 
 Bot *opsb_bot;
@@ -71,23 +72,24 @@ ModuleInfo module_info = {
 	__TIME__,
 	MODULE_FLAG_LOCAL_EXCLUDES,
 	0,
+	0,
 };
 
 static bot_cmd opsb_commands[]=
 {
-	{"STATUS",	opsb_cmd_status,	0,	NS_ULEVEL_OPER,		opsb_help_status},
-	{"REMOVE",	opsb_cmd_remove,	1,	NS_ULEVEL_OPER,		opsb_help_remove},
-	{"CHECK",	opsb_cmd_check,		1,	NS_ULEVEL_OPER,		opsb_help_check},
-	{"ADD",		opsb_cmd_add,		2,	NS_ULEVEL_ADMIN,	opsb_help_add},
-	{"DEL",		opsb_cmd_del,		1,	NS_ULEVEL_ADMIN,	opsb_help_del},
-	{"LIST",	opsb_cmd_list,		0,	NS_ULEVEL_ADMIN,	opsb_help_list},
+	{"STATUS",	opsb_cmd_status,	0,	NS_ULEVEL_OPER,		opsb_help_status, 0, NULL, NULL},
+	{"REMOVE",	opsb_cmd_remove,	1,	NS_ULEVEL_OPER,		opsb_help_remove, 0, NULL, NULL},
+	{"CHECK",	opsb_cmd_check,		1,	NS_ULEVEL_OPER,		opsb_help_check, 0, NULL, NULL},
+	{"ADD",		opsb_cmd_add,		2,	NS_ULEVEL_ADMIN,	opsb_help_add, 0, NULL, NULL},
+	{"DEL",		opsb_cmd_del,		1,	NS_ULEVEL_ADMIN,	opsb_help_del, 0, NULL, NULL},
+	{"LIST",	opsb_cmd_list,		0,	NS_ULEVEL_ADMIN,	opsb_help_list, 0, NULL, NULL},
 	NS_CMD_END()
 };
 
 static bot_setting opsb_settings[]=
 {
-	{"TARGETIP",	opsb.targetip,		SET_TYPE_IPV4,	0,	MAXHOST,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetip,	opsb_set_cb, (void*)0 		},
-	{"TARGETPORT",	&opsb.targetport,	SET_TYPE_INT,	0,	65535,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetport,	opsb_set_cb, (void*)6667	},
+	{"TARGETIP",	opsb.targetip,		SET_TYPE_IPV4,	0,	MAXHOST,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetip,	opsb_set_target_cb, (void*)0 		},
+	{"TARGETPORT",	&opsb.targetport,	SET_TYPE_INT,	0,	65535,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_targetport,	opsb_set_target_cb, (void*)6667	},
 	{"AKILL",		&opsb.doakill,		SET_TYPE_BOOLEAN,	0,	0,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akill,	opsb_set_cb, (void*)1 	},	
 	{"AKILLTIME",	&opsb.akilltime,	SET_TYPE_INT,	0,	20736000,NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_akilltime,	opsb_set_cb, (void*)TS_ONE_DAY 	},
 	{"MAXBYTES",	&opsb.maxbytes,		SET_TYPE_INT,	0,	100000,	NS_ULEVEL_ADMIN, 	NULL,	opsb_help_set_maxbytes,	opsb_set_cb, (void*)500 	},
@@ -383,6 +385,26 @@ int opsb_set_cb( const CmdParams *cmdparams, SET_REASON reason )
 		opsb.confed = 1;
 		DBAStoreConfigInt ("Confed", &opsb.confed);
 		DelTimer("unconf");
+	}
+	return NS_SUCCESS;
+}
+
+/** @brief opsb_set_cb
+ *
+ *  Set callback
+ *  Remove unconfigured warning if needed
+ *
+ *  @cmdparams pointer to commands param struct
+ *  @cmdparams reason for SET
+ *
+ *  @return NS_SUCCESS if suceeds else NS_FAILURE
+ */
+
+int opsb_set_target_cb( const CmdParams *cmdparams, SET_REASON reason )
+{
+	if( reason == SET_CHANGE )
+	{
+		opsb_set_cb( cmdparams, reason );
 		init_scanengine();
 	}
 	return NS_SUCCESS;

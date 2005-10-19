@@ -266,27 +266,24 @@ int init_scanengine( void )
 	router_send_buf_len = ircsnprintf(router_send_buf, BUFSIZE, "cisco\r\ntelnet %s %d\r\n", opsb.targetip, opsb.targetport);
 	wingate_send_buf_len = ircsnprintf(wingate_send_buf, BUFSIZE, "%s:%d\r\n", opsb.targetip, opsb.targetport);
 	
-	if (inet_aton(opsb.targetip, &addr) != 0) {
-	         laddr = htonl(addr.s_addr);
-	} else {
+	if (inet_aton(opsb.targetip, &addr) == 0)
+	{
 		nlog(LOG_ERROR, "Couldn't Setup connect address for init_scan_engine: %s", opsb.targetip);
 		return NS_FAILURE;
 	}
+	laddr = htonl(addr.s_addr);
 	/* taken from libopm */
 	socks4_send_buf_len = ircsnprintf(socks4_send_buf, BUFSIZE, "%c%c%c%c%c%c%c%c%c",  4, 1,
 		(((unsigned short) opsb.targetport) >> 8) & 0xFF,
-	         (((unsigned short) opsb.targetport) & 0xFF),
-	         (char) (laddr >> 24) & 0xFF, (char) (laddr >> 16) & 0xFF,
-	         (char) (laddr >> 8) & 0xFF, (char) laddr & 0xFF, 0);
-	
+		(((unsigned short) opsb.targetport) & 0xFF),
+		(char) (laddr >> 24) & 0xFF, (char) (laddr >> 16) & 0xFF,
+		(char) (laddr >> 8) & 0xFF, (char) laddr & 0xFF, 0);
 	socks5_send_buf_len = ircsnprintf(socks5_send_buf, BUFSIZE, "%c%c%c%c%c%c%c%c%c%c%c%c%c", 5, 1, 0, 5, 1, 0, 1,
-                 (char) (laddr >> 24) & 0xFF, (char) (laddr >> 16) & 0xFF,
-                 (char) (laddr >> 8) & 0xFF, (char) laddr & 0xFF,
-                 (((unsigned short) opsb.targetport) >> 8) & 0xFF,
-                 (((unsigned short) opsb.targetport) & 0xFF));	
-	
+		(char) (laddr >> 24) & 0xFF, (char) (laddr >> 16) & 0xFF,
+		(char) (laddr >> 8) & 0xFF, (char) laddr & 0xFF,
+		(((unsigned short) opsb.targetport) >> 8) & 0xFF,
+		(((unsigned short) opsb.targetport) & 0xFF));	
 	return NS_SUCCESS;
-
 }         
 
 /** @brief start_proxy_scan
