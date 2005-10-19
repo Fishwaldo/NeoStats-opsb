@@ -213,7 +213,7 @@ int opsb_cmd_check( const CmdParams *cmdparams )
 			ns_free(scandata);
 			return NS_SUCCESS;
 		}
-		if (scanuser->ip.s_addr <= 0) {
+		if (scanuser->ip.s_addr == 0) {
 			/* if its here, we don't have the IP address yet */
 			irc_prefmsg (opsb_bot, cmdparams->source, "Error: We don't have a IP address for %s.", scanuser->name);
 			ns_free(scandata);
