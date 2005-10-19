@@ -35,7 +35,12 @@
 #endif
 #include "opsb.h"
 
-void dns_callback( void *scandata, adns_answer *a );
+typedef struct cache_entry {
+	unsigned long ip;
+	time_t when;
+} cache_entry;
+
+static void dns_callback( void *scandata, adns_answer *a );
 static int startscan( scaninfo *scandata );
 static int unconf( void* );
 static int event_nickip (const CmdParams *cmdparams);

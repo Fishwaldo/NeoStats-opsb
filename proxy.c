@@ -30,10 +30,6 @@
 #endif
 #include "opsb.h"
 
-#ifndef MSG_NOSIGNAL
-#define MSG_NOSIGNAL 0
-#endif
-
 typedef enum PORT_TYPE
 {
 	PTYPE_HTTP = 1,
@@ -45,11 +41,17 @@ typedef enum PORT_TYPE
 	PTYPE_MAX
 }PORT_TYPE;
 
+typedef struct proxy_type {
+	PORT_TYPE type;
+	char name[MAXNICK];
+	sockcb writefunc;
+	int scanned;
+	int numopen;
+} proxy_type;
+
 typedef struct conninfo {
 	int type;
 	int port;
-	int status;
-	int bytesread;
 	OS_SOCKET fd;
 	Sock *sock;
 	scaninfo *scandata;
@@ -94,8 +96,8 @@ static char http_send_buf[BUFSIZE];
 static int http_send_buf_len;
 static char httppost_send_buf[BUFSIZE];
 static int httppost_send_buf_len;
-char router_send_buf[BUFSIZE];
-int router_send_buf_len;
+static char router_send_buf[BUFSIZE];
+static int router_send_buf_len;
 static char wingate_send_buf[BUFSIZE];
 static int wingate_send_buf_len;
 static char socks4_send_buf[BUFSIZE];

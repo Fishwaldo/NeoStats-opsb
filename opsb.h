@@ -77,19 +77,6 @@ typedef struct opsbcfg {
 	list_t *ports;
 } opsbcfg;
 
-typedef struct cache_entry {
-	unsigned long ip;
-	time_t when;
-} cache_entry;
-
-typedef struct proxy_type {
-	int type;
-	char name[MAXNICK];
-	sockcb writefunc;
-	int scanned;
-	int numopen;
-} proxy_type;
-
 extern Bot *opsb_bot;
 extern opsbcfg opsb;
 /* this is the list of items to be queued */
