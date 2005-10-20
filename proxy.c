@@ -187,7 +187,7 @@ static void load_port(int type, const char *portname)
 {
 	static char portlist[512];
 	char **av;
-	int j, ac;
+	unsigned int j, ac;
 	port_list *prtlst;
 
 	strlcpy (portlist, portname, 512);
@@ -539,7 +539,7 @@ static void check_scan_free(scaninfo *scandata) {
  *  @return 
  */
 
-static int proxy_read( void *data, void *recv, size_t size )
+static int proxy_read( void *data, void *recv, int size )
 {
 	conninfo *ci = (conninfo *)data;
 	scaninfo *si = ci->scandata;

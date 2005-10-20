@@ -413,8 +413,8 @@ int opsb_set_target_cb( const CmdParams *cmdparams, SET_REASON reason )
 {
 	if( reason == SET_CHANGE )
 	{
-		opsb_set_cb( cmdparams, reason );
-		init_scanengine();
+		(void)opsb_set_cb( cmdparams, reason );
+		(void)init_scanengine();
 	}
 	return NS_SUCCESS;
 }
@@ -467,7 +467,7 @@ static int unconf(void *userptr)
  *  @return none
  */
 
-void checkqueue() 
+void checkqueue( void )
 {
 	lnode_t *scannode;
 	scaninfo *scandata;
@@ -482,7 +482,7 @@ void checkqueue()
 	scandata = lnode_get(scannode);
 	list_delete(opsbq, scannode);
 	lnode_destroy(scannode);
-	startscan(scandata);
+	(void)startscan(scandata);
 }
 
 /** @brief addtocache
@@ -642,7 +642,7 @@ static int event_nickip (const CmdParams *cmdparams)
  *  @return 
  */
 
-int startscan(scaninfo *scandata) 
+static int startscan(scaninfo *scandata) 
 {
 	int i;
 
@@ -720,7 +720,7 @@ static void dns_callback(void *data, adns_answer *a)
 				if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "Warning, More than one IP address for %s. Using %s only", scandata->lookup, show);
 			}
 			if (inet_aton(show, &scandata->ip) > 0) {
-				startscan(scandata);
+				(void)startscan(scandata);
 			} else {
 				nlog (LOG_CRITICAL, "OPSB: dns_callback() GETNICKIP failed-> %s", show);
 				irc_chanalert (opsb_bot, "Warning, Couldn't get the address for %s", scandata->who);
@@ -801,7 +801,7 @@ int ModSynch (void)
 	opsb_bot = AddBot (&opsb_botinfo);
 	if (opsb.confed == 0) {
 		AddTimer (TIMER_TYPE_INTERVAL, unconf, "unconf", TS_ONE_MINUTE, NULL);
-		unconf( NULL );
+		(void)unconf( NULL );
 	}
 	if(opsb.verbose) {
 		irc_chanalert (opsb_bot, "Open Proxy Scanning bot has started (Concurrent Scans: %d Sockets %d)", opsb.socks, opsb.socks *7);

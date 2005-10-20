@@ -87,9 +87,9 @@ extern list_t *opsbl;
 extern list_t *cache;
 
 /* opsb.c */
-int findscan(const void *key1, const void *key2);
-void checkqueue();
-void addtocache(unsigned long ip);
+int findscan( const void *key1, const void *key2 );
+void checkqueue( void );
+void addtocache( unsigned long ip );
 
 /* proxy.c */
 void start_proxy_scan( scaninfo *scandata );
