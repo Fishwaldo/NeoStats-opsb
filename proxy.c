@@ -63,8 +63,6 @@ static int sock5_send(int fd, void *data);
 static int wingate_send(int fd, void *data);
 static int router_send(int fd, void *data);
 static int httppost_send(int fd, void *data);
-static int proxy_read(void *data, void *recv, int size);
-static void open_proxy(conninfo *connection);
 
 static char *defaultports[] = {
 	"80 8080 8000 3128",
@@ -105,6 +103,144 @@ static int socks4_send_buf_len;
 static char socks5_send_buf[BUFSIZE];
 static int socks5_send_buf_len;
 
+/** @brief findconn
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+static int findconn( const void *key1, const void *key2 )
+{
+	const conninfo *ci1 = key1;
+	const conninfo *ci2 = key2;
+
+	if ((ci1->type == ci2->type) && (ci1->port == ci2->port))
+		return 0;
+	return -1;
+}
+
+/** @brief check_scan_free
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+static void check_scan_free(scaninfo *scandata) {
+	lnode_t *scannode;
+	if (scandata->state == DOING_SCAN) {
+		dlog (DEBUG2, "Not Cleaning up Scaninfo for %s yet. Scan hasn't completed", scandata->who);
+		return;
+	}
+	if (scandata->state != GOTOPENPROXY) {
+		addtocache(scandata->ip.s_addr);	
+		dlog (DEBUG1, "%s's Host is clean. Adding to Cache", scandata->who);
+	}
+	scannode = list_find(opsbl, scandata->who, findscan);
+	if (scannode) {
+		dlog (DEBUG1, "%s scan finished. Cleaning up", scandata->who);
+		list_delete(opsbl, scannode);
+		lnode_destroy(scannode);
+		scandata->reqclient = NULL;
+		ns_free(scandata);
+	} else {
+		nlog (LOG_WARNING, "Damn, Can't find ScanNode %s. Something is fubar", scandata->who);
+	}
+	checkqueue();												
+}
+
+/** @brief open_proxy
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+static void open_proxy(const conninfo *connection)
+{
+	scaninfo *scandata = connection->scandata;
+	Client *u;
+	char buf[1400];
+	
+	SET_SEGV_LOCATION();
+
+	if (scandata->doneban == 1)
+		return;
+
+	++opsb.open;
+	nlog (LOG_CRITICAL, "OPSB: Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
+	irc_chanalert (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
+	irc_globops  (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
+	if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
+	u = FindUser(scandata->who);
+	if (u) 
+		irc_prefmsg(opsb_bot, u, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
+	if (opsb.doakill) 
+		irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.akilltime, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
+	if (opsb.doreport) {
+		/* type\nport\nip\nnetwork\n */
+		ircsnprintf(buf, 1400, "%d\n%d\n%s\n%s\n", connection->type, connection->port, inet_ntoa(scandata->ip), me.name);
+		sendtoMQ(UPDATE_OPSBREPORT, buf, strlen(buf));
+	}
+	/* no point continuing the scan if they are found open */
+	scandata->state = GOTOPENPROXY;
+	/* XXX end scan */
+	scandata->doneban = 1;	
+}
+
+/** @brief proxy_read 
+ *
+ *  
+ *
+ *  @param 
+ *
+ *  @return 
+ */
+
+static int proxy_read( void *data, void *recv, int size )
+{
+	conninfo *ci = (conninfo *)data;
+	scaninfo *si = ci->scandata;
+	lnode_t *connode;
+	int i;
+	/* XXX delete CI */
+	switch (size) {
+		case -1:	/* connect refused */
+		case -2: /* timeout */
+			/* XXX Close */
+			connode = list_find(si->connections, ci, findconn);
+			if (connode) {
+				list_delete(si->connections, connode);
+				lnode_destroy(connode);
+				if (si->reqclient) irc_prefmsg(opsb_bot, si->reqclient, "Connection on %s (%s:%d) for Protocol %s Closed", si->who, si->lookup, ci->port, type_of_proxy(ci->type));
+				ns_free(ci);
+			}
+			if (list_count(si->connections) == 0) {
+				if (si->state == DOING_SCAN) si->state = FIN_SCAN;			
+				check_scan_free(si);
+			}
+			return NS_FAILURE;
+		default:
+			proxy_list[ci->type-1].scanned++;
+			for (i = 0; stdmatchstrings[i] != NULL; i++) {
+				if (match(stdmatchstrings[i], recv)) {
+					proxy_list[ci->type-1].numopen++;
+					if (si->state == DOING_SCAN) si->state = GOTOPENPROXY;
+					open_proxy(ci);
+				}
+			}
+			break;
+	}
+	return NS_SUCCESS;
+}
+
 /** @brief type_of_proxy
  *
  *  
@@ -128,7 +264,8 @@ char *type_of_proxy(int type)
  *  @return 
  */
 
-int get_proxy_by_name(const char *name) {
+int get_proxy_by_name(const char *name)
+{
 	int i;
 	for (i=0; proxy_list[i].type != 0; i++) {
 		if (!ircstrcasecmp (proxy_list[i].name, name)) {
@@ -220,7 +357,8 @@ static void load_port(int type, const char *portname)
  *  @return 
  */
 
-int load_ports() {
+int load_ports( void )
+{
 	static char portname[512];
 	int i;
 	int ok = 0;
@@ -349,7 +487,8 @@ void start_proxy_scan(scaninfo *scandata)
  *  @return 
  */
 
-static int http_send(int fd, void *data) {
+static int http_send(int fd, void *data)
+{
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	if (send_to_sock(ci->sock, http_send_buf, http_send_buf_len) != NS_FAILURE) {
@@ -370,7 +509,8 @@ static int http_send(int fd, void *data) {
  *  @return 
  */
 
-static int sock4_send(int fd, void *data) {
+static int sock4_send(int fd, void *data)
+{
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
@@ -392,7 +532,8 @@ static int sock4_send(int fd, void *data) {
  *  @return 
  */
 
-static int sock5_send(int fd, void *data) {
+static int sock5_send(int fd, void *data)
+{
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
@@ -414,7 +555,8 @@ static int sock5_send(int fd, void *data) {
  *  @return 
  */
 
-static int wingate_send(int fd, void *data) {
+static int wingate_send(int fd, void *data)
+{
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
@@ -436,7 +578,8 @@ static int wingate_send(int fd, void *data) {
  *  @return 
  */
 
-static int router_send(int fd, void *data) {
+static int router_send(int fd, void *data)
+{
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
@@ -458,7 +601,8 @@ static int router_send(int fd, void *data) {
  *  @return 
  */
 
-static int httppost_send(int fd, void *data) {
+static int httppost_send(int fd, void *data)
+{
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	if (send_to_sock(ci->sock, httppost_send_buf, httppost_send_buf_len) != NS_FAILURE) {
@@ -468,144 +612,6 @@ static int httppost_send(int fd, void *data) {
 		UpdateSock(ci->sock, EV_READ|EV_PERSIST|EV_TIMEOUT, 1, &tv);
 	}
 	return NS_SUCCESS;
-}
-
-/** @brief findconn
- *
- *  
- *
- *  @param 
- *
- *  @return 
- */
-
-static int findconn( const void *key1, const void *key2 )
-{
-	const conninfo *ci1 = key1;
-	const conninfo *ci2 = key2;
-
-	if ((ci1->type == ci2->type) && (ci1->port == ci2->port))
-		return 0;
-	return -1;
-}
-
-/** @brief check_scan_free
- *
- *  
- *
- *  @param 
- *
- *  @return 
- */
-
-static void check_scan_free(scaninfo *scandata) {
-	lnode_t *scannode;
-	if (scandata->state == DOING_SCAN) {
-		dlog (DEBUG2, "Not Cleaning up Scaninfo for %s yet. Scan hasn't completed", scandata->who);
-		return;
-	}
-	if (scandata->state != GOTOPENPROXY) {
-		addtocache(scandata->ip.s_addr);	
-		dlog (DEBUG1, "%s's Host is clean. Adding to Cache", scandata->who);
-	}
-	scannode = list_find(opsbl, scandata->who, findscan);
-	if (scannode) {
-		dlog (DEBUG1, "%s scan finished. Cleaning up", scandata->who);
-		list_delete(opsbl, scannode);
-		lnode_destroy(scannode);
-		scandata->reqclient = NULL;
-		ns_free(scandata);
-	} else {
-		nlog (LOG_WARNING, "Damn, Can't find ScanNode %s. Something is fubar", scandata->who);
-	}
-	checkqueue();												
-}
-
-/** @brief open_proxy
- *
- *  
- *
- *  @param 
- *
- *  @return 
- */
-
-/** @brief proxy_read 
- *
- *  
- *
- *  @param 
- *
- *  @return 
- */
-
-static int proxy_read( void *data, void *recv, int size )
-{
-	conninfo *ci = (conninfo *)data;
-	scaninfo *si = ci->scandata;
-	lnode_t *connode;
-	int i;
-	/* XXX delete CI */
-	switch (size) {
-		case -1:	/* connect refused */
-		case -2: /* timeout */
-			/* XXX Close */
-			connode = list_find(si->connections, ci, findconn);
-			if (connode) {
-				list_delete(si->connections, connode);
-				lnode_destroy(connode);
-				if (si->reqclient) irc_prefmsg(opsb_bot, si->reqclient, "Connection on %s (%s:%d) for Protocol %s Closed", si->who, si->lookup, ci->port, type_of_proxy(ci->type));
-				ns_free(ci);
-			}
-			if (list_count(si->connections) == 0) {
-				if (si->state == DOING_SCAN) si->state = FIN_SCAN;			
-				check_scan_free(si);
-			}
-			return NS_FAILURE;
-		default:
-			proxy_list[ci->type-1].scanned++;
-			for (i = 0; stdmatchstrings[i] != NULL; i++) {
-				if (match(stdmatchstrings[i], recv)) {
-					proxy_list[ci->type-1].numopen++;
-					if (si->state == DOING_SCAN) si->state = GOTOPENPROXY;
-					open_proxy(ci);
-				}
-			}
-			break;
-	}
-	return NS_SUCCESS;
-}
-
-static void open_proxy(conninfo *connection)
-{
-	scaninfo *scandata = connection->scandata;
-	Client *u;
-	char buf[1400];
-	
-	SET_SEGV_LOCATION();
-
-	if (scandata->doneban == 1)
-		return;
-
-	++opsb.open;
-	nlog (LOG_CRITICAL, "OPSB: Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
-	irc_chanalert (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
-	irc_globops  (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
-	if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
-	u = FindUser(scandata->who);
-	if (u) 
-		irc_prefmsg(opsb_bot, u, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
-	if (opsb.doakill) 
-		irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.akilltime, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
-	if (opsb.doreport) {
-		/* type\nport\nip\nnetwork\n */
-		ircsnprintf(buf, 1400, "%d\n%d\n%s\n%s\n", connection->type, connection->port, inet_ntoa(scandata->ip), me.name);
-		sendtoMQ(UPDATE_OPSBREPORT, buf, strlen(buf));
-	}
-	/* no point continuing the scan if they are found open */
-	scandata->state = GOTOPENPROXY;
-	/* XXX end scan */
-	scandata->doneban = 1;	
 }
 
 /** @brief opsb_cmd_status
@@ -659,7 +665,7 @@ int opsb_cmd_status( const CmdParams *cmdparams )
 			irc_prefmsg(opsb_bot, cmdparams->source, "    Checking for %s Proxy on port %d", type_of_proxy(ci->type), ci->port);
 			cnode = list_next(scandata->connections, cnode);
 		}
-	node = list_next(opsbl, node);
+		node = list_next(opsbl, node);
 	}
 	return 0;
 }
