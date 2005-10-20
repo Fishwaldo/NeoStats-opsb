@@ -37,6 +37,8 @@
 /* max no of ports to scan */
 #define MAX_PORTS 50
 
+#define SCAN_SOCKET_COUNT	7
+
 typedef struct port_list {
 	int type;
 	int port;

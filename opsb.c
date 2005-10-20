@@ -754,13 +754,13 @@ int ModInit( void )
 {
 	DBAFetchConfigInt ("Confed", &opsb.confed);
 	ModuleConfig (opsb_settings);
-	/* we have to be careful here. Currently, we have 7 sockets that get opened per connection. Soooo.
-	*  we check that MAX_SCANS is not greater than the maxsockets available / 7
+	/* we have to be careful here. Currently, we have SCAN_SOCKET_COUNT sockets that get opened per connection. Soooo.
+	*  we check that MAX_SCANS is not greater than the maxsockets available / SCAN_SOCKET_COUNT
 	*  this way, we *shouldn't* get problems with running out of sockets 
 	*/
-	if (MAX_SCANS > me.maxsocks / 7) {
-		opsbl = list_create(me.maxsocks /7);
-		opsb.socks = me.maxsocks /7;
+	if (MAX_SCANS > me.maxsocks / SCAN_SOCKET_COUNT) {
+		opsbl = list_create(me.maxsocks /SCAN_SOCKET_COUNT);
+		opsb.socks = me.maxsocks /SCAN_SOCKET_COUNT;
 	} else {
 		opsbl = list_create(MAX_SCANS);
 		opsb.socks = MAX_SCANS;
@@ -772,7 +772,8 @@ int ModInit( void )
 	opsb.open = 0;
 	opsb.scanned = 0;
 	opsb.cachehits = 0;
-	if (load_ports() != 1) {
+	if( load_ports() != NS_SUCCESS )
+	{
 		nlog (LOG_WARNING, "Can't Load opsb. No Ports Defined for Scanner. Did you install Correctly?");
 		return NS_FAILURE;
 	}
@@ -804,7 +805,7 @@ int ModSynch (void)
 		(void)unconf( NULL );
 	}
 	if(opsb.verbose) {
-		irc_chanalert (opsb_bot, "Open Proxy Scanning bot has started (Concurrent Scans: %d Sockets %d)", opsb.socks, opsb.socks *7);
+		irc_chanalert (opsb_bot, "Open Proxy Scanning bot has started (Concurrent Scans: %d Sockets %d)", opsb.socks, opsb.socks *SCAN_SOCKET_COUNT);
 	}
 	return NS_SUCCESS;
 }

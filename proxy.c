@@ -374,7 +374,7 @@ int load_ports( void )
 			ok = 1;
 		}
 	}
-	return ok;				
+	return ( ok == 1 ) ? NS_SUCCESS : NS_FAILURE;				
 }
 
 /** @brief init_scanengine
