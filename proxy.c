@@ -63,7 +63,7 @@ static int sock5_send(int fd, void *data);
 static int wingate_send(int fd, void *data);
 static int router_send(int fd, void *data);
 static int httppost_send(int fd, void *data);
-static int proxy_read(void *data, void *recv, size_t size);
+static int proxy_read(void *data, void *recv, int size);
 static void open_proxy(conninfo *connection);
 
 static char *defaultports[] = {
