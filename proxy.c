@@ -184,11 +184,13 @@ static void open_proxy(const conninfo *connection)
 		irc_prefmsg(opsb_bot, u, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
 	if (opsb.doakill) 
 		irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.akilltime, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
+#ifndef WIN32
 	if (opsb.doreport) {
 		/* type\nport\nip\nnetwork\n */
 		ircsnprintf(buf, 1400, "%d\n%d\n%s\n%s\n", connection->type, connection->port, inet_ntoa(scandata->ip), me.name);
 		sendtoMQ(UPDATE_OPSBREPORT, buf, strlen(buf));
 	}
+#endif
 	/* no point continuing the scan if they are found open */
 	scandata->state = GOTOPENPROXY;
 	/* XXX end scan */
