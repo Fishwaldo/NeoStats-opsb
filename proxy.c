@@ -269,10 +269,11 @@ char *type_of_proxy(int type)
 int get_proxy_by_name(const char *name)
 {
 	int i;
-	for (i=0; proxy_list[i].type != 0; i++) {
-		if (!ircstrcasecmp (proxy_list[i].name, name)) {
+
+	for( i = 0; proxy_list[i].type != 0; i++ )
+	{
+		if( ircstrcasecmp( proxy_list[i].name, name ) == 0 )
 			return proxy_list[i].type;
-		}
 	}
 	return 0;
 }

@@ -792,7 +792,7 @@ int ModInit( void )
 int ModSynch (void)
 {
 	SET_SEGV_LOCATION();
-	if (strlen(opsb.targetip) == 0)
+	if (opsb.targetip[0] == 0)
 	{
 		strlcpy(opsb.targetip, inet_ntoa(me.srvip.sin_addr), MAXHOST);
 	}
