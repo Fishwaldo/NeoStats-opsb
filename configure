@@ -464,7 +464,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL wi_PWD USECCDV DIRINST LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS MAINTAINER_MODE_TRUE MAINTAINER_MODE_FALSE MAINT INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL wi_PWD USECCDV DIRINST CCDV LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -19725,6 +19725,7 @@ fi;
 
 
 
+
           ac_config_files="$ac_config_files Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -20448,6 +20449,7 @@ s,@LIBTOOL@,$LIBTOOL,;t t
 s,@wi_PWD@,$wi_PWD,;t t
 s,@USECCDV@,$USECCDV,;t t
 s,@DIRINST@,$DIRINST,;t t
+s,@CCDV@,$CCDV,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF

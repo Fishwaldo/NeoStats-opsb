@@ -94,6 +94,7 @@ AC_SUBST(DIRINST)
 AC_SUBST(CFLAGS)
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
+AC_SUBST(CCDV)
 AC_OUTPUT(Makefile)
 echo "Configuration complete."
 read -p "Press Enter key to read the release notes"
