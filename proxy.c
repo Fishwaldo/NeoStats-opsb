@@ -25,6 +25,7 @@
 
 #include "neostats.h"
 #include "event.h"
+#include "updates.h"
 #ifdef HAVE_ARPA_NAMESER_H
 #include <arpa/nameser.h>
 #endif
@@ -154,6 +155,39 @@ static void check_scan_free(scaninfo *scandata) {
 	checkqueue();												
 }
 
+static void report_positive (const Client *u, const conninfo *connection)
+{
+	MMessage *msg;
+	int32 *msgver;
+	MByteBuffer **host;
+	MByteBuffer **proxy;
+	int32 *port;
+	MByteBuffer **NeoVer;
+
+
+	if (opsb.doreport) {
+		/* get our template message */
+		msg = MQCreateMessage("OPSB", "securebot", 0, NULL, 1);
+		if (msg) {
+			msgver = MMPutInt32Field(msg, false, "msgver", 1);
+			host = MMPutStringField(msg, false, "Host", 1);
+			proxy = MMPutStringField(msg, false, "Proxy", 1);
+			NeoVer = MMPutStringField(msg, false, "NeoVer", 1);
+			port = MMPutInt32Field(msg, false, "Port", 1);
+			host[0] = MBStrdupByteBuffer(u->hostip);
+			proxy[0] = MBStrdupByteBuffer(type_of_proxy(connection->type));
+			NeoVer[0] = MBStrdupByteBuffer(MODULE_VERSION);
+			port[0] = connection->port;
+			/* msgver 1 = SecureServ, msgver 2 = OPSB */
+			msgver[0] = 2;
+			MQSendMessage(msg, 1);
+		} else {
+			nlog(LOG_WARNING, "Couldn't create Report Message");
+		}
+	}	
+}
+
+
 /** @brief open_proxy
  *
  *  
@@ -167,7 +201,6 @@ static void open_proxy(const conninfo *connection)
 {
 	scaninfo *scandata = connection->scandata;
 	Client *u;
-	char buf[1400];
 	
 	SET_SEGV_LOCATION();
 
@@ -185,11 +218,7 @@ static void open_proxy(const conninfo *connection)
 	if (opsb.doakill) 
 		irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.akilltime, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
 #ifndef WIN32
-	if (opsb.doreport) {
-		/* type\nport\nip\nnetwork\n */
-		ircsnprintf(buf, 1400, "%d\n%d\n%s\n%s\n", connection->type, connection->port, inet_ntoa(scandata->ip), me.name);
-		sendtoMQ(UPDATE_OPSBREPORT, buf, strlen(buf));
-	}
+	report_positive(u, connection);
 #endif
 	/* no point continuing the scan if they are found open */
 	scandata->state = GOTOPENPROXY;
