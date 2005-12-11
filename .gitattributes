@@ -1,6 +1,7 @@
 * text=auto !eol
 /ChangeLog -text
 /LICENSE -text
+/Makefile.am -text
 /Makefile.in -text
 /OPSB.xml -text
 /README.opsb -text

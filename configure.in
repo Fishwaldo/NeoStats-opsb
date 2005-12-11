@@ -1,8 +1,9 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(opsb.c)
+AC_CONFIG_AUX_DIR(autotools)
 AC_CONFIG_HEADER(modconfig.h)
-
-PACKAGE=OPSB
+AM_MAINTAINER_MODE
+MODPACKAGE=OPSB
 MODULE_MAJOR=3
 MODULE_MINOR=0
 MODULE_REV=a3-dev
@@ -15,27 +16,27 @@ DIRINST=~/NeoStats3.0/
 AC_PREFIX_DEFAULT(~/NeoStats3.0/)
 CFLAGS="$CFLAGS -O2 -Wall -fno-strict-aliasing"
 
-case "$host_os" in
-*openbsd*)
-	MAKEDEPENDENCIES="";;
-*freebsd*)
-	MAKEDEPENDENCIES="";;
-*)
-	MAKEDEPENDENCIES="-include \$(OBJS:.o=.d)";;
-esac
+AM_INIT_AUTOMAKE($MODPACKAGE, $VERSION)
+
+AC_PROG_CC
+AC_PROG_INSTALL 
+AC_DISABLE_STATIC
+AC_PROG_LIBTOOL
+wi_ARG_DISABLE_CCDV
+wi_PROG_CCDV
 
 AC_MSG_CHECKING(Location of NeoStats...)
-AC_ARG_WITH(neostats, 
-[  --with-neostats=DIR	  Location of NeoStats installation],
+AC_ARG_WITH(neostats,
+[  --with-neostats=DIR    Location of NeoStats installation],
 [DIRINST=$withval])
 AC_MSG_RESULT($DIRINST)
 
-AC_CHECK_FILE($DIRINST/include/neostats.h, 
-[INCLUDEDIR="$DIRINST/include/"], 
+AC_CHECK_FILE($DIRINST/include/neostats.h,
+[INCLUDEDIR="$DIRINST/include/"],
 [AC_MSG_ERROR(Can't find existing NeoStats Installation please supply with --with-neostats option)])
 
 CPPFLAGS="$CPPFLAGS -I$INCLUDEDIR"
-dnl Check we are running the latest supported version of NeoStats
+
 AC_MSG_CHECKING(Version of NeoStats...)
 AC_TRY_RUN(
 [
@@ -44,8 +45,8 @@ AC_TRY_RUN(
 int main(void) {
 	if (MAJOR >= 3) {
 		if (MINOR >= 0) {
-			exit(0);
-		}
+			exit(0)
+;		}
 	}
 	exit(1);
 }
@@ -75,12 +76,21 @@ AC_ARG_ENABLE(debug,
 AC_MSG_RESULT(no)
 )
 
-dnl Checks for programs.
-AC_PROG_CC
-AC_PROG_INSTALL 
-
+AC_MSG_CHECKING(To Enable AutoTools Debug Mode?)
+AC_ARG_ENABLE(autodebug, [  --enable-autodebug - Enable AutoTools Debug],
+[ case "$enableval" in
+  yes)
+        AC_MSG_RESULT(yes)
+        ;;
+  *)
+        AC_MSG_RESULT(no)
+        AX_MAINTAINER_MODE_AUTO_SILENT
+        ;;
+esac],
+AC_MSG_RESULT(no)
+AX_MAINTAINER_MODE_AUTO_SILENT
+)
 AC_SUBST(DIRINST)
-AC_SUBST(MAKEDEPENDENCIES)
 AC_SUBST(CFLAGS)
 AC_SUBST(PACKAGE)
 AC_SUBST(VERSION)
