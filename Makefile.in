@@ -15,6 +15,7 @@
 @SET_MAKE@
 
 
+
 SOURCES = $(opsb_la_SOURCES)
 
 srcdir = @srcdir@
@@ -38,7 +39,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(am__configure_deps) $(noinst_HEADERS) \
+DIST_COMMON = $(am__configure_deps) $(dist_doc_DATA) $(noinst_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/modconfig.h.in $(top_srcdir)/autotools/rules.mk \
 	$(top_srcdir)/configure ChangeLog autotools/compile \
@@ -63,7 +64,7 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(pkglibdir)"
+am__installdirs = "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(docdir)"
 pkglibLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(pkglib_LTLIBRARIES)
 opsb_la_LIBADD =
@@ -80,6 +81,8 @@ LTCOMPILE = $(LIBTOOL) --mode=compile --tag=CC $(CC) $(DEFS) \
 CCLD = $(CC)
 SOURCES = $(opsb_la_SOURCES)
 DIST_SOURCES = $(opsb_la_SOURCES)
+dist_docDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(dist_doc_DATA)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
@@ -205,9 +208,12 @@ pkglib_LTLIBRARIES = opsb.la
 opsb_la_SOURCES = opsb.c  opsb_help.c  proxy.c
 noinst_HEADERS = opsb.h 
 opsb_la_LDFLAGS = -module -avoid-version
+EXTRA_DIST = autotools/ccdv.c autotools/shtool RELNOTES
+dist_doc_DATA = README.opsb README.opsb.html
 LINK = $(LIBTOOL) --tag=CXX --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
         $(AM_LDFLAGS) $(LDFLAGS) -o $@
 
+docdir = $(prefix)/doc
 all: modconfig.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -302,6 +308,14 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+
+uninstall-dist_docDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_doc_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(docdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(docdir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -480,9 +494,9 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(HEADERS) modconfig.h
+all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS) modconfig.h
 installdirs:
-	for dir in "$(DESTDIR)$(pkglibdir)"; do \
+	for dir in "$(DESTDIR)$(pkglibdir)" "$(DESTDIR)$(docdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -531,7 +545,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-dist_docDATA
 
 install-exec-am: install-pkglibLTLIBRARIES
 
@@ -561,7 +575,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-pkglibLTLIBRARIES
+uninstall-am: uninstall-dist_docDATA uninstall-info-am \
+	uninstall-pkglibLTLIBRARIES
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-am clean \
 	clean-generic clean-libtool clean-pkglibLTLIBRARIES ctags dist \
@@ -570,12 +585,13 @@ uninstall-am: uninstall-info-am uninstall-pkglibLTLIBRARIES
 	distclean-hdr distclean-libtool distclean-tags distcleancheck \
 	distdir distuninstallcheck dvi dvi-am html html-am info \
 	info-am install install-am install-data install-data-am \
-	install-exec install-exec-am install-info install-info-am \
-	install-man install-pkglibLTLIBRARIES install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-info-am \
+	install-dist_docDATA install-exec install-exec-am install-info \
+	install-info-am install-man install-pkglibLTLIBRARIES \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
+	uninstall-dist_docDATA uninstall-info-am \
 	uninstall-pkglibLTLIBRARIES
 
 
@@ -704,7 +720,6 @@ install-libLTLIBRARIES: $(lib_LTLIBRARIES)
    	if test "x#" != "x@USECCDV@"; then echo "Installing $$f"; fi; \
 	  else :; fi; \
 	done
-#AM_CFLAGS		= @PCRE_CFLAGS@ @CURL_CFLAGS@ 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
