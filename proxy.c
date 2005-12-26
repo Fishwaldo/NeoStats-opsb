@@ -164,6 +164,7 @@ static void report_positive (const Client *u, const conninfo *connection)
 	int32 *port;
 	MByteBuffer **NeoVer;
 
+	SET_SEGV_LOCATION();
 
 	if (opsb.doreport) {
 		/* get our template message */
@@ -213,13 +214,15 @@ static void open_proxy(const conninfo *connection)
 	irc_globops  (opsb_bot, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
 	if (scandata->reqclient) irc_prefmsg (opsb_bot, scandata->reqclient, "Banning %s (%s) for Open Proxy - %s(%d)", scandata->who, scandata->lookup, type_of_proxy(connection->type), connection->port);
 	u = FindUser(scandata->who);
-	if (u) 
+	if (u) {
 		irc_prefmsg(opsb_bot, u, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
-	if (opsb.doakill) 
-		irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.akilltime, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
 #ifndef WIN32
 	report_positive(u, connection);
 #endif
+	}
+
+	if (opsb.doakill) 
+		irc_akill (opsb_bot, inet_ntoa(scandata->ip), "*", opsb.akilltime, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
 	/* no point continuing the scan if they are found open */
 	scandata->state = GOTOPENPROXY;
 	/* XXX end scan */
@@ -241,11 +244,13 @@ static int proxy_read( void *data, void *recv, int size )
 	scaninfo *si = ci->scandata;
 	lnode_t *connode;
 	int i;
+
+	SET_SEGV_LOCATION();
+
 	/* XXX delete CI */
 	switch (size) {
 		case -1:	/* connect refused */
 		case -2: /* timeout */
-			/* XXX Close */
 			connode = list_find(si->connections, ci, findconn);
 			if (connode) {
 				list_delete(si->connections, connode);
@@ -324,6 +329,8 @@ void save_ports( void )
 	static char tmpports[512];
 	int lasttype = -1;
 
+	SET_SEGV_LOCATION();
+
 	pn = list_first(opsb.ports);
 	while (pn) {
 		pl = lnode_get(pn);
@@ -358,6 +365,8 @@ static void load_port(int type, const char *portname)
 	char **av;
 	unsigned int j, ac;
 	port_list *prtlst;
+
+	SET_SEGV_LOCATION();
 
 	strlcpy (portlist, portname, 512);
 	ac = split_buf(portlist, &av);
@@ -395,6 +404,8 @@ int load_ports( void )
 	int i;
 	int ok = 0;
 	
+	SET_SEGV_LOCATION();
+
 	for (i = 0; proxy_list[i].type != 0; i++) {
 		if (DBAFetchConfigStr (proxy_list[i].name, portname, 512) != NS_SUCCESS) {
 			nlog (LOG_WARNING, "Warning, no ports defined for protocol %s, using defaults", proxy_list[i].name);
@@ -422,6 +433,8 @@ int init_scanengine( void )
 {
 	struct in_addr addr;
 	unsigned long laddr;
+
+	SET_SEGV_LOCATION();
 
 	/* set up our send buffers */
 	http_send_buf_len = ircsnprintf(http_send_buf, BUFSIZE, "CONNECT %s:%d HTTP/1.0\r\n\r\nquit\r\n\r\n", opsb.targetip, opsb.targetport);
@@ -523,6 +536,9 @@ static int http_send(int fd, void *data)
 {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
+
+	SET_SEGV_LOCATION();
+
 	if (send_to_sock(ci->sock, http_send_buf, http_send_buf_len) != NS_FAILURE) {
 		/* our timeout */
 		tv.tv_sec = opsb.timeout;
@@ -545,7 +561,9 @@ static int sock4_send(int fd, void *data)
 {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
-	
+
+	SET_SEGV_LOCATION();
+
 	if (send_to_sock(ci->sock, socks4_send_buf, socks4_send_buf_len) != NS_FAILURE) {
 		/* our timeout */
 		tv.tv_sec = opsb.timeout;
@@ -569,6 +587,8 @@ static int sock5_send(int fd, void *data)
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
+	SET_SEGV_LOCATION();
+
 	if (send_to_sock(ci->sock, socks5_send_buf, socks5_send_buf_len) != NS_FAILURE) {
 		/* our timeout */
 		tv.tv_sec = opsb.timeout;
@@ -592,6 +612,8 @@ static int wingate_send(int fd, void *data)
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
+	SET_SEGV_LOCATION();
+
 	if (send_to_sock(ci->sock, wingate_send_buf, wingate_send_buf_len) != NS_FAILURE) {
 		/* our timeout */
 		tv.tv_sec = opsb.timeout;
@@ -615,6 +637,8 @@ static int router_send(int fd, void *data)
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
 	
+	SET_SEGV_LOCATION();
+
 	if (send_to_sock(ci->sock, wingate_send_buf, wingate_send_buf_len) != NS_FAILURE) {
 		/* our timeout */
 		tv.tv_sec = opsb.timeout;
@@ -637,6 +661,9 @@ static int httppost_send(int fd, void *data)
 {
 	conninfo *ci = (conninfo *)data;
 	struct timeval tv;
+
+	SET_SEGV_LOCATION();
+
 	if (send_to_sock(ci->sock, httppost_send_buf, httppost_send_buf_len) != NS_FAILURE) {
 		/* our timeout */
 		tv.tv_sec = opsb.timeout;

@@ -163,6 +163,8 @@ static int ports_sort( const void *key1, const void *key2 )
 	port_list *pl1 = (port_list *)key1;
 	port_list *pl2 = (port_list *)key2;
 
+	SET_SEGV_LOCATION();
+
 	if (pl1->type == pl2->type)
 	{
 		if (pl1->port == pl2->port)
@@ -188,6 +190,8 @@ static int ports_sort( const void *key1, const void *key2 )
 
 int opsb_cmd_remove( const CmdParams *cmdparams )
 {
+	SET_SEGV_LOCATION();
+
 	irc_rakill (opsb_bot, cmdparams->av[0], "*");
 	irc_chanalert (opsb_bot, "%s attempted to remove an akill for *@%s", cmdparams->source->name, cmdparams->av[0]);
 	return NS_SUCCESS;
@@ -206,6 +210,8 @@ int opsb_cmd_check( const CmdParams *cmdparams )
 {
 	Client *scanuser;
 	scaninfo *scandata;
+
+	SET_SEGV_LOCATION();
 
 	if ((list_find(opsbl, cmdparams->av[0], findscan)) || (list_find(opsbq, cmdparams->av[0], findscan))) {
 		irc_prefmsg (opsb_bot, cmdparams->source, "Already Scanning (or in queue) %s. Not Scanning again", cmdparams->av[0]);
@@ -269,6 +275,8 @@ int opsb_cmd_list (const CmdParams *cmdparams)
 	int i;
 	lnode_t *lnode;
 
+	SET_SEGV_LOCATION();
+
 	lnode = list_first(opsb.ports);
 	i = 1;
 	irc_prefmsg (opsb_bot, cmdparams->source, "Port List:");
@@ -296,6 +304,8 @@ int opsb_cmd_add (const CmdParams *cmdparams)
 {
 	port_list *pl;
 	lnode_t *lnode;
+
+	SET_SEGV_LOCATION();
 
 	if (list_isfull(opsb.ports)) {
 		irc_prefmsg (opsb_bot, cmdparams->source, "Error, Ports list is full");
@@ -347,6 +357,8 @@ int opsb_cmd_del (const CmdParams *cmdparams)
 	int i;
 	lnode_t *lnode;
 
+	SET_SEGV_LOCATION();
+
 	if (atoi(cmdparams->av[0]) != 0) {
 		lnode = list_first(opsb.ports);
 		i = 1;
@@ -389,6 +401,9 @@ int opsb_cmd_del (const CmdParams *cmdparams)
 
 int opsb_set_cb( const CmdParams *cmdparams, SET_REASON reason )
 {
+
+	SET_SEGV_LOCATION();
+
 	if( reason == SET_CHANGE )
 	{
 		opsb.confed = 1;
@@ -411,6 +426,8 @@ int opsb_set_cb( const CmdParams *cmdparams, SET_REASON reason )
 
 int opsb_set_target_cb( const CmdParams *cmdparams, SET_REASON reason )
 {
+	SET_SEGV_LOCATION();
+
 	if( reason == SET_CHANGE )
 	{
 		(void)opsb_set_cb( cmdparams, reason );
@@ -432,6 +449,8 @@ int opsb_set_target_cb( const CmdParams *cmdparams, SET_REASON reason )
 
 static int opsb_set_exclusions_cb( const CmdParams *cmdparams, SET_REASON reason )
 {
+	SET_SEGV_LOCATION();
+
 	if( reason == SET_LOAD || reason == SET_CHANGE )
 	{
 		SetAllEventFlags( EVENT_FLAG_USE_EXCLUDE, opsb.exclusions );
@@ -450,6 +469,8 @@ static int opsb_set_exclusions_cb( const CmdParams *cmdparams, SET_REASON reason
 
 static int unconf(void *userptr) 
 {
+	SET_SEGV_LOCATION();
+
 	if (opsb.confed != 1) 
 	{
 		irc_chanalert (opsb_bot, "Warning, OPSB is configured with default Settings. Please Update this ASAP");
@@ -752,6 +773,9 @@ static void dns_callback(void *data, adns_answer *a)
 
 int ModInit( void )
 {
+
+	SET_SEGV_LOCATION();
+
 	DBAFetchConfigInt ("Confed", &opsb.confed);
 	ModuleConfig (opsb_settings);
 	/* we have to be careful here. Currently, we have SCAN_SOCKET_COUNT sockets that get opened per connection. Soooo.
