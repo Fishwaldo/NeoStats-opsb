@@ -1,5 +1,7 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
+3.0.b1 - Mark (M) & Fish (F) & DeadNotBuried (D)
+ - fix crash on adding new port
 3.0.a3-dev - Mark (M) & Fish (F)
  - AKILL support and open proxy reporting (F)
  - Get default targetip when starting up correctly (F)

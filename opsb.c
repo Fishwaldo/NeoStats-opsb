@@ -330,8 +330,8 @@ int opsb_cmd_add (const CmdParams *cmdparams)
 		lnode = list_next(opsb.ports, lnode);
 	}
 	pl = ns_malloc(sizeof(port_list));
-	pl->type = get_proxy_by_name(cmdparams->av[1]);
-	pl->port = atoi(cmdparams->av[2]);
+	pl->type = get_proxy_by_name(cmdparams->av[0]);
+	pl->port = atoi(cmdparams->av[1]);
 		
 	lnode_create_append(opsb.ports, pl);
 	list_sort(opsb.ports, ports_sort);
