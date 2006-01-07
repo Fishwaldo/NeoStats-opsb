@@ -1575,8 +1575,8 @@ _ACEOF
 
 DIRINST=~/NeoStats3.0/
 
-CFLAGS="$CFLAGS -O2 -Wall -fno-strict-aliasing"
-
+CFLAGS="$CFLAGS -O2 -Wall -fno-strict-aliasing -g"
+LIBS="$LIBS -g"
 am__api_version="1.9"
 # Find a good install program.  We prefer a C program (faster),
 # so one script is as good as another.  But avoid the broken or
