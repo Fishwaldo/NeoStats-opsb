@@ -155,7 +155,7 @@ static void check_scan_free(scaninfo *scandata) {
 	checkqueue();												
 }
 
-static void report_positive (const Client *u, const conninfo *connection)
+static void report_positive (const char *hostip, const conninfo *connection)
 {
 	MMessage *msg;
 	int32 *msgver;
@@ -175,7 +175,7 @@ static void report_positive (const Client *u, const conninfo *connection)
 			proxy = MMPutStringField(msg, false, "Proxy", 1);
 			NeoVer = MMPutStringField(msg, false, "NeoVer", 1);
 			port = MMPutInt32Field(msg, false, "Port", 1);
-			host[0] = MBStrdupByteBuffer(u->hostip);
+			host[0] = MBStrdupByteBuffer(hostip);
 			proxy[0] = MBStrdupByteBuffer(type_of_proxy(connection->type));
 			NeoVer[0] = MBStrdupByteBuffer(MODULE_VERSION);
 			port[0] = connection->port;
@@ -217,7 +217,7 @@ static void open_proxy(const conninfo *connection)
 	if (u) {
 		irc_prefmsg(opsb_bot, u, "An %s open proxy was found on port %d from your host. Please see http://secure.irc-chat.net/op.php?f=opsb&t=%d&p=%d&ip=%s", type_of_proxy(connection->type), connection->port, connection->type, connection->port, inet_ntoa(scandata->ip));
 #ifndef WIN32
-	report_positive(u, connection);
+	report_positive(inet_ntoa(scandata->ip), connection);
 #endif
 	}
 
