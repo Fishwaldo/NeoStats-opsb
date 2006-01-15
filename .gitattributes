@@ -3,9 +3,9 @@
 /LICENSE -text
 /Makefile.am -text
 /Makefile.in -text
-/OPSB.xml -text
 /README.opsb -text
 /README.opsb.html -text
+/README.opsb.xml -text
 /RELNOTES -text
 /aclocal.m4 -text
 /configure -text

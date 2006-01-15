@@ -1,0 +1,629 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.2/docbookx.dtd">
+<article>
+  <title>ModuleName 3.0 Manual</title>
+
+  <para>Welcome to the ModuleName Manual. This document will aid you in
+  setting up and running ModuleName on your IRC network.</para>
+
+  <para>&lt;add module introduction&gt;</para>
+
+  <para>ModuleName is Copyright, 2005 by Justin Hammond.</para>
+
+  <sect1>
+    <title>Prerequisites and Installation.</title>
+
+    <para>ModuleName is designed to run on Top of NeoStats. The Following
+    requirements at the time of writing are required for
+    NeoStats:<itemizedlist>
+        <listitem>
+          <para>A Linux or BSD based Server or Shell.</para>
+        </listitem>
+
+        <listitem>
+          <para>A IRCd supported by NeoStats. See the <link
+          linkend="???">NeoStats</link> website.</para>
+        </listitem>
+
+        <listitem>
+          <para>Some basic Unix administration Skill</para>
+        </listitem>
+
+        <listitem>
+          <para>Of Course, a IRC network to connect it all together.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>Please refer to the NeoStats website for more information on the
+    requirements</para>
+
+    <para>ModuleName itself requires the following:<itemizedlist>
+        <listitem>
+          <para>NeoStats 3.0 or Higher correctly installed and Running</para>
+        </listitem>
+
+        <listitem>
+          <para>The time to read this entire document. </para>
+        </listitem>
+      </itemizedlist></para>
+
+    <sect2>
+      <title>Compiling and Installation</title>
+
+      <para>As long as you have successfully setup NeoStats, and installed it
+      correctly, Compiling ModuleName is very simple and straight forward.
+      First you must extract the files from the download package. This is as
+      simple as:</para>
+
+      <screen>bash$<command> tar -xzf ModuleName-&lt;ver&gt;.tar.gz</command></screen>
+
+      <para>This should then create a directory called
+      ModuleName-&lt;version&gt; where &lt;version&gt; is the Version of
+      ModuleName. Then Proceed to Change into the ModuleName directory, and
+      run Configure as follows:<screen>bash$<command>./configure [--enable-debug | --with-neostats=&lt;dir&gt;]</command></screen></para>
+
+      <para>--enable-debug is only useful for diagnostics purposes when used
+      in conjunction with debugging tools. There should be no need to use this
+      option on a day to day basis</para>
+
+      <para>--with-neostats=&lt;dir&gt; should be used if your neostats
+      directory is not in a standard location (~/NeoStats/). Replace
+      &lt;dir&gt; with the full path to your NeoStats installation directory
+      (NOT SOURCE DIRECTORY)</para>
+
+      <para>Configuring ModuleName will look something like the following
+      screen:</para>
+
+      <screen>Fishs-Mac:~/Documents/Dev/ModuleName justin$ ./configure       
+checking whether to enable maintainer-specific portions of Makefiles... no
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for gawk... no
+checking for mawk... no
+checking for nawk... no
+
+&lt;snip&gt;
+
+checking To Enable AutoTools Debug Mode?... no
+checking silent building of source files... Enabled
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating modconfig.h
+config.status: modconfig.h is unchanged
+config.status: executing depfiles commands
+Configuration complete.
+Press Enter key to read the release notes</screen>
+
+      <para>The Configure process will then prompt you to read the release
+      notes. You are encouraged to read this document throughly as it might
+      contain important information about the current version of ModuleName
+      that isn't covered in the manual.</para>
+
+      <para>If the configuration did not produce a error, you may then move
+      onto Compiling ModuleName. Compiling is simply just issuing the "make"
+      command (or "gmake" if you are running BSD):</para>
+
+      <screen>Fishs-Mac:~/Documents/Dev/ModuleName justin$ make
+make -s all-am
+Compiling Helpers.c:                                                  [OK]     
+Compiling ModuleName.c:                                               [OK]     
+Compiling scan.c:                                                     [OK]     
+Compiling OnJoinBot.c:                                                [OK]     
+Compiling ModuleName_help.c:                                          [OK]     
+Compiling update.c:                                                   [OK] </screen>
+
+      <para>Again, check for Error messages. As long as there are not error
+      messages, "make install" will install ModuleName, this README file, and
+      any auxiliary files needed into your NeoStats directory:</para>
+
+      <screen>Fishs-Mac:~/Documents/Dev/ModuleName justin$ make install
+Installing ModuleName.so:                                             [OK]     
+Installing viri.dat:                                                  [OK]     
+Installing README.ModuleName:                                         [OK]     
+Installing README.ModuleName.html:                                    [OK] </screen>
+
+      <para>If you receive *ANY* errors at all during the this process, please
+      post them on our Support boards, at
+      http//www.neostats.net/boards/</para>
+
+      <para>Once Installation is complete, you can either configure NeoStats
+      to load ModuleName when it starts, or load ModuleName via IRC.</para>
+
+      <para>To Configure NeoStats to automatically load ModuleName when it
+      boots, modify the neostats.conf file and add ModuleName to the list of
+      modules to load:</para>
+
+      <screen>MODULENAME = {
+       "statserv",
+       "hostserv",
+       "ModuleName",
+} </screen>
+
+      <para>To load ModuleName via IRC, you must make sure you have the
+      appropriate permissions and issue the following command:</para>
+
+      <para><command>/msg neostats load ModuleName</command></para>
+
+      <para>Thats it. ModuleName is now loaded and ready for use (in fact, it
+      will already be running now, but read on for further
+      information.)</para>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Basic Configuration</title>
+
+    <para>ModuleName is completely configured online via IRC. When you first
+    start up ModuleName, it attempts some "Sane" defaults for you get started
+    with, but you should always review these settings as soon as you install.
+    There are a few important settings you may want to review right away. They
+    are:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>blah blah</para>
+      </listitem>
+
+      <listitem>
+        <para>blah blah</para>
+      </listitem>
+
+      <listitem>
+        <para>blah blah</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>These are outlined below:</para>
+
+    <sect2>
+      <title>Blah Blah</title>
+
+      <para>Blah Blah</para>
+    </sect2>
+
+    <sect2>
+      <title>Blah Blah</title>
+
+      <para>BLAH BLAH</para>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Detailed Configuration</title>
+
+    <para>ModuleName attempts to be as configurable as possible in order to
+    cater for each individual networks requirements. This in turn though makes
+    the configuration very complex. There are many many settings with
+    ModuleName that affect how it operates, how it responds and even, how
+    affects the performance of NeoStats Overall. Out of the box, ModuleName
+    provides sensible defaults for these settings, but you may wish to read
+    this section for details on exactly what each option does, and its affect
+    on how ModuleName operates.</para>
+
+    <para>The following list summaries the available options you can set in
+    ModuleName</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>NICK</para>
+      </listitem>
+
+      <listitem>
+        <para>ALTNICK</para>
+      </listitem>
+
+      <listitem>
+        <para>USER</para>
+      </listitem>
+
+      <listitem>
+        <para>HOST</para>
+      </listitem>
+
+      <listitem>
+        <para>REALNAME</para>
+      </listitem>
+
+      <listitem>
+        <para>EXCLUSIONS</para>
+      </listitem>
+
+      <listitem>
+        <para>BLAHBLAH</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>To change any of these settings, you use the Set Interface in
+    ModuleName. Eg:</para>
+
+    <screen>/msg ModuleName set &lt;option&gt; &lt;params&gt;</screen>
+
+    <para>To view the current settings, issue the following command:</para>
+
+    <screen>/msg ModuleName set list</screen>
+
+    <para>The following Sections describes the different options, their
+    params, and the effect on ModuleName in detail.</para>
+
+    <sect2>
+      <title>NICK Setting</title>
+
+      <para>This setting allows you to change the Nickname that ModuleName
+      uses when it connects to your network. If you change this setting make
+      sure you update your NeoNet account, otherwise you might loose access to
+      the Secure IRC-Chat site if we perform a check on your network and can't
+      find "ModuleName" running.</para>
+
+      <warning>
+        <para>This option requires you to reload ModuleName or restart
+        NeoStats to take effect.</para>
+      </warning>
+
+      <screen>/msg ModuleName set NICK &lt;nickname&gt;</screen>
+    </sect2>
+
+    <sect2>
+      <title>ALTNICK Setting</title>
+
+      <para>This setting allows you to set a "Backup" nickname used for
+      ModuleName. If the primary Nickname in the NICK Setting is not
+      available, ModuleName will use this nickname, and if that is not
+      available, it will use a automatically generated nickname</para>
+
+      <warning>
+        <para>This option requires you to reload ModuleName or restart
+        NeoStats to take effect</para>
+      </warning>
+
+      <screen>/msg ModuleName set ALTNICK &lt;nickname&gt;</screen>
+    </sect2>
+
+    <sect2>
+      <title>USER Setting</title>
+
+      <para>This option allows you to customize the "user" or ident portion of
+      the ModuleName Bot. </para>
+
+      <warning>
+        <para>This option requires you to reload ModuleName or restart
+        NeoStats to take effect</para>
+      </warning>
+
+      <screen>/msg ModuleName set USER &lt;user&gt;</screen>
+    </sect2>
+
+    <sect2>
+      <title>HOST Setting</title>
+
+      <para>This option allows you to customize the Hostname that ModuleName
+      uses when it signs onto your Network. It defaults to the Standard
+      Hostname specified in your NeoStats configuration.</para>
+
+      <warning>
+        <para>This option requires you to reload ModuleName or restart
+        NeoStats to take effect</para>
+      </warning>
+
+      <screen>/msg ModuleName set HOST &lt;host&gt;</screen>
+    </sect2>
+
+    <sect2>
+      <title>REALNAME Setting</title>
+
+      <para>This option allows you to customize the realname (or Gecos) that
+      ModuleName uses when it signs onto your Network. </para>
+
+      <warning>
+        <para>This option requires you to reload ModuleName or restart
+        NeoStats to take effect</para>
+      </warning>
+
+      <screen>/msg ModuleName set REALNAME &lt;realname&gt;</screen>
+    </sect2>
+
+    <sect2>
+      <title>EXCLUSIONS Setting</title>
+
+      <para>This option enables ModuleName to use the Global Exclusions list
+      that is control by the main NeoStats bot. This allows you to maintain a
+      "global" exclusion list that is applicable to all modules in NeoStats,
+      and then only apply individual exclusions to ModuleName. </para>
+
+      <warning>
+        <para>This option only becomes effective on new users joining your
+        Network. Existing users that are already connected when you enable
+        this option will not be rescanned for exclusions, as the Global
+        Exclusions are only effected when a new user signs onto the Network.
+        In order to make the global exclusions list effective straight away,
+        you should restart NeoStats.</para>
+      </warning>
+
+      <para>If you wish to enable or disable the Global Exclusions lists,
+      issue the following command</para>
+
+      <screen>/msg ModuleName set EXCLUSIONS &lt;ON/OFF&gt;</screen>
+    </sect2>
+
+    <sect2>
+      <title>BLAH Blah Setting</title>
+
+      <para>blah blah description</para>
+
+      <para>To Change the setting, issue the following Command:</para>
+
+      <screen>/msg ModuleName set blahblah &lt;blah&gt; </screen>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Operational Commands</title>
+
+    <para>ModuleName has a number of commands that you can issue it in order
+    to perform checks or operations on your IRC network. These commands aid
+    Administrators in keeping their network secure, and keeping ModuleName
+    upto date.</para>
+
+    <para>The following list summarizes these commands:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>HELP</para>
+      </listitem>
+
+      <listitem>
+        <para>VERSION</para>
+      </listitem>
+
+      <listitem>
+        <para>ABOUT</para>
+      </listitem>
+
+      <listitem>
+        <para>CREDITS</para>
+      </listitem>
+
+      <listitem>
+        <para>LEVELS</para>
+      </listitem>
+
+      <listitem>
+        <para>SET</para>
+      </listitem>
+
+      <listitem>
+        <para>EXCLUDE</para>
+      </listitem>
+
+      <listitem>
+        <para>BLAHBLAH</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>The following Sections Describe these commands in detail</para>
+
+    <sect2>
+      <title>HELP Command</title>
+
+      <para>The help command allows the users to access the online help for
+      the different commands available. You can get general help about the
+      available commands, or can access more specific information about a
+      command.</para>
+
+      <para>To see the help pages, use the following format:</para>
+
+      <screen>/msg ModuleName help [command]
+</screen>
+
+      <para>command is optional and only required if you want more specific
+      information about a particular command</para>
+    </sect2>
+
+    <sect2>
+      <title>VERSION Command</title>
+
+      <para>This command displays the Version of ModuleName, and the dat
+      files. </para>
+
+      <para>The format of the command is as follows:</para>
+
+      <screen>/msg ModuleName version
+</screen>
+    </sect2>
+
+    <sect2>
+      <title>ABOUT Command</title>
+
+      <para>The about command shows a brief description of the Bot and its
+      purpose.</para>
+
+      <para>The format of the command is as follows:</para>
+
+      <screen>/msg ModuleName about
+</screen>
+    </sect2>
+
+    <sect2>
+      <title>CREDITS Command</title>
+
+      <para>The credits command shows details about the authors or
+      contributors of to the Module</para>
+
+      <para>The format of the command is as follows:</para>
+
+      <screen>/msg ModuleName credits
+</screen>
+    </sect2>
+
+    <sect2>
+      <title>LEVELS Command</title>
+
+      <para>The levels command allows you to adjust the security of each
+      command available in this module. You can make certian commands only
+      available to higher "level" users in NeoStats. </para>
+
+      <para>For more information about NeoStats Levels and Security, please
+      consult the NeoStats Manual</para>
+
+      <para>To list the currently configured levels, issue the following
+      command:</para>
+
+      <screen>/msg ModuleName levels list
+</screen>
+
+      <para>To change the minimum level required to execute a command, issue
+      the following command:</para>
+
+      <screen>/msg ModuleName levels &lt;command&gt; &lt;level&gt;</screen>
+
+      <para>Where:</para>
+
+      <para>command = is the actual command name you wish to modify</para>
+
+      <para>level = a number between 0 and 200 that specifies the new
+      level.</para>
+    </sect2>
+
+    <sect2>
+      <title>SET Command</title>
+
+      <para>The set command allows you to modify settings applicable to this
+      module. For a complete description of the available set options, please
+      consult the Detailed Configuration Section of this manual.</para>
+    </sect2>
+
+    <sect2>
+      <title>EXCLUDE Command</title>
+
+      <para>Exclusion lists allow you to specify certain Hostmasks, Servers,
+      or Channels that should be excluded from monitoring by ModuleName. This
+      exclusion list would allow a administrator to say, allow users on that
+      are matched against Trojans, when the administrator has verified that
+      the Trojan does not in fact exist on the users host.</para>
+
+      <caution>
+        <para>Exclusions should be setup for your Services Server, so that
+        ModuleName does not try to scan ChanServ, or NickServ, or any of the
+        bots relating to Nickname protection.</para>
+      </caution>
+
+      <para>With NeoStats 3.0, you should also be aware that there are two
+      types of Exclusion Lists. There are "Global" exclusion lists that all
+      modules may optionally use, and there is module specific exclusion
+      lists. ModuleName defaults to not using the Global Exclusion lists. You
+      can enable it by the following command:<screen>/msg ModuleName set exclusions on</screen></para>
+
+      <para><emphasis role="bold">Adding a Entry</emphasis></para>
+
+      <para>To add a entry to the Exclusion list, use the following
+      format:</para>
+
+      <screen>/msg ModuleName exclude add &lt;host/Server/Channel/UserHost&gt; &lt;pattern&gt; &lt;reason&gt;</screen>
+
+      <para>Where:</para>
+
+      <para>&lt;Host/Server/Channel/UserHost&gt; = The type of exclusion you
+      are adding. The different types are:<itemizedlist>
+          <listitem>
+            <para>Host - The Users real (Internet) Hostname</para>
+          </listitem>
+
+          <listitem>
+            <para>Server - The Users server they are connecting to. You should
+            ensure you add a exclusion for your Services Server</para>
+          </listitem>
+
+          <listitem>
+            <para>Channel - A specific channel on your IRC Network</para>
+          </listitem>
+
+          <listitem>
+            <para>UserHost - The users Virtual Hostname (IRC)</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>&lt;pattern&gt; = The pattern you wish to match on. May include
+      wildcard charactors such as * and ?</para>
+
+      <para>&lt;reason&gt; = a short description of the exclusion, for
+      operator reference only.</para>
+
+      <para>The output is as follows:</para>
+
+      <screen>[13:20] -ModuleName- Added *.blah.com (userhost) to exclusion list
+[13:20] ModuleName Fish added *.blah.com (userhost) to the exclusion list</screen>
+
+      <para><emphasis role="bold">Listing an Entry</emphasis></para>
+
+      <para>To list the Exclusions simple type:</para>
+
+      <screen>/msg ModuleName exclude list</screen>
+
+      <para>And all the current exclusions are listed. Additionally, a
+      Position number is provided for use with the delete command. The output
+      is as follows:</para>
+
+      <screen>[13:21]  -ModuleName- Exclusion list:
+[13:21]  -ModuleName- #bothouse (Channel) Added by Fish on Sat Aug 13 2005 01:20 AM SGT for Requested
+[13:21]  -ModuleName- #ircop (Channel) Added by Fish on Sat Aug 13 2005 07:40 PM SGT for IRCop channel
+[13:21]  -ModuleName- *irc-chat.net (Host) Added by Fish on Tue Aug 09 2005 10:13 PM SGT for Services Exclusion
+[13:21]  -ModuleName- chieftess!*@* (Userhost) Added by Fish on Tue Aug 09 2005 10:14 PM SGT for buggy client
+[13:21]  -ModuleName- *.blah.com (Userhost) Added by Fish on Sun Jan 15 2006 01:20 PM SGT for Cause Blah.com is cool
+[13:21]  -ModuleName- End of list.</screen>
+
+      <para><emphasis role="bold">Deleting an Entry</emphasis></para>
+
+      <para>To delete a entry, you should first lookup the Position of the
+      entry that you wish to delete. The format of the command is as
+      follows:</para>
+
+      <screen>/msg ModuleName exclude del &lt;pattern&gt;</screen>
+
+      <para>Where:</para>
+
+      <para>&lt;pattern&gt; is the pattern of the entry you wish to delete in
+      the list</para>
+
+      <para>The output of the command is as follows:</para>
+
+      <screen>[13:22]  ModuleName Fish used EXCLUDE
+[13:22]  -ModuleName- *.blah.com delete from exclusion list</screen>
+    </sect2>
+
+    <sect2>
+      <title>BLAHBLAH Command</title>
+
+      <para>That command forces ModuleName to check the Dat File version at
+      <link linkend="???">http://secure.irc-chat.net/</link> and download the
+      latest version if required.</para>
+
+      <warning>
+        <para>Repeated use of this command in a short period of time will
+        result in your account at secure.irc-chat.net being suspended for
+        abuse. Use with CARE</para>
+      </warning>
+
+      <para>The format of the command is as follows:</para>
+
+      <screen>/msg ModuleName update</screen>
+    </sect2>
+  </sect1>
+
+  <sect1>
+    <title>Optional Chapter</title>
+
+    <para>use this to write any optional information etc etc etc</para>
+
+    <sect2>
+      <title>Optional Sub Heading</title>
+
+      <para>Subheading</para>
+
+      <sect3>
+        <title>Minor heading</title>
+
+        <para>minor heading</para>
+      </sect3>
+    </sect2>
+  </sect1>
+</article>
