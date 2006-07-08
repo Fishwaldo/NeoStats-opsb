@@ -4,6 +4,7 @@ Open Proxy Scanning Bot Module for NeoStats Changelog.
  - fix crash on adding new port (D)
  - Fix the open_proxy crash when a user had signed off and thus we had a
    dangling pointer (F)
+ - Fix make install when NeoStats is installed in a non-default location (F)
 
 3.0.a3 - Mark (M) & Fish (F)
  - AKILL support and open proxy reporting (F)

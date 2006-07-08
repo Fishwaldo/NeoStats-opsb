@@ -55,6 +55,7 @@ int main(void) {
 	ns_version_ok='no')
 if test "$ns_version_ok" = "yes"; then
 	AC_MSG_RESULT(Compatible version);
+	prefix=$DIRINST
 else
 	AC_MSG_ERROR(This module requires NeoStats 3.0.a2 or higher)
 fi
