@@ -91,7 +91,7 @@ static bot_cmd opsb_commands[]=
 	{"CHECK",	opsb_cmd_check,		1,	NS_ULEVEL_OPER,		opsb_help_check, 0, NULL, NULL},
 	{"ADD",		opsb_cmd_add,		2,	NS_ULEVEL_ADMIN,	opsb_help_add, 0, NULL, NULL},
 	{"DEL",		opsb_cmd_del,		1,	NS_ULEVEL_ADMIN,	opsb_help_del, 0, NULL, NULL},
-	{"LIST",	opsb_cmd_list,		0,	NS_ULEVEL_ADMIN,	opsb_help_list, 0, NULL, NULL},
+	{"LISTPORTS",	opsb_cmd_list,		0,	NS_ULEVEL_ADMIN,	opsb_help_list, 0, NULL, NULL},
 	NS_CMD_END()
 };
 
