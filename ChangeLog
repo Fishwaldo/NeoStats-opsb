@@ -1,7 +1,10 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
 3.0.b1 - Mark (M) & Fish (F) & DeadNotBuried (D)
- - change LIST command to LISTPORTS as LIST can't have a access level changed if a command
+ - fix crash on too many file descriptors open by deleting sockets correctly (D)
+ - Increase max number of ports to scan (D)
+ - change LIST command to LISTPORTS as LIST can't have a access level changed
+   if set as a command (D)
  - fix crash on adding new port (D)
  - Fix the open_proxy crash when a user had signed off and thus we had a
    dangling pointer (F)

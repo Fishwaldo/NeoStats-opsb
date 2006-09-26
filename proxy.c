@@ -256,6 +256,7 @@ static int proxy_read( void *data, void *recv, int size )
 				list_delete(si->connections, connode);
 				lnode_destroy(connode);
 				if (si->reqclient) irc_prefmsg(opsb_bot, si->reqclient, "Connection on %s (%s:%d) for Protocol %s Closed", si->who, si->lookup, ci->port, type_of_proxy(ci->type));
+				DelSock(ci->sock);
 				ns_free(ci);
 			}
 			if (list_count(si->connections) == 0) {
@@ -503,6 +504,7 @@ void start_proxy_scan(scaninfo *scandata)
 			if (proxy_list[i].type == pl->type) {
 				if ((ci->fd = sock_connect(SOCK_STREAM, scandata->ip, ci->port)) == NS_FAILURE) {
 					nlog(LOG_WARNING, "start_proxy_scan(): Failed Connect for protocol %s on port %d", type_of_proxy(ci->type), ci->port);
+					DelSock(ci->sock);
 					ns_free(ci);
 					pn = list_next(opsb.ports, pn);
 					continue;

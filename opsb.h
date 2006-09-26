@@ -35,7 +35,7 @@
 /* max queue is the max amount of scans that may be concurrent and queued. */
 #define MAX_QUEUE ( MAX_SCANS * 100 )
 /* max no of ports to scan */
-#define MAX_PORTS 50
+#define MAX_PORTS 500
 
 #define SCAN_SOCKET_COUNT	7
 
