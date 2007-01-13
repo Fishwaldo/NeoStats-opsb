@@ -7254,6 +7254,7 @@ AC_SUBST([am__tar])
 AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
+m4_include([autotools/acinclude.m4])
 m4_include([autotools/ax_distversion.m4])
 m4_include([autotools/ax_maintainer_mode_auto_silent.m4])
 m4_include([autotools/ccdv.m4])
