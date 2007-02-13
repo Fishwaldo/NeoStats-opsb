@@ -90,16 +90,16 @@ OPM_CONFIG_T *libopm_config_create()
             break;
 
          case OPM_TYPE_STRING:
-            (char *) ret->vars[i] = strdup("");
+            ret->vars[i] = strdup("");
             break;
 
          case OPM_TYPE_ADDRESS:
-            (opm_sockaddr *) ret->vars[i] = MyMalloc(sizeof(opm_sockaddr));
+            ret->vars[i] = MyMalloc(sizeof(opm_sockaddr));
             memset((opm_sockaddr *) ret->vars[i], 0, sizeof(opm_sockaddr));
             break; 
 
          case OPM_TYPE_STRINGLIST:
-            (OPM_LIST_T *) ret->vars[i] = libopm_list_create();
+            ret->vars[i] = libopm_list_create();
             break;
          default:
             ret->vars[i] = NULL;
@@ -188,7 +188,7 @@ OPM_ERR_T libopm_config_set(OPM_CONFIG_T *config, int key, void *value)
       case OPM_TYPE_STRING:
          if((char *) config->vars[key] != NULL)
             MyFree(config->vars[key]);
-         (char *) config->vars[key] = strdup((char *) value);
+         config->vars[key] = strdup((char *) value);
          break;
 
       case OPM_TYPE_INT:

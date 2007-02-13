@@ -1,5 +1,8 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
+* Version 2.6 * 13/2/2007 * Fish (F)
+ - Fix compile error with newer compilers (F)
+
 * Version 2.5 * 27/02/2005 * Fish (F)
  - Fix compile issue with newer compilers (F)
 
