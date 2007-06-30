@@ -9,6 +9,8 @@ Open Proxy Scanning Bot Module for NeoStats Changelog.
  - Fix the open_proxy crash when a user had signed off and thus we had a
    dangling pointer (F)
  - Fix make install when NeoStats is installed in a non-default location (F)
+ - Fix a issue with SockRead Functions when timeouts or connection refused
+   called, we return NS_FAILURE when it should be NS_SUCCESS (F)
 
 3.0.a3 - Mark (M) & Fish (F)
  - AKILL support and open proxy reporting (F)
