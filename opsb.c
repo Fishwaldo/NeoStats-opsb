@@ -496,7 +496,7 @@ void checkqueue( void )
 	SET_SEGV_LOCATION();
 	
 	/* exit, if the list is full */
-	if (list_isfull(opsbl) || list_isempty(opsbq))
+	if (list_isfull(opsbl) || list_isempty(opsbq) || ((list_count(opsb.ports) + me.cursocks) >= me.maxsocks)) 
 		return;
 	
 	scannode = list_first(opsbq);
@@ -677,7 +677,7 @@ static int startscan(scaninfo *scandata)
 			return 1;
 		}
 	}
-	if (list_isfull(opsbl)) {
+	if (list_isfull(opsbl) || ((list_count(opsb.ports) + me.cursocks) >= me.maxsocks)) {
 		if (list_isfull(opsbq)) {
 			irc_chanalert (opsb_bot, "Warning, Both Current and queue lists are full. Not Adding additional scans");
 			dlog (DEBUG1, "OPSB: dropped scanning of %s, as queue is full", scandata->who);
