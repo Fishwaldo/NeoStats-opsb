@@ -256,9 +256,6 @@ static int proxy_read( void *data, void *recv, int size )
 				list_delete(si->connections, connode);
 				lnode_destroy(connode);
 				if (si->reqclient) irc_prefmsg(opsb_bot, si->reqclient, "Connection on %s (%s:%d) for Protocol %s Closed", si->who, si->lookup, ci->port, type_of_proxy(ci->type));
-				/*timeout needs the socket deleted */
-				if( size == -2 )
-					DelSock(ci->sock);
 				ns_free(ci);
 			}
 			if (list_count(si->connections) == 0) {

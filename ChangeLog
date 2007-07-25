@@ -1,6 +1,7 @@
 Open Proxy Scanning Bot Module for NeoStats Changelog.
 ==============================================================================
 3.0.b1 - Mark (M) & Fish (F) & DeadNotBuried (D)
+ - Timeouts should not call DelSock (In fact nothing should!) (F)
  - fix crash on too many file descriptors open by deleting sockets correctly (D)
  - Increase max number of ports to scan (D)
  - change LIST command to LISTPORTS as LIST can't have a access level changed
