@@ -262,12 +262,7 @@ static int proxy_read( void *data, void *recv, int size )
 				if (si->state == DOING_SCAN) si->state = FIN_SCAN;			
 				check_scan_free(si);
 			}
-			if (size == -2) 
-				/* already delsock */
-				return NS_SUCCESS;
-			else 
-				/* need socket functions to delsock */
-				return NS_FAILURE;
+			return NS_FAILURE;
 				
 		default:
 			proxy_list[ci->type-1].scanned++;
