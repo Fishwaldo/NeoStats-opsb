@@ -32,7 +32,7 @@ extern char s_opsb[MAXNICK];
 /* max no of exempt entries */
 #define MAX_EXEMPTS 20
 /* max no of ports to scan */
-#define MAX_PORTS 50
+#define MAX_PORTS 250
 
 #define MAXREASON		128
 
