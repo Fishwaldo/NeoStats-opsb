@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default-recipe="default">
+    <recipe name="Configure">
+        <post-processor name="checkbuild.pp">
+            <gcc.pp name="gcc.pp"/>
+            <make.pp name="make.pp"/>
+        </post-processor>
+        <executable name="ShutUp Configure" exe="touch" args="${base.dir}/.hush"> </executable>
+        <executable name="run configure" exe="${base.dir}/configure" args="--enable-debug --disable-ccdv --enable-autodebug"> </executable>
+        <make name="build">
+            <process processor="${checkbuild.pp}"/>
+        </make>
+    </recipe>
+    <recipe name="SnapShowCheck">
+        <post-processor name="checkbuild.pp">
+            <gcc.pp name="gcc.pp"/>
+            <make.pp name="make.pp"/>
+        </post-processor>
+        <executable name="ShutUp Configure" exe="touch" args="${base.dir}/.hush"> </executable>
+        <executable name="run configure" exe="${base.dir}/configure" args="--enable-debug --disable-ccdv --enable-autodebug --with-distversion=${build.revision}"> </executable>
+        <command name="Build">
+            <make name="build" targets="distcheck">
+                <process processor="${checkbuild.pp}"/>
+            </make>
+            <artifact name="SnapShot" file="OPSB-*.tar.gz"/>
+        </command>
+    </recipe>
+    <recipe name="Win32-Build">
+        <post-processor name="checkbuild.pp">
+            <regex.pp name="compile.pp">
+                <pattern category="error" expression="\\.[chl]\\([0-9]+\\): error"/>
+                <pattern category="warning" expression="\\.[chl]\\([0-9]+\\): warning"/>
+            </regex.pp>
+        </post-processor>
+        <resource name="Win32" required="true" version="1"/>
+        <command name="Build-Core">
+            <executable name="MSBuild core" exe="${MSBuildPath}\MSBuild.exe" args="OPSB.sln /p:Configuration=Release">
+                <environment name="VCBUILD_DEFAULT_OPTIONS" value="/u"/>
+                <process processor="${checkbuild.pp}"/>
+            </executable>
+        </command>
+    </recipe>
+    <recipe name="Win32-Snapshow">
+        <post-processor name="checkbuild.pp">
+            <regex.pp name="compile.pp">
+                <pattern category="error" expression="\\.[chl]\\([0-9]+\\): error"/>
+                <pattern category="warning" expression="\\.[chl]\\([0-9]+\\): warning"/>
+            </regex.pp>
+        </post-processor>
+        <resource name="Win32" required="true" version="1"/>
+        <command name="Build-Core">
+            <executable name="MSBuild core" exe="${MSBuildPath}\MSBuild.exe" args="OPSB.sln /p:Configuration=Release">
+                <environment name="VCBUILD_DEFAULT_OPTIONS" value="/u"/>
+                <process processor="${checkbuild.pp}"/>
+            </executable>
+        </command>
+        <command name="MakeDist">
+            <executable name="MakeSnap" exe="${base.dir}\\tools\\buildwin32snap.bat" args="${build.revision}"/>
+            <artifact name="OPSB Setup File" file="${base.dir}\\tools\\OPSB-Setup-*.exe"/>
+        </command>
+    </recipe>
+</project>
