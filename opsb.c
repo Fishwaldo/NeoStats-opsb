@@ -413,7 +413,7 @@ int opsb_set_cb( const CmdParams *cmdparams, SET_REASON reason )
 	return NS_SUCCESS;
 }
 
-/** @brief opsb_set_cb
+/** @brief opsb_set_target_cb
  *
  *  Set callback
  *  Remove unconfigured warning if needed
