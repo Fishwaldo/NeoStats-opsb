@@ -148,6 +148,7 @@ static void check_scan_free(scaninfo *scandata) {
 		list_delete(opsbl, scannode);
 		lnode_destroy(scannode);
 		scandata->reqclient = NULL;
+		list_destroy(scandata->connections);
 		ns_free(scandata);
 	} else {
 		nlog (LOG_WARNING, "Damn, Can't find ScanNode %s. Something is fubar", scandata->who);
